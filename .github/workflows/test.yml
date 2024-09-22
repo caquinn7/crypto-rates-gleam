@@ -21,7 +21,7 @@ jobs:
 
       - name: Set environment variables from secrets
         run: |
-          echo "SECRET_NAME=${{ secrets.COIN_MARKET_CAP_API_KEY }}" >> .env
+          echo "COIN_MARKET_CAP_API_KEY=${{ secrets.COIN_MARKET_CAP_API_KEY }}" >> .env
         shell: bash
       - run: gleam deps download
       - run: gleam test
