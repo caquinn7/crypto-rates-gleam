@@ -1,5 +1,5 @@
 import crypto_rates/coin_market_cap.{
-  CmcResponse, CryptoCurrency, Status, get_crypto,
+  CmcResponse, CryptoCurrency, Status, get_crypto_currencies,
 }
 import dot_env
 import dot_env/env
@@ -21,7 +21,7 @@ pub fn coin_market_cap_get_crypto_happy_path_test() {
 
   let CmcResponse(Status(error_code, error_message), data) =
     api_key
-    |> get_crypto
+    |> get_crypto_currencies
     |> should.be_ok
 
   error_code |> should.equal(0)
@@ -42,7 +42,7 @@ pub fn coin_market_cap_get_crypto_happy_path_test() {
 pub fn coin_market_cap_get_crypto_invalid_api_key_test() {
   let CmcResponse(Status(error_code, error_message), data) =
     "invalid_api_key"
-    |> get_crypto
+    |> get_crypto_currencies
     |> should.be_ok
 
   { error_code > 0 } |> should.be_true

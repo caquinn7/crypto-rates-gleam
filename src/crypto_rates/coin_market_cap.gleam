@@ -21,7 +21,9 @@ pub type CmcResponse(a) {
 
 const base_url = "https://pro-api.coinmarketcap.com"
 
-pub fn get_crypto(api_key: String) -> Result(CmcResponse(CryptoCurrency), Nil) {
+pub fn get_crypto_currencies(
+  api_key: String,
+) -> Result(CmcResponse(CryptoCurrency), Nil) {
   let assert Ok(req) = request.to(base_url <> "/v1/cryptocurrency/map")
   let req =
     req
