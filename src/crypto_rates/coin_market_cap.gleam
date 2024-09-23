@@ -32,6 +32,7 @@ pub fn get_crypto_currencies(
       #("sort", "cmc_rank"),
       #("limit", "100"),
       #("listing_status", "active"),
+      #("aux", ""),
     ])
 
   case httpc.send(req) {
