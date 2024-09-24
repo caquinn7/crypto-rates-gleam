@@ -1,6 +1,6 @@
 import decode.{type Decoder}
 import gleam/dynamic.{type DecodeError, type Dynamic}
-import gleam/http/request
+import gleam/http/request.{type Request}
 import gleam/httpc
 import gleam/int
 import gleam/json
@@ -33,7 +33,7 @@ pub fn get_crypto_currencies(
   let assert Ok(req) = request.to(base_url <> "/v1/cryptocurrency/map")
   let req =
     req
-    |> request.set_header("x-cmc_pro_api_key", api_key)
+    |> set_headers(api_key)
     |> request.set_query([
       #("sort", "cmc_rank"),
       #("limit", int.to_string(limit)),
@@ -62,7 +62,7 @@ pub fn get_fiat_currencies(
   let assert Ok(req) = request.to(base_url <> "/v1/fiat/map")
   let req =
     req
-    |> request.set_header("x-cmc_pro_api_key", api_key)
+    |> set_headers(api_key)
     |> request.set_query([#("sort", "id"), #("limit", int.to_string(limit))])
 
   case httpc.send(req) {
@@ -76,6 +76,12 @@ pub fn get_fiat_currencies(
       })
     Error(err) -> panic as { "request failed: " <> string.inspect(err) }
   }
+}
+
+fn set_headers(req: Request(a), api_key: String) -> Request(a) {
+  req
+  |> request.set_header("x-cmc_pro_api_key", api_key)
+  |> request.set_header("accept", "application/json")
 }
 
 fn crypto_currency_decoder() -> Decoder(CryptoCurrency) {
