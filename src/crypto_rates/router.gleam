@@ -1,4 +1,4 @@
-import crypto_rates/coin_market_cap.{CmcResponse}
+import crypto_rates/coin_market_cap.{CmcListResponse}
 import crypto_rates/web
 import dot_env/env
 import gleam/http
@@ -12,21 +12,24 @@ pub fn handle_request(req: Request) -> Response {
   use req <- web.middleware(req)
   case wisp.path_segments(req) {
     ["ping"] -> wisp.html_response(string_builder.from_string("pong"), 200)
+
     ["currencies", "crypto"] -> {
       use <- wisp.require_method(req, http.Get)
       get_crypto_currencies()
     }
+
     ["currencies", "fiat"] -> {
       use <- wisp.require_method(req, http.Get)
       get_fiat_currencies()
     }
+
     _ -> wisp.not_found()
   }
 }
 
 fn get_crypto_currencies() {
   let assert Ok(api_key) = env.get_string("COIN_MARKET_CAP_API_KEY")
-  let assert Ok(coin_market_cap.CmcResponse(_status, Some(crypto))) =
+  let assert Ok(CmcListResponse(_status, Some(crypto))) =
     coin_market_cap.get_crypto_currencies(api_key, 100)
 
   crypto
@@ -45,7 +48,7 @@ fn get_crypto_currencies() {
 
 fn get_fiat_currencies() {
   let assert Ok(api_key) = env.get_string("COIN_MARKET_CAP_API_KEY")
-  let assert Ok(coin_market_cap.CmcResponse(_status, Some(fiat))) =
+  let assert Ok(CmcListResponse(_status, Some(fiat))) =
     coin_market_cap.get_fiat_currencies(api_key, 100)
 
   fiat
