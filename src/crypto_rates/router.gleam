@@ -1,66 +1,39 @@
-import crypto_rates/coin_market_cap.{CmcListResponse}
-import crypto_rates/web
-import dot_env/env
+import crypto_rates/coin_market_cap
+import crypto_rates/routes/conversions
+import crypto_rates/routes/currencies
+import crypto_rates/web.{type Context}
 import gleam/http
-import gleam/json
-import gleam/list
-import gleam/option.{Some}
 import gleam/string_builder
 import wisp.{type Request, type Response}
 
-pub fn handle_request(req: Request) -> Response {
+pub fn handle_request(req: Request, ctx: Context) -> Response {
   use req <- web.middleware(req)
   case wisp.path_segments(req) {
-    ["ping"] -> wisp.html_response(string_builder.from_string("pong"), 200)
+    ["ping"] -> wisp.json_response(string_builder.from_string("pong"), 200)
 
     ["currencies", "crypto"] -> {
       use <- wisp.require_method(req, http.Get)
-      get_crypto_currencies()
+      currencies.get_crypto(coin_market_cap.get_crypto_currencies(
+        ctx.cmc_api_key,
+        _,
+      ))
     }
 
     ["currencies", "fiat"] -> {
       use <- wisp.require_method(req, http.Get)
-      get_fiat_currencies()
+      currencies.get_fiat(coin_market_cap.get_fiat_currencies(
+        ctx.cmc_api_key,
+        _,
+      ))
+    }
+
+    ["conversions"] -> {
+      use <- wisp.require_method(req, http.Get)
+      conversions.get(req, fn(amount, id, convert_id) {
+        coin_market_cap.get_conversion(ctx.cmc_api_key, amount, id, convert_id)
+      })
     }
 
     _ -> wisp.not_found()
   }
-}
-
-fn get_crypto_currencies() {
-  let assert Ok(api_key) = env.get_string("COIN_MARKET_CAP_API_KEY")
-  let assert Ok(CmcListResponse(_status, Some(crypto))) =
-    coin_market_cap.get_crypto_currencies(api_key, 100)
-
-  crypto
-  |> list.unique
-  |> json.array(fn(currency) {
-    json.object([
-      #("id", json.int(currency.id)),
-      #("rank", json.nullable(currency.rank, json.int)),
-      #("name", json.string(currency.name)),
-      #("symbol", json.string(currency.symbol)),
-    ])
-  })
-  |> json.to_string_builder
-  |> wisp.json_response(200)
-}
-
-fn get_fiat_currencies() {
-  let assert Ok(api_key) = env.get_string("COIN_MARKET_CAP_API_KEY")
-  let assert Ok(CmcListResponse(_status, Some(fiat))) =
-    coin_market_cap.get_fiat_currencies(api_key, 100)
-
-  fiat
-  |> list.unique
-  |> json.array(fn(currency) {
-    json.object([
-      #("id", json.int(currency.id)),
-      #("name", json.string(currency.name)),
-      #("sign", json.string(currency.sign)),
-      #("symbol", json.string(currency.symbol)),
-    ])
-  })
-  |> json.to_string_builder
-  |> wisp.json_response(200)
 }

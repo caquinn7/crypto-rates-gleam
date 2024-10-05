@@ -14,15 +14,6 @@ pub fn main() {
   gleeunit.main()
 }
 
-fn load_env(then: fn() -> a) {
-  dot_env.new()
-  |> dot_env.set_path(".env")
-  |> dot_env.set_debug(False)
-  |> dot_env.load
-
-  then()
-}
-
 pub fn coin_market_cap_get_crypto_currencies_happy_path_test() {
   use <- load_env
 
@@ -123,4 +114,13 @@ pub fn coin_market_cap_get_conversion_happy_path_test() {
   quote
   |> dict.get(int.to_string(to_id))
   |> should.be_ok
+}
+
+fn load_env(then: fn() -> a) {
+  dot_env.new()
+  |> dot_env.set_path(".env")
+  |> dot_env.set_debug(False)
+  |> dot_env.load
+
+  then()
 }

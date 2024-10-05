@@ -36,12 +36,12 @@ pub type Conversion {
     symbol: String,
     name: String,
     amount: Float,
-    quote: Dict(String, Quote),
+    quote: Dict(String, QuoteItem),
   )
 }
 
-pub type Quote {
-  Quote(price: Float)
+pub type QuoteItem {
+  QuoteItem(price: Float)
 }
 
 const base_url = "https://pro-api.coinmarketcap.com"
@@ -166,7 +166,7 @@ fn conversion_decoder() -> Decoder(Conversion) {
   let quote_decoder = {
     decode.into({
       use price <- decode.parameter
-      Quote(price)
+      QuoteItem(price)
     })
     |> decode.field("price", decode.float)
   }
@@ -182,7 +182,10 @@ fn conversion_decoder() -> Decoder(Conversion) {
   |> decode.field("id", decode.int)
   |> decode.field("symbol", decode.string)
   |> decode.field("name", decode.string)
-  |> decode.field("amount", decode.float)
+  |> decode.field(
+    "amount",
+    decode.one_of([decode.float, decode.int |> decode.map(int.to_float)]),
+  )
   |> decode.field("quote", decode.dict(decode.string, quote_decoder))
 }
 
