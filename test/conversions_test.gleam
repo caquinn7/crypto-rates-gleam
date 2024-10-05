@@ -16,17 +16,13 @@ pub fn main() {
 }
 
 pub fn conversions_validate_request_amount_param_missing_test() {
-  testing.get("", [])
-  |> request.set_query([#("from", "1"), #("to", "2")])
-  |> validate_request
+  test_validate_request([#("from", "1"), #("to", "2")])
   |> should.be_error
   |> should.equal(NonEmptyList(ValidationError("amount", "is required"), []))
 }
 
 pub fn conversions_validate_request_amount_param_not_a_number_test() {
-  testing.get("", [])
-  |> request.set_query([#("amount", "x"), #("from", "1"), #("to", "2")])
-  |> validate_request
+  test_validate_request([#("amount", "x"), #("from", "1"), #("to", "2")])
   |> should.be_error
   |> should.equal(
     NonEmptyList(
@@ -40,9 +36,11 @@ pub fn conversions_validate_request_amount_param_not_a_number_test() {
 }
 
 pub fn conversions_validate_request_amount_param_less_than_min_test() {
-  testing.get("", [])
-  |> request.set_query([#("amount", "0.00000001"), #("from", "1"), #("to", "2")])
-  |> validate_request
+  test_validate_request([
+    #("amount", "0.00000001"),
+    #("from", "1"),
+    #("to", "2"),
+  ])
   |> should.be_error
   |> should.equal(
     NonEmptyList(ValidationError("amount", "must be greater than 1.0e-8"), []),
@@ -50,17 +48,13 @@ pub fn conversions_validate_request_amount_param_less_than_min_test() {
 }
 
 pub fn conversions_validate_request_from_param_missing_test() {
-  testing.get("", [])
-  |> request.set_query([#("amount", "1.0"), #("to", "2")])
-  |> validate_request
+  test_validate_request([#("amount", "1.0"), #("to", "2")])
   |> should.be_error
   |> should.equal(NonEmptyList(ValidationError("from", "is required"), []))
 }
 
 pub fn conversions_validate_request_from_param_not_an_integer_test() {
-  testing.get("", [])
-  |> request.set_query([#("amount", "1.0"), #("from", "x"), #("to", "2")])
-  |> validate_request
+  test_validate_request([#("amount", "1.0"), #("from", "x"), #("to", "2")])
   |> should.be_error
   |> should.equal(
     NonEmptyList(ValidationError("from", "must be an integer"), []),
@@ -68,9 +62,7 @@ pub fn conversions_validate_request_from_param_not_an_integer_test() {
 }
 
 pub fn conversions_validate_request_from_param_is_zero_test() {
-  testing.get("", [])
-  |> request.set_query([#("amount", "1.0"), #("from", "0"), #("to", "2")])
-  |> validate_request
+  test_validate_request([#("amount", "1.0"), #("from", "0"), #("to", "2")])
   |> should.be_error
   |> should.equal(
     NonEmptyList(ValidationError("from", "must be greater than 0"), []),
@@ -78,25 +70,19 @@ pub fn conversions_validate_request_from_param_is_zero_test() {
 }
 
 pub fn conversions_validate_request_to_param_missing_test() {
-  testing.get("", [])
-  |> request.set_query([#("amount", "1.0"), #("from", "1")])
-  |> validate_request
+  test_validate_request([#("amount", "1.0"), #("from", "1")])
   |> should.be_error
   |> should.equal(NonEmptyList(ValidationError("to", "is required"), []))
 }
 
 pub fn conversions_validate_request_to_param_not_an_integer_test() {
-  testing.get("", [])
-  |> request.set_query([#("amount", "1.0"), #("from", "1"), #("to", "x")])
-  |> validate_request
+  test_validate_request([#("amount", "1.0"), #("from", "1"), #("to", "x")])
   |> should.be_error
   |> should.equal(NonEmptyList(ValidationError("to", "must be an integer"), []))
 }
 
 pub fn conversions_validate_request_to_param_is_zero_test() {
-  testing.get("", [])
-  |> request.set_query([#("amount", "1.0"), #("from", "1"), #("to", "0")])
-  |> validate_request
+  test_validate_request([#("amount", "1.0"), #("from", "1"), #("to", "0")])
   |> should.be_error
   |> should.equal(
     NonEmptyList(ValidationError("to", "must be greater than 0"), []),
@@ -104,17 +90,13 @@ pub fn conversions_validate_request_to_param_is_zero_test() {
 }
 
 pub fn conversions_validate_request_amount_is_integer_test() {
-  testing.get("", [])
-  |> request.set_query([#("amount", "1"), #("from", "1"), #("to", "2")])
-  |> validate_request
+  test_validate_request([#("amount", "1"), #("from", "1"), #("to", "2")])
   |> should.be_ok
   |> should.equal(ConversionParameters(1.0, 1, 2))
 }
 
 pub fn conversions_validate_request_amount_is_float_test() {
-  testing.get("", [])
-  |> request.set_query([#("amount", "1.0"), #("from", "1"), #("to", "2")])
-  |> validate_request
+  test_validate_request([#("amount", "1.0"), #("from", "1"), #("to", "2")])
   |> should.be_ok
   |> should.equal(ConversionParameters(1.0, 1, 2))
 }
@@ -157,4 +139,10 @@ pub fn conversions_get_test() {
   response
   |> testing.string_body
   |> should.equal(expected_json)
+}
+
+fn test_validate_request(query_params) {
+  testing.get("", [])
+  |> request.set_query(query_params)
+  |> validate_request
 }
