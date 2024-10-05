@@ -1,8 +1,11 @@
 import crypto_rates/coin_market_cap
 import crypto_rates/routes/conversions
 import crypto_rates/routes/currencies
+import crypto_rates/validation_response.{ValidationResponse}
 import crypto_rates/web.{type Context}
 import gleam/http
+import gleam/json
+import gleam/result
 import gleam/string_builder
 import wisp.{type Request, type Response}
 
@@ -29,9 +32,26 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
 
     ["conversions"] -> {
       use <- wisp.require_method(req, http.Get)
-      conversions.get(req, fn(amount, id, convert_id) {
-        coin_market_cap.get_conversion(ctx.cmc_api_key, amount, id, convert_id)
+      req
+      |> conversions.validate_request
+      |> result.map_error(fn(errs) {
+        errs
+        |> ValidationResponse
+        |> validation_response.encode
+        |> json.to_string_builder
+        |> wisp.json_response(400)
       })
+      |> result.map(fn(conversion_params) {
+        conversions.get(conversion_params, fn(amount, id, convert_id) {
+          coin_market_cap.get_conversion(
+            ctx.cmc_api_key,
+            amount,
+            id,
+            convert_id,
+          )
+        })
+      })
+      |> result.unwrap_both
     }
 
     _ -> wisp.not_found()

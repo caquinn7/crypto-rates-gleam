@@ -1,9 +1,7 @@
 import crypto_rates/coin_market_cap.{
   type CmcResponse, type Conversion, CmcResponse, QuoteItem,
 }
-import crypto_rates/validation_response.{
-  type ValidationError, ValidationError, ValidationResponse,
-}
+import crypto_rates/validation_response.{type ValidationError, ValidationError}
 import gleam/dict
 import gleam/float
 import gleam/http/request
@@ -12,9 +10,13 @@ import gleam/json
 import gleam/list
 import gleam/option.{type Option, Some}
 import gleam/result
-import non_empty_list
+import non_empty_list.{type NonEmptyList}
 import valid
 import wisp.{type Request, type Response}
+
+pub type ConversionParameters {
+  ConversionParameters(amount: Float, from: Int, to: Int)
+}
 
 type ConversionRequest {
   ConversionRequest(
@@ -24,75 +26,13 @@ type ConversionRequest {
   )
 }
 
-type ConversionParameters {
-  ConversionParameters(amount: Float, from: Int, to: Int)
-}
-
 type Currency {
   Currency(id: Int, amount: Float)
 }
 
-pub fn get(
+pub fn validate_request(
   req: Request,
-  do_get: fn(Float, Int, Int) -> Result(CmcResponse(Conversion), Nil),
-) -> Response {
-  let assert Ok(params) = request.get_query(req)
-
-  let get_params = fn(param_names) {
-    param_names
-    |> list.map(fn(name) {
-      params
-      |> list.key_find(name)
-      |> option.from_result
-    })
-  }
-
-  let assert [amount, from, to] = get_params(["amount", "from", "to"])
-
-  let validation_result =
-    ConversionRequest(amount, from, to)
-    |> validate_conversion_request
-
-  case validation_result {
-    Ok(conversion_params) -> {
-      let ConversionParameters(amount, from, to) = conversion_params
-
-      let assert Ok(CmcResponse(_status, Some(conversion))) =
-        do_get(amount, from, to)
-
-      let from_currency = Currency(conversion.id, conversion.amount)
-
-      let assert Ok(QuoteItem(price)) =
-        dict.get(conversion.quote, int.to_string(to))
-
-      let to_currency = Currency(to, price)
-
-      let encode_currency = fn(currency: Currency) {
-        json.object([
-          #("id", json.int(currency.id)),
-          #("amount", json.float(currency.amount)),
-        ])
-      }
-
-      json.object([
-        #("from", encode_currency(from_currency)),
-        #("to", encode_currency(to_currency)),
-      ])
-      |> json.to_string_builder
-      |> wisp.json_response(200)
-    }
-
-    Error(errs) -> {
-      errs
-      |> ValidationResponse
-      |> validation_response.encode
-      |> json.to_string_builder
-      |> wisp.json_response(400)
-    }
-  }
-}
-
-fn validate_conversion_request(conversion_req: ConversionRequest) {
+) -> Result(ConversionParameters, NonEmptyList(ValidationError)) {
   let amount_validator = {
     let string_is_number = fn(str, param_name) {
       str
@@ -134,6 +74,23 @@ fn validate_conversion_request(conversion_req: ConversionRequest) {
     |> valid.then(valid.int_min(1, #(param_name, "must be greater than 0")))
   }
 
+  let conversion_req = {
+    let get_params = fn(param_names) {
+      let assert Ok(query_params) = request.get_query(req)
+
+      param_names
+      |> list.map(fn(name) {
+        query_params
+        |> list.key_find(name)
+        |> option.from_result
+      })
+    }
+
+    let assert [amount, from, to] = get_params(["amount", "from", "to"])
+
+    ConversionRequest(amount, from, to)
+  }
+
   valid.build3(ConversionParameters)
   |> valid.check(conversion_req.amount, amount_validator)
   |> valid.check(conversion_req.from, id_validator("from"))
@@ -145,4 +102,34 @@ fn validate_conversion_request(conversion_req: ConversionRequest) {
       ValidationError(param_name, msg)
     })
   })
+}
+
+pub fn get(
+  conversion_params: ConversionParameters,
+  do_get: fn(Float, Int, Int) -> Result(CmcResponse(Conversion), Nil),
+) -> Response {
+  let ConversionParameters(amount, from, to) = conversion_params
+  let assert Ok(CmcResponse(_status, Some(conversion))) =
+    do_get(amount, from, to)
+
+  let from_currency = Currency(conversion.id, conversion.amount)
+
+  let assert Ok(QuoteItem(price)) =
+    dict.get(conversion.quote, int.to_string(to))
+
+  let to_currency = Currency(to, price)
+
+  let encode_currency = fn(currency: Currency) {
+    json.object([
+      #("id", json.int(currency.id)),
+      #("amount", json.float(currency.amount)),
+    ])
+  }
+
+  json.object([
+    #("from", encode_currency(from_currency)),
+    #("to", encode_currency(to_currency)),
+  ])
+  |> json.to_string_builder
+  |> wisp.json_response(200)
 }
