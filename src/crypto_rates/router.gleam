@@ -1,7 +1,7 @@
 import crypto_rates/coin_market_cap
 import crypto_rates/routes/conversions
 import crypto_rates/routes/currencies
-import crypto_rates/validation_response.{ValidationResponse}
+import crypto_rates/validation_failed
 import crypto_rates/web.{type Context}
 import gleam/http
 import gleam/json
@@ -36,8 +36,7 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
       |> conversions.validate_request
       |> result.map_error(fn(errs) {
         errs
-        |> ValidationResponse
-        |> validation_response.encode
+        |> validation_failed.encode
         |> json.to_string_builder
         |> wisp.json_response(400)
       })

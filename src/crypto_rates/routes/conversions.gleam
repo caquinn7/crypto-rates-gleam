@@ -1,7 +1,7 @@
 import crypto_rates/coin_market_cap.{
   type CmcResponse, type Conversion, CmcResponse, QuoteItem,
 }
-import crypto_rates/validation_response.{type ValidationError, ValidationError}
+import crypto_rates/validation_failed.{type ValidationFailed}
 import gleam/dict
 import gleam/float
 import gleam/http/request
@@ -10,7 +10,7 @@ import gleam/json
 import gleam/list
 import gleam/option.{type Option, Some}
 import gleam/result
-import non_empty_list.{type NonEmptyList}
+import non_empty_list
 import valid
 import wisp.{type Request, type Response}
 
@@ -32,7 +32,11 @@ type Currency {
 
 pub fn validate_request(
   req: Request,
-) -> Result(ConversionParameters, NonEmptyList(ValidationError)) {
+) -> Result(ConversionParameters, ValidationFailed) {
+  let error_msg = fn(param_name, problem) {
+    "\"" <> param_name <> "\" " <> problem
+  }
+
   let amount_validator = {
     let string_is_number = fn(str, param_name) {
       str
@@ -43,7 +47,10 @@ pub fn validate_request(
       })
       |> result.map_error(fn(_) {
         non_empty_list.new(
-          #(param_name, "must be either an integer or a floating-point number"),
+          error_msg(
+            param_name,
+            "must be either an integer or a floating-point number",
+          ),
           [],
         )
       })
@@ -51,7 +58,7 @@ pub fn validate_request(
 
     let param_name = "amount"
 
-    valid.is_some(#(param_name, "is required"))
+    valid.is_some(error_msg(param_name, "is required"))
     |> valid.then(string_is_number(_, param_name))
     |> valid.then(fn(x) {
       let min = 0.00000001
@@ -60,7 +67,10 @@ pub fn validate_request(
         _ ->
           Error(
             non_empty_list.new(
-              #(param_name, "must be greater than " <> float.to_string(min)),
+              error_msg(
+                param_name,
+                "must be greater than " <> float.to_string(min),
+              ),
               [],
             ),
           )
@@ -69,9 +79,14 @@ pub fn validate_request(
   }
 
   let id_validator = fn(param_name) {
-    valid.is_some(#(param_name, "is required"))
-    |> valid.then(valid.string_is_int(#(param_name, "must be an integer")))
-    |> valid.then(valid.int_min(1, #(param_name, "must be greater than 0")))
+    valid.is_some(error_msg(param_name, "is required"))
+    |> valid.then(
+      valid.string_is_int(error_msg(param_name, "must be an integer")),
+    )
+    |> valid.then(valid.int_min(
+      1,
+      error_msg(param_name, "must be greater than 0"),
+    ))
   }
 
   let conversion_req = {
@@ -95,13 +110,6 @@ pub fn validate_request(
   |> valid.check(conversion_req.amount, amount_validator)
   |> valid.check(conversion_req.from, id_validator("from"))
   |> valid.check(conversion_req.to, id_validator("to"))
-  |> result.map_error(fn(errs) {
-    errs
-    |> non_empty_list.map(fn(pair) {
-      let #(param_name, msg) = pair
-      ValidationError(param_name, msg)
-    })
-  })
 }
 
 pub fn get(

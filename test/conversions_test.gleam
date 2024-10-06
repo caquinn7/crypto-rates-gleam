@@ -1,6 +1,5 @@
 import crypto_rates/coin_market_cap.{CmcResponse, Conversion, QuoteItem, Status}
 import crypto_rates/routes/conversions.{ConversionParameters, validate_request}
-import crypto_rates/validation_response.{ValidationError}
 import gleam/dict
 import gleam/float
 import gleam/http/request
@@ -18,7 +17,7 @@ pub fn main() {
 pub fn conversions_validate_request_amount_param_missing_test() {
   test_validate_request([#("from", "1"), #("to", "2")])
   |> should.be_error
-  |> should.equal(NonEmptyList(ValidationError("amount", "is required"), []))
+  |> should.equal(NonEmptyList("\"amount\" is required", []))
 }
 
 pub fn conversions_validate_request_amount_param_not_a_number_test() {
@@ -26,10 +25,7 @@ pub fn conversions_validate_request_amount_param_not_a_number_test() {
   |> should.be_error
   |> should.equal(
     NonEmptyList(
-      ValidationError(
-        "amount",
-        "must be either an integer or a floating-point number",
-      ),
+      "\"amount\" must be either an integer or a floating-point number",
       [],
     ),
   )
@@ -42,51 +38,43 @@ pub fn conversions_validate_request_amount_param_less_than_min_test() {
     #("to", "2"),
   ])
   |> should.be_error
-  |> should.equal(
-    NonEmptyList(ValidationError("amount", "must be greater than 1.0e-8"), []),
-  )
+  |> should.equal(NonEmptyList("\"amount\" must be greater than 1.0e-8", []))
 }
 
 pub fn conversions_validate_request_from_param_missing_test() {
   test_validate_request([#("amount", "1.0"), #("to", "2")])
   |> should.be_error
-  |> should.equal(NonEmptyList(ValidationError("from", "is required"), []))
+  |> should.equal(NonEmptyList("\"from\" is required", []))
 }
 
 pub fn conversions_validate_request_from_param_not_an_integer_test() {
   test_validate_request([#("amount", "1.0"), #("from", "x"), #("to", "2")])
   |> should.be_error
-  |> should.equal(
-    NonEmptyList(ValidationError("from", "must be an integer"), []),
-  )
+  |> should.equal(NonEmptyList("\"from\" must be an integer", []))
 }
 
 pub fn conversions_validate_request_from_param_is_zero_test() {
   test_validate_request([#("amount", "1.0"), #("from", "0"), #("to", "2")])
   |> should.be_error
-  |> should.equal(
-    NonEmptyList(ValidationError("from", "must be greater than 0"), []),
-  )
+  |> should.equal(NonEmptyList("\"from\" must be greater than 0", []))
 }
 
 pub fn conversions_validate_request_to_param_missing_test() {
   test_validate_request([#("amount", "1.0"), #("from", "1")])
   |> should.be_error
-  |> should.equal(NonEmptyList(ValidationError("to", "is required"), []))
+  |> should.equal(NonEmptyList("\"to\" is required", []))
 }
 
 pub fn conversions_validate_request_to_param_not_an_integer_test() {
   test_validate_request([#("amount", "1.0"), #("from", "1"), #("to", "x")])
   |> should.be_error
-  |> should.equal(NonEmptyList(ValidationError("to", "must be an integer"), []))
+  |> should.equal(NonEmptyList("\"to\" must be an integer", []))
 }
 
 pub fn conversions_validate_request_to_param_is_zero_test() {
   test_validate_request([#("amount", "1.0"), #("from", "1"), #("to", "0")])
   |> should.be_error
-  |> should.equal(
-    NonEmptyList(ValidationError("to", "must be greater than 0"), []),
-  )
+  |> should.equal(NonEmptyList("\"to\" must be greater than 0", []))
 }
 
 pub fn conversions_validate_request_amount_is_integer_test() {
