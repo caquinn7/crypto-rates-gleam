@@ -41,13 +41,8 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
         |> wisp.json_response(400)
       })
       |> result.map(fn(conversion_params) {
-        conversions.get(conversion_params, fn(amount, id, convert_id) {
-          coin_market_cap.get_conversion(
-            ctx.cmc_api_key,
-            amount,
-            id,
-            convert_id,
-          )
+        conversions.get(conversion_params, fn(conversion_params) {
+          coin_market_cap.get_conversion(ctx.cmc_api_key, conversion_params)
         })
       })
       |> result.unwrap_both

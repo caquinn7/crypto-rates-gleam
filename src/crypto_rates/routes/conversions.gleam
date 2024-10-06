@@ -1,5 +1,6 @@
 import crypto_rates/coin_market_cap.{
-  type CmcResponse, type Conversion, CmcResponse, QuoteItem,
+  type CmcResponse, type Conversion, type ConversionParameters, type Status,
+  CmcResponse, ConversionParameters, QuoteItem, Status,
 }
 import crypto_rates/validation_failed.{type ValidationFailed}
 import gleam/dict
@@ -14,8 +15,16 @@ import non_empty_list
 import valid
 import wisp.{type Request, type Response}
 
-pub type ConversionParameters {
-  ConversionParameters(amount: Float, from: Int, to: Int)
+pub type ConversionResponse {
+  ConversionResponse(from: Currency, to: Currency)
+}
+
+pub type Currency {
+  Currency(id: Int, amount: Float)
+}
+
+pub type ConversionError {
+  CurrencyNotFound(Int)
 }
 
 type ConversionRequest {
@@ -24,10 +33,6 @@ type ConversionRequest {
     from: Option(String),
     to: Option(String),
   )
-}
-
-type Currency {
-  Currency(id: Int, amount: Float)
 }
 
 pub fn validate_request(
@@ -114,19 +119,66 @@ pub fn validate_request(
 
 pub fn get(
   conversion_params: ConversionParameters,
-  do_get: fn(Float, Int, Int) -> Result(CmcResponse(Conversion), Nil),
+  request_conversion: fn(ConversionParameters) ->
+    Result(CmcResponse(Conversion), Nil),
 ) -> Response {
-  let ConversionParameters(amount, from, to) = conversion_params
-  let assert Ok(CmcResponse(_status, Some(conversion))) =
-    do_get(amount, from, to)
+  let assert Ok(CmcResponse(status, data)) =
+    request_conversion(conversion_params)
 
-  let from_currency = Currency(conversion.id, conversion.amount)
+  conversion_params
+  |> map_cmc_response(status, data)
+  |> result.map(fn(conversion_response) {
+    conversion_response
+    |> encode_conversion_response
+    |> json.to_string_builder
+    |> wisp.json_response(200)
+  })
+  |> result.map_error(fn(conversion_err) {
+    let CurrencyNotFound(invalid_id) = conversion_err
+    let err =
+      "currency with id \"" <> int.to_string(invalid_id) <> "\" does not exist"
 
-  let assert Ok(QuoteItem(price)) =
-    dict.get(conversion.quote, int.to_string(to))
+    err
+    |> validation_failed.from_error
+    |> validation_failed.encode
+    |> json.to_string_builder
+    |> wisp.json_response(400)
+  })
+  |> result.unwrap_both
+}
 
-  let to_currency = Currency(to, price)
+pub fn map_cmc_response(
+  conversion_params: ConversionParameters,
+  cmc_status: Status,
+  cmc_conversion: Option(Conversion),
+) -> Result(ConversionResponse, ConversionError) {
+  let ConversionParameters(_amount, from, to) = conversion_params
 
+  case cmc_status {
+    Status(400, Some("Invalid value for \"id\":" <> _)) ->
+      CurrencyNotFound(from) |> Error
+
+    Status(400, Some("Invalid value for \"convert_id\":" <> _)) ->
+      CurrencyNotFound(to) |> Error
+
+    Status(0, _) -> {
+      let assert Some(conversion) = cmc_conversion
+
+      let from_currency = Currency(conversion.id, conversion.amount)
+
+      let assert Ok(QuoteItem(price)) =
+        dict.get(conversion.quote, int.to_string(to))
+
+      let to_currency = Currency(to, price)
+
+      ConversionResponse(from_currency, to_currency) |> Ok
+    }
+
+    _ -> panic
+  }
+}
+
+fn encode_conversion_response(conversion_response: ConversionResponse) {
   let encode_currency = fn(currency: Currency) {
     json.object([
       #("id", json.int(currency.id)),
@@ -135,9 +187,7 @@ pub fn get(
   }
 
   json.object([
-    #("from", encode_currency(from_currency)),
-    #("to", encode_currency(to_currency)),
+    #("from", encode_currency(conversion_response.from)),
+    #("to", encode_currency(conversion_response.to)),
   ])
-  |> json.to_string_builder
-  |> wisp.json_response(200)
 }

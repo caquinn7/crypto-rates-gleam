@@ -1,6 +1,6 @@
 import crypto_rates/coin_market_cap.{
-  CmcListResponse, CmcResponse, Conversion, Status, get_conversion,
-  get_crypto_currencies, get_fiat_currencies,
+  CmcListResponse, CmcResponse, Conversion, ConversionParameters, Status,
+  get_conversion, get_crypto_currencies, get_fiat_currencies,
 }
 import dot_env
 import dot_env/env
@@ -95,7 +95,7 @@ pub fn coin_market_cap_get_conversion_happy_path_test() {
 
   let CmcResponse(Status(error_code, error_message), data) =
     api_key
-    |> get_conversion(from_amount, from_id, to_id)
+    |> get_conversion(ConversionParameters(from_amount, from_id, to_id))
     |> should.be_ok
 
   error_code |> should.equal(0)

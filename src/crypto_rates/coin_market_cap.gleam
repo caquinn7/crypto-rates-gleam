@@ -30,6 +30,10 @@ pub type FiatCurrency {
   FiatCurrency(id: Int, name: String, sign: String, symbol: String)
 }
 
+pub type ConversionParameters {
+  ConversionParameters(amount: Float, id: Int, convert_id: Int)
+}
+
 pub type Conversion {
   Conversion(
     id: Int,
@@ -75,11 +79,12 @@ pub fn get_fiat_currencies(
 
 pub fn get_conversion(
   api_key: String,
-  amount: Float,
-  id: Int,
-  convert_id: Int,
+  params: ConversionParameters,
 ) -> Result(CmcResponse(Conversion), Nil) {
+  let ConversionParameters(amount, id, convert_id) = params
+
   let assert Ok(req) = request.to(base_url <> "/v2/tools/price-conversion")
+
   req
   |> set_headers(api_key)
   |> request.set_query([

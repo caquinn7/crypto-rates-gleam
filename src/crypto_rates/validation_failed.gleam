@@ -4,6 +4,11 @@ import non_empty_list.{type NonEmptyList}
 pub type ValidationFailed =
   NonEmptyList(String)
 
+pub fn from_error(err: String) -> ValidationFailed {
+  err
+  |> non_empty_list.new([])
+}
+
 pub fn encode(validation_failed: ValidationFailed) -> Json {
   let errs =
     validation_failed
