@@ -53,7 +53,7 @@ const base_url = "https://pro-api.coinmarketcap.com"
 pub fn get_crypto_currencies(
   api_key: String,
   limit: Int,
-) -> Result(CmcListResponse(CryptoCurrency), Nil) {
+) -> Result(CmcListResponse(CryptoCurrency), Dynamic) {
   let assert Ok(req) = request.to(base_url <> "/v1/cryptocurrency/map")
   req
   |> set_headers(api_key)
@@ -69,7 +69,7 @@ pub fn get_crypto_currencies(
 pub fn get_fiat_currencies(
   api_key: String,
   limit: Int,
-) -> Result(CmcListResponse(FiatCurrency), Nil) {
+) -> Result(CmcListResponse(FiatCurrency), Dynamic) {
   let assert Ok(req) = request.to(base_url <> "/v1/fiat/map")
   req
   |> set_headers(api_key)
@@ -80,7 +80,7 @@ pub fn get_fiat_currencies(
 pub fn get_conversion(
   api_key: String,
   params: ConversionParameters,
-) -> Result(CmcResponse(Conversion), Nil) {
+) -> Result(CmcResponse(Conversion), Dynamic) {
   let ConversionParameters(amount, id, convert_id) = params
 
   let assert Ok(req) = request.to(base_url <> "/v2/tools/price-conversion")
@@ -106,12 +106,9 @@ fn send_request(
   decode: fn(Dynamic, Decoder(a)) -> Result(b, List(DecodeError)),
   decoder: Decoder(a),
 ) {
-  case httpc.send(req) {
-    Ok(res) ->
-      res.body
-      |> decode_json_response(decode, decoder)
-    Error(err) -> panic as { "request failed: " <> string.inspect(err) }
-  }
+  use res <- result.try(httpc.send(req))
+  res.body
+  |> decode_json_response(decode, decoder)
 }
 
 fn decode_json_response(

@@ -1,13 +1,14 @@
 import crypto_rates/coin_market_cap.{
   type CmcListResponse, type CryptoCurrency, type FiatCurrency, CmcListResponse,
 }
+import gleam/dynamic.{type Dynamic}
 import gleam/json
 import gleam/list
 import gleam/option.{Some}
 import wisp.{type Response}
 
 pub fn get_crypto(
-  do_get: fn(Int) -> Result(CmcListResponse(CryptoCurrency), Nil),
+  do_get: fn(Int) -> Result(CmcListResponse(CryptoCurrency), Dynamic),
 ) -> Response {
   let assert Ok(CmcListResponse(_status, Some(crypto))) = do_get(100)
 
@@ -26,7 +27,7 @@ pub fn get_crypto(
 }
 
 pub fn get_fiat(
-  do_get: fn(Int) -> Result(CmcListResponse(FiatCurrency), Nil),
+  do_get: fn(Int) -> Result(CmcListResponse(FiatCurrency), Dynamic),
 ) -> Response {
   let assert Ok(CmcListResponse(_status, Some(fiat))) = do_get(100)
 

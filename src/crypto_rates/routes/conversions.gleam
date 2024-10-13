@@ -4,6 +4,7 @@ import crypto_rates/coin_market_cap.{
 }
 import crypto_rates/validation_failed.{type ValidationFailed}
 import gleam/dict
+import gleam/dynamic.{type Dynamic}
 import gleam/float
 import gleam/http/request
 import gleam/int
@@ -120,7 +121,7 @@ pub fn validate_request(
 pub fn get(
   conversion_params: ConversionParameters,
   request_conversion: fn(ConversionParameters) ->
-    Result(CmcResponse(Conversion), Nil),
+    Result(CmcResponse(Conversion), Dynamic),
 ) -> Response {
   let assert Ok(CmcResponse(status, data)) =
     request_conversion(conversion_params)

@@ -22,7 +22,7 @@ pub fn coin_market_cap_get_crypto_currencies_happy_path_test() {
 
   let CmcListResponse(Status(error_code, error_message), data) =
     api_key
-    |> get_crypto_currencies(limit)
+    |> coin_market_cap.get_crypto_currencies(limit)
     |> should.be_ok
 
   // there should be no error code or msg
