@@ -8,9 +8,9 @@ import gleam/option.{Some}
 import wisp.{type Response}
 
 pub fn get_crypto(
-  do_get: fn(Int) -> Result(CmcListResponse(CryptoCurrency), Dynamic),
+  reguest_crypto: fn(Int) -> Result(CmcListResponse(CryptoCurrency), Dynamic),
 ) -> Response {
-  let assert Ok(CmcListResponse(_status, Some(crypto))) = do_get(100)
+  let assert Ok(CmcListResponse(_status, Some(crypto))) = reguest_crypto(100)
 
   crypto
   |> list.unique
@@ -27,9 +27,9 @@ pub fn get_crypto(
 }
 
 pub fn get_fiat(
-  do_get: fn(Int) -> Result(CmcListResponse(FiatCurrency), Dynamic),
+  reguest_fiat: fn(Int) -> Result(CmcListResponse(FiatCurrency), Dynamic),
 ) -> Response {
-  let assert Ok(CmcListResponse(_status, Some(fiat))) = do_get(100)
+  let assert Ok(CmcListResponse(_status, Some(fiat))) = reguest_fiat(100)
 
   fiat
   |> list.unique

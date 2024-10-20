@@ -1,0 +1,7 @@
+---
+version: 1.2.3
+title: conversions_get_invalid_currency_id_test
+file: ./test/conversions_test.gleam
+test_name: conversions_get_invalid_currency_id_test
+---
+{"title":"Bad Request","status":400,"detail":"One or more request parameters are invalid.","instance":"https://localhost/conversions?amount=1.0&from=1&to=2","errors":["currency with id \"1\" does not exist"]}

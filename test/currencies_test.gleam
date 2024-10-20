@@ -12,7 +12,7 @@ pub fn main() {
 }
 
 pub fn currencies_get_crypto_test() {
-  let do_get = fn(_limit) {
+  let request_crypto = fn(_limit) {
     [
       CryptoCurrency(1, Some(1), "Bitcoin", "BTC"),
       CryptoCurrency(2, None, "XCoin", "XXX"),
@@ -23,7 +23,7 @@ pub fn currencies_get_crypto_test() {
   }
 
   let response =
-    do_get
+    request_crypto
     |> get_crypto
 
   response.status
@@ -38,7 +38,7 @@ pub fn currencies_get_crypto_test() {
 }
 
 pub fn currencies_get_fiat_test() {
-  let do_get = fn(_limit) {
+  let request_fiat = fn(_limit) {
     [FiatCurrency(1, "United States Dollar", "$", "USD")]
     |> Some
     |> CmcListResponse(Status(0, None), _)
@@ -46,7 +46,7 @@ pub fn currencies_get_fiat_test() {
   }
 
   let response =
-    do_get
+    request_fiat
     |> get_fiat
 
   response.status

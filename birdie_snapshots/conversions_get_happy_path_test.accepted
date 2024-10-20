@@ -1,0 +1,7 @@
+---
+version: 1.2.3
+title: conversions_get_happy_path_test
+file: ./test/conversions_test.gleam
+test_name: conversions_get_happy_path_test
+---
+{"from":{"id":1,"amount":1.0},"to":{"id":2,"amount":60000.01}}
