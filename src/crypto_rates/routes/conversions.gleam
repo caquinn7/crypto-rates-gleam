@@ -29,14 +29,6 @@ pub type ConversionError {
   CurrencyNotFound(Int)
 }
 
-type ConversionRequest {
-  ConversionRequest(
-    amount: Option(String),
-    from: Option(String),
-    to: Option(String),
-  )
-}
-
 pub fn get(
   req: Request,
   request_conversion: fn(ConversionParameters) ->
@@ -150,27 +142,13 @@ pub fn validate_request(
     ))
   }
 
-  let conversion_req = {
-    let get_params = fn(param_names) {
-      let assert Ok(query_params) = request.get_query(req)
-
-      param_names
-      |> list.map(fn(name) {
-        query_params
-        |> list.key_find(name)
-        |> option.from_result
-      })
-    }
-
-    let assert [amount, from, to] = get_params(["amount", "from", "to"])
-
-    ConversionRequest(amount, from, to)
-  }
+  let assert [amount, from, to] =
+    get_query_params(req, ["amount", "from", "to"])
 
   valid.build3(ConversionParameters)
-  |> valid.check(conversion_req.amount, amount_validator)
-  |> valid.check(conversion_req.from, id_validator("from"))
-  |> valid.check(conversion_req.to, id_validator("to"))
+  |> valid.check(amount, amount_validator)
+  |> valid.check(from, id_validator("from"))
+  |> valid.check(to, id_validator("to"))
 }
 
 pub fn map_cmc_response(
@@ -202,6 +180,20 @@ pub fn map_cmc_response(
 
     _ -> panic
   }
+}
+
+fn get_query_params(
+  req: Request,
+  param_names: List(String),
+) -> List(Option(String)) {
+  let assert Ok(query_params) = request.get_query(req)
+
+  param_names
+  |> list.map(fn(name) {
+    query_params
+    |> list.key_find(name)
+    |> option.from_result
+  })
 }
 
 fn encode_conversion_response(conversion_response: ConversionResponse) {
