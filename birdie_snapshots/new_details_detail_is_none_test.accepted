@@ -4,4 +4,4 @@ title: new_details_detail_is_none_test
 file: ./test/problem_details_test.gleam
 test_name: new_details_detail_is_none_test
 ---
-{"title":"Internal Server Error","status":500,"detail":null,"instance":"/endpoint"}
+{"title":"Internal Server Error","status":500,"detail":null,"instance":"https://localhost/endpoint"}

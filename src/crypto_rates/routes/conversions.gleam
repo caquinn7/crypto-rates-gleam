@@ -13,7 +13,6 @@ import gleam/json
 import gleam/list
 import gleam/option.{type Option, Some}
 import gleam/result
-import gleam/uri
 import non_empty_list.{type NonEmptyList}
 import valid
 import wisp.{type Request, type Response}
@@ -42,7 +41,7 @@ pub fn get(
     status
     |> problem_details.new_validation_details(
       "One or more request parameters are invalid.",
-      req |> request.to_uri |> uri.to_string,
+      req,
       errs,
     )
     |> response_utils.problem_details_response
@@ -69,7 +68,7 @@ pub fn get(
       status
       |> problem_details.new_validation_details(
         "One or more request parameters are invalid.",
-        req |> request.to_uri |> uri.to_string,
+        req,
         non_empty_list.new(err, []),
       )
       |> response_utils.problem_details_response

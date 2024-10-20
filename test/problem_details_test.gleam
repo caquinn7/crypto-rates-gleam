@@ -6,6 +6,7 @@ import gleam/string_builder
 import gleeunit
 import gleeunit/should
 import non_empty_list
+import wisp/testing
 
 pub fn main() {
   gleeunit.main()
@@ -62,7 +63,10 @@ pub fn new_details_test() {
   500
   |> problem_details.new_problem_status
   |> should.be_ok
-  |> problem_details.new_details(Some("Error occurred"), "/endpoint")
+  |> problem_details.new_details(
+    Some("Error occurred"),
+    testing.get("/endpoint", []),
+  )
   |> problem_details.encode
   |> json.to_string_builder
   |> string_builder.to_string
@@ -73,7 +77,7 @@ pub fn new_details_detail_is_none_test() {
   500
   |> problem_details.new_problem_status
   |> should.be_ok
-  |> problem_details.new_details(None, "/endpoint")
+  |> problem_details.new_details(None, testing.get("/endpoint", []))
   |> problem_details.encode
   |> json.to_string_builder
   |> string_builder.to_string
@@ -86,7 +90,7 @@ pub fn new_validation_details_test() {
   |> should.be_ok
   |> problem_details.new_validation_details(
     "Invalid parameters",
-    "/endpoint",
+    testing.get("/endpoint", []),
     non_empty_list.new("error 1", ["error 2"]),
   )
   |> problem_details.encode

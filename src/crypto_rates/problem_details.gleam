@@ -1,7 +1,10 @@
+import gleam/http/request
 import gleam/json.{type Json}
 import gleam/list
 import gleam/option.{type Option, Some}
+import gleam/uri
 import non_empty_list.{type NonEmptyList}
+import wisp.{type Request}
 
 pub opaque type ProblemDetails {
   Details(title: String, status: Int, detail: Option(String), instance: String)
@@ -46,19 +49,21 @@ pub fn unwrap_problem_status(problem_status: ProblemStatus) -> #(Int, String) {
 pub fn new_details(
   status: ProblemStatus,
   detail: Option(String),
-  instance: String,
+  req: Request,
 ) -> ProblemDetails {
   let #(status_code, status_descr) = unwrap_problem_status(status)
+  let instance = req |> request.to_uri |> uri.to_string
   Details(status_descr, status_code, detail, instance)
 }
 
 pub fn new_validation_details(
   status: ProblemStatus,
   detail: String,
-  instance: String,
+  req: Request,
   errors: NonEmptyList(String),
 ) -> ProblemDetails {
   let #(status_code, status_descr) = unwrap_problem_status(status)
+  let instance = req |> request.to_uri |> uri.to_string
   ValidationDetails(status_descr, status_code, detail, instance, errors)
 }
 

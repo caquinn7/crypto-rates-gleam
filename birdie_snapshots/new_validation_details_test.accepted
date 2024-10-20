@@ -4,4 +4,4 @@ title: new_validation_details_test
 file: ./test/problem_details_test.gleam
 test_name: new_validation_details_test
 ---
-{"title":"Bad Request","status":400,"detail":"Invalid parameters","instance":"/endpoint","errors":["error 1","error 2"]}
+{"title":"Bad Request","status":400,"detail":"Invalid parameters","instance":"https://localhost/endpoint","errors":["error 1","error 2"]}
