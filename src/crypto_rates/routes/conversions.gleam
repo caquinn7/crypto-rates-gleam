@@ -3,6 +3,7 @@ import crypto_rates/coin_market_cap.{
   CmcResponse, ConversionParameters, QuoteItem, Status,
 }
 import crypto_rates/problem_details
+import crypto_rates/response_utils
 import gleam/dict
 import gleam/dynamic.{type Dynamic}
 import gleam/float
@@ -44,9 +45,7 @@ pub fn get(
       req |> request.to_uri |> uri.to_string,
       errs,
     )
-    |> problem_details.encode
-    |> json.to_string_builder
-    |> wisp.json_response(400)
+    |> response_utils.problem_details_response
   })
   |> result.map(fn(conversion_params) {
     let assert Ok(CmcResponse(status, data)) =
@@ -57,8 +56,7 @@ pub fn get(
     |> result.map(fn(conversion_response) {
       conversion_response
       |> encode_conversion_response
-      |> json.to_string_builder
-      |> wisp.json_response(200)
+      |> response_utils.json_response(200)
     })
     |> result.map_error(fn(conversion_err) {
       let CurrencyNotFound(invalid_id) = conversion_err
@@ -74,9 +72,7 @@ pub fn get(
         req |> request.to_uri |> uri.to_string,
         non_empty_list.new(err, []),
       )
-      |> problem_details.encode
-      |> json.to_string_builder
-      |> wisp.json_response(400)
+      |> response_utils.problem_details_response
     })
     |> result.unwrap_both
   })

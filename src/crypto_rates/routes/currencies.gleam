@@ -1,6 +1,7 @@
 import crypto_rates/coin_market_cap.{
   type CmcListResponse, type CryptoCurrency, type FiatCurrency, CmcListResponse,
 }
+import crypto_rates/response_utils
 import gleam/dynamic.{type Dynamic}
 import gleam/json
 import gleam/list
@@ -22,8 +23,7 @@ pub fn get_crypto(
       #("symbol", json.string(currency.symbol)),
     ])
   })
-  |> json.to_string_builder
-  |> wisp.json_response(200)
+  |> response_utils.json_response(200)
 }
 
 pub fn get_fiat(
@@ -41,6 +41,5 @@ pub fn get_fiat(
       #("symbol", json.string(currency.symbol)),
     ])
   })
-  |> json.to_string_builder
-  |> wisp.json_response(200)
+  |> response_utils.json_response(200)
 }

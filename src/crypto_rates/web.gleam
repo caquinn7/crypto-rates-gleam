@@ -1,8 +1,10 @@
 import crypto_rates/problem_details
+import crypto_rates/response_utils
 import gleam/bool
-import gleam/json
+import gleam/http/request
 import gleam/option.{None, Some}
 import gleam/result
+import gleam/uri
 import wisp.{type Request, type Response}
 
 pub type Context {
@@ -35,14 +37,11 @@ fn default_response(req: Request, handler: fn() -> Response) -> Response {
     }
 
     problem_status
-    |> problem_details.new_details(detail, req.path)
-    |> problem_details.encode
-    |> json.to_string_builder
-    |> wisp.json_response(res.status)
-    |> wisp.set_header(
-      "content-type",
-      "application/problem+json; charset=utf-8",
+    |> problem_details.new_details(
+      detail,
+      req |> request.to_uri |> uri.to_string,
     )
+    |> response_utils.problem_details_response
   })
   |> result.unwrap_both
 }
