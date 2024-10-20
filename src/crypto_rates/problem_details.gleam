@@ -62,6 +62,10 @@ pub fn new_validation_details(
   ValidationDetails(status_descr, status_code, detail, instance, errors)
 }
 
+pub fn get_status(problem_details: ProblemDetails) -> Int {
+  problem_details.status
+}
+
 pub fn encode(problem_details: ProblemDetails) -> Json {
   let encode_common_fields = fn(title, status, detail, instance) {
     [

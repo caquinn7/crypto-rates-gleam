@@ -11,6 +11,6 @@ pub fn json_response(json: Json, status: Int) -> Response {
 pub fn problem_details_response(problem_details: ProblemDetails) -> Response {
   problem_details
   |> problem_details.encode
-  |> json_response(problem_details.status)
+  |> json_response(problem_details.get_status(problem_details))
   |> wisp.set_header("content-type", "application/problem+json; charset=utf-8")
 }
