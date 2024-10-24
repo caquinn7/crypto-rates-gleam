@@ -1,0 +1,7 @@
+---
+version: 1.2.3
+title: currencies_get_crypto_test
+file: ./test/currencies_test.gleam
+test_name: currencies_get_crypto_test
+---
+[{"id":1,"rank":1,"name":"Bitcoin","symbol":"BTC"},{"id":2,"rank":null,"name":"XCoin","symbol":"XXX"}]

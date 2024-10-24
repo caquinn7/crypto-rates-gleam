@@ -13,7 +13,7 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
 
     ["currencies", "crypto"] -> {
       use <- wisp.require_method(req, http.Get)
-      currencies.get_crypto(coin_market_cap.get_crypto_currencies(
+      currencies.get_crypto(req, coin_market_cap.get_crypto_currencies(
         ctx.cmc_api_key,
         _,
       ))

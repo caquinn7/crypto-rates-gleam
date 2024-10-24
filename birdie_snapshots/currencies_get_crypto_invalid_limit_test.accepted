@@ -1,0 +1,7 @@
+---
+version: 1.2.3
+title: currencies_get_crypto_invalid_limit_test
+file: ./test/currencies_test.gleam
+test_name: currencies_get_crypto_invalid_limit_test
+---
+{"title":"Bad Request","status":400,"detail":"One or more request parameters are invalid.","instance":"https://localhost/currencies/crypto?limit=abc","errors":["\"limit\" must be an integer"]}

@@ -1,0 +1,7 @@
+---
+version: 1.2.3
+title: router_get_currencies_test
+file: ./test/router_test.gleam
+test_name: router_get_currencies_test
+---
+[{"id":1,"rank":1,"name":"Bitcoin","symbol":"BTC"}]
