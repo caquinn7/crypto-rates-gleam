@@ -13,6 +13,8 @@ pub fn main() {
   gleeunit.main()
 }
 
+// get_crypto
+
 pub fn currencies_get_crypto_test() {
   let request_crypto = fn(_limit) {
     [
@@ -78,17 +80,22 @@ pub fn currencies_get_crypto_invalid_limit_test() {
   |> birdie.snap("currencies_get_crypto_invalid_limit_test")
 }
 
+// get_fiat
+
 pub fn currencies_get_fiat_test() {
   let request_fiat = fn(_limit) {
-    [FiatCurrency(1, "United States Dollar", "$", "USD")]
+    [
+      FiatCurrency(1, "United States Dollar", "$", "USD"),
+      FiatCurrency(2, "Pound Sterling", "£", "GBP"),
+    ]
     |> Some
     |> CmcListResponse(Status(0, None), _)
     |> Ok
   }
 
   let response =
-    request_fiat
-    |> get_fiat
+    testing.get("/currencies/fiat", [])
+    |> get_fiat(request_fiat)
 
   response.status
   |> should.equal(200)
@@ -96,4 +103,46 @@ pub fn currencies_get_fiat_test() {
   response
   |> testing.string_body
   |> birdie.snap("currencies_get_fiat_test")
+}
+
+pub fn currencies_get_fiat_with_limit_test() {
+  let request_fiat = fn(limit) {
+    [
+      FiatCurrency(1, "United States Dollar", "$", "USD"),
+      FiatCurrency(2, "Pound Sterling", "£", "GBP"),
+    ]
+    |> list.take(limit)
+    |> Some
+    |> CmcListResponse(Status(0, None), _)
+    |> Ok
+  }
+
+  let response =
+    testing.get("/currencies/fiat?limit=1", [])
+    |> get_fiat(request_fiat)
+
+  response.status
+  |> should.equal(200)
+
+  response
+  |> testing.string_body
+  |> birdie.snap("currencies_get_fiat_with_limit_test")
+}
+
+pub fn currencies_get_fiat_with_invalid_limit_test() {
+  let request_fiat = fn(_) {
+    CmcListResponse(Status(0, None), Some([]))
+    |> Ok
+  }
+
+  let response =
+    testing.get("/currencies/fiat?limit=abc", [])
+    |> get_fiat(request_fiat)
+
+  response.status
+  |> should.equal(400)
+
+  response
+  |> testing.string_body
+  |> birdie.snap("currencies_get_fiat_with_invalid_limit_test")
 }
