@@ -58,11 +58,11 @@ pub fn new_details(
 
 pub fn new_validation_details(
   status: ProblemStatus,
-  detail: String,
   req: Request,
   errors: NonEmptyList(String),
 ) -> ProblemDetails {
   let #(status_code, status_descr) = unwrap_problem_status(status)
+  let detail = "One or more request parameters are invalid."
   let instance = req |> request.to_uri |> uri.to_string
   ValidationDetails(status_descr, status_code, detail, instance, errors)
 }
@@ -80,6 +80,7 @@ pub fn encode(problem_details: ProblemDetails) -> Json {
       #("instance", json.string(instance)),
     ]
   }
+
   case problem_details {
     Details(title, status, detail, instance) ->
       json.object(encode_common_fields(title, status, detail, instance))

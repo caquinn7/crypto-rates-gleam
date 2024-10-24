@@ -40,11 +40,7 @@ pub fn get(
   |> result.map_error(fn(errs) {
     let assert Ok(status) = problem_details.new_problem_status(400)
     status
-    |> problem_details.new_validation_details(
-      "One or more request parameters are invalid.",
-      req,
-      errs,
-    )
+    |> problem_details.new_validation_details(req, errs)
     |> response_utils.problem_details_response
   })
   |> result.map(fn(conversion_params) {
@@ -68,7 +64,6 @@ pub fn get(
       let assert Ok(status) = problem_details.new_problem_status(400)
       status
       |> problem_details.new_validation_details(
-        "One or more request parameters are invalid.",
         req,
         non_empty_list.new(err, []),
       )

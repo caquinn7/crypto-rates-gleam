@@ -89,7 +89,6 @@ pub fn new_validation_details_test() {
   |> problem_details.new_problem_status
   |> should.be_ok
   |> problem_details.new_validation_details(
-    "Invalid parameters",
     testing.get("/endpoint", []),
     non_empty_list.new("error 1", ["error 2"]),
   )
