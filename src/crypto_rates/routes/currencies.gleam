@@ -3,6 +3,7 @@ import crypto_rates/coin_market_cap.{
 }
 import crypto_rates/problem_details
 import crypto_rates/response_utils
+import crypto_rates/validation_utils.{error_msg}
 import gleam/dynamic.{type Dynamic}
 import gleam/http/request
 import gleam/json
@@ -83,10 +84,6 @@ pub fn get_fiat(
 }
 
 pub fn validate_request(req: Request) -> Result(Int, NonEmptyList(String)) {
-  let error_msg = fn(param_name, problem) {
-    "\"" <> param_name <> "\" " <> problem
-  }
-
   let limit_name = "limit"
 
   let validator =

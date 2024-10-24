@@ -4,6 +4,7 @@ import crypto_rates/coin_market_cap.{
 }
 import crypto_rates/problem_details
 import crypto_rates/response_utils
+import crypto_rates/validation_utils.{error_msg}
 import gleam/dict
 import gleam/dynamic.{type Dynamic}
 import gleam/float
@@ -81,49 +82,24 @@ pub fn get(
 pub fn validate_request(
   req: Request,
 ) -> Result(ConversionParameters, NonEmptyList(String)) {
-  let error_msg = fn(param_name, problem) {
-    "\"" <> param_name <> "\" " <> problem
-  }
-
   let amount_validator = {
-    let string_is_number = fn(str, param_name) {
-      str
-      |> float.parse
-      |> result.try_recover(fn(_) {
-        int.parse(str)
-        |> result.map(int.to_float)
-      })
-      |> result.map_error(fn(_) {
-        non_empty_list.new(
-          error_msg(
-            param_name,
-            "must be either an integer or a floating-point number",
-          ),
-          [],
-        )
-      })
-    }
-
     let param_name = "amount"
+    let threshold = 0.00000001
 
     valid.is_some(error_msg(param_name, "is required"))
-    |> valid.then(string_is_number(_, param_name))
-    |> valid.then(fn(x) {
-      let min = 0.00000001
-      case x >. min {
-        True -> Ok(x)
-        _ ->
-          Error(
-            non_empty_list.new(
-              error_msg(
-                param_name,
-                "must be greater than " <> float.to_string(min),
-              ),
-              [],
-            ),
-          )
-      }
-    })
+    |> valid.then(
+      validation_utils.string_is_number(error_msg(
+        param_name,
+        "must be either an integer or a floating-point number",
+      )),
+    )
+    |> valid.then(validation_utils.float_is_greater_than(
+      threshold,
+      error_msg(
+        param_name,
+        "must be greater than " <> float.to_string(threshold),
+      ),
+    ))
   }
 
   let id_validator = fn(param_name) {
