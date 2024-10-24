@@ -1,7 +1,7 @@
 ---
 version: 1.2.3
-title: currencies_get_fiat_with_invalid_limit_test
+title: currencies_get_fiat_limit_not_an_integer_test
 file: ./test/currencies_test.gleam
-test_name: currencies_get_fiat_with_invalid_limit_test
+test_name: currencies_get_fiat_limit_not_an_integer_test
 ---
 {"title":"Bad Request","status":400,"detail":"One or more request parameters are invalid.","instance":"https://localhost/currencies/fiat?limit=abc","errors":["\"limit\" must be an integer"]}

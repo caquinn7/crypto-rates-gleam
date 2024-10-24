@@ -1,7 +1,0 @@
----
-version: 1.2.3
-title: router_get_currencies_expecting_500_test
-file: ./test/router_test.gleam
-test_name: router_get_currencies_expecting_500_test
----
-{"title":"Internal Server Error","status":500,"detail":"An error occurred while processing your request.","instance":"https://localhost/currencies/crypto"}

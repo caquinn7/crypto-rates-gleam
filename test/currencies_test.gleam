@@ -62,7 +62,7 @@ pub fn currencies_get_crypto_with_limit_test() {
   |> birdie.snap("currencies_get_crypto_with_limit_test")
 }
 
-pub fn currencies_get_crypto_invalid_limit_test() {
+pub fn currencies_get_crypto_limit_not_an_integer_test() {
   let request_crypto = fn(_) {
     CmcListResponse(Status(0, None), Some([]))
     |> Ok
@@ -77,7 +77,25 @@ pub fn currencies_get_crypto_invalid_limit_test() {
 
   response
   |> testing.string_body
-  |> birdie.snap("currencies_get_crypto_invalid_limit_test")
+  |> birdie.snap("currencies_get_crypto_limit_not_an_integer_test")
+}
+
+pub fn currencies_get_crypto_limit_less_than_one_test() {
+  let request_crypto = fn(_) {
+    CmcListResponse(Status(0, None), Some([]))
+    |> Ok
+  }
+
+  let response =
+    testing.get("/currencies/crypto?limit=0", [])
+    |> get_crypto(request_crypto)
+
+  response.status
+  |> should.equal(400)
+
+  response
+  |> testing.string_body
+  |> birdie.snap("currencies_get_crypto_limit_less_than_one_test")
 }
 
 // get_fiat
@@ -129,7 +147,7 @@ pub fn currencies_get_fiat_with_limit_test() {
   |> birdie.snap("currencies_get_fiat_with_limit_test")
 }
 
-pub fn currencies_get_fiat_with_invalid_limit_test() {
+pub fn currencies_get_fiat_limit_not_an_integer_test() {
   let request_fiat = fn(_) {
     CmcListResponse(Status(0, None), Some([]))
     |> Ok
@@ -144,5 +162,23 @@ pub fn currencies_get_fiat_with_invalid_limit_test() {
 
   response
   |> testing.string_body
-  |> birdie.snap("currencies_get_fiat_with_invalid_limit_test")
+  |> birdie.snap("currencies_get_fiat_limit_not_an_integer_test")
+}
+
+pub fn currencies_get_fiat_limit_less_than_one_test() {
+  let request_fiat = fn(_) {
+    CmcListResponse(Status(0, None), Some([]))
+    |> Ok
+  }
+
+  let response =
+    testing.get("/currencies/fiat?limit=0", [])
+    |> get_fiat(request_fiat)
+
+  response.status
+  |> should.equal(400)
+
+  response
+  |> testing.string_body
+  |> birdie.snap("currencies_get_fiat_limit_less_than_one_test")
 }
