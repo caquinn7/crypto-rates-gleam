@@ -1,7 +1,6 @@
 import crypto_rates/coin_market_cap.{
   type CmcListResponse, type CryptoCurrency, type FiatCurrency, CmcListResponse,
 }
-import crypto_rates/problem_details
 import crypto_rates/response_utils
 import crypto_rates/validation_utils.{error_msg}
 import gleam/dynamic.{type Dynamic}
@@ -20,12 +19,7 @@ pub fn get_crypto(
 ) -> Response {
   req
   |> validate_request
-  |> result.map_error(fn(errs) {
-    let assert Ok(status) = problem_details.new_problem_status(400)
-    status
-    |> problem_details.new_validation_details(req, errs)
-    |> response_utils.problem_details_response
-  })
+  |> result.map_error(response_utils.bad_request_response(req, _))
   |> result.map(fn(limit) {
     let assert Ok(CmcListResponse(_status, Some(crypto))) =
       reguest_crypto(limit)
@@ -51,12 +45,7 @@ pub fn get_fiat(
 ) -> Response {
   req
   |> validate_request
-  |> result.map_error(fn(errs) {
-    let assert Ok(status) = problem_details.new_problem_status(400)
-    status
-    |> problem_details.new_validation_details(req, errs)
-    |> response_utils.problem_details_response
-  })
+  |> result.map_error(response_utils.bad_request_response(req, _))
   |> result.map(fn(limit) {
     let assert Ok(CmcListResponse(_status, Some(fiat))) = reguest_fiat(limit)
 

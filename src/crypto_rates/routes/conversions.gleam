@@ -2,7 +2,6 @@ import crypto_rates/coin_market_cap.{
   type CmcResponse, type Conversion, type ConversionParameters, type Status,
   CmcResponse, ConversionParameters, QuoteItem, Status,
 }
-import crypto_rates/problem_details
 import crypto_rates/response_utils
 import crypto_rates/validation_utils.{error_msg}
 import gleam/dict
@@ -37,12 +36,7 @@ pub fn get(
 ) -> Response {
   req
   |> validate_request
-  |> result.map_error(fn(errs) {
-    let assert Ok(status) = problem_details.new_problem_status(400)
-    status
-    |> problem_details.new_validation_details(req, errs)
-    |> response_utils.problem_details_response
-  })
+  |> result.map_error(response_utils.bad_request_response(req, _))
   |> result.map(fn(conversion_params) {
     let assert Ok(CmcResponse(status, data)) =
       request_conversion(conversion_params)
@@ -56,18 +50,14 @@ pub fn get(
     })
     |> result.map_error(fn(conversion_err) {
       let CurrencyNotFound(invalid_id) = conversion_err
+
       let err =
         "currency with id \""
         <> int.to_string(invalid_id)
         <> "\" does not exist"
 
-      let assert Ok(status) = problem_details.new_problem_status(400)
-      status
-      |> problem_details.new_validation_details(
-        req,
-        non_empty_list.new(err, []),
-      )
-      |> response_utils.problem_details_response
+      non_empty_list.new(err, [])
+      |> response_utils.bad_request_response(req, _)
     })
     |> result.unwrap_both
   })
