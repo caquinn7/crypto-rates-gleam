@@ -191,7 +191,7 @@ fn conversion_decoder() -> Decoder(Conversion) {
   |> decode.field("quote", decode.dict(decode.string, quote_decoder))
 }
 
-fn status_decoder() {
+fn status_decoder() -> Decoder(Status) {
   decode.into({
     use error_code <- decode.parameter
     use error_message <- decode.parameter
