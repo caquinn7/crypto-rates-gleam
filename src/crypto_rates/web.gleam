@@ -15,13 +15,13 @@ pub fn middleware(
 ) -> Response {
   let req = wisp.method_override(req)
   use <- wisp.log_request(req)
-  use <- default_response(req)
+  use <- set_default_response(req)
   use <- wisp.rescue_crashes
   use req <- wisp.handle_head(req)
   handle_request(req)
 }
 
-fn default_response(req: Request, handler: fn() -> Response) -> Response {
+pub fn set_default_response(req: Request, handler: fn() -> Response) -> Response {
   let res = handler()
   use <- bool.guard(when: res.body != wisp.Empty, return: res)
 

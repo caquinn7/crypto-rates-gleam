@@ -1,0 +1,7 @@
+---
+version: 1.2.3
+title: web_set_default_response_status_is_not_500_test
+file: ./test/crypto_rates/web_test.gleam
+test_name: web_set_default_response_status_is_not_500_test
+---
+{"title":"Not Found","status":404,"detail":null,"instance":"https://localhost/endpoint"}
