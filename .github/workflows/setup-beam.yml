@@ -1,0 +1,20 @@
+name: Setup BEAM Environment
+
+on:
+  workflow_call: # Makes this workflow reusable
+
+jobs:
+  setup-beam:
+    name: Setup BEAM Environment
+    runs-on: ubuntu-latest
+    outputs:
+      otp-version: "27.1.2"
+      gleam-version: "1.6.1"
+    steps:
+      - name: Setup BEAM
+        uses: erlef/setup-beam@v1
+        with:
+          otp-version: "27.1.2"
+          gleam-version: "1.6.1"
+          rebar3-version: "3"
+        # elixir-version: "1.15.4"

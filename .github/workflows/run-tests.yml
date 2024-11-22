@@ -12,12 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: erlef/setup-beam@v1
-        with:
-          otp-version: "27.1.2"
-          gleam-version: "1.6.1"
-          rebar3-version: "3"
-          # elixir-version: "1.15.4"
+      - uses: ./.github/workflows/setup-beam.yml
       - name: Run Shared Tests
         run: |
           cd shared
@@ -31,12 +26,7 @@ jobs:
     needs: shared-tests
     steps:
       - uses: actions/checkout@v4
-      - uses: erlef/setup-beam@v1
-        with:
-          otp-version: "27.1.2"
-          gleam-version: "1.6.1"
-          rebar3-version: "3"
-          # elixir-version: "1.15.4"
+      - uses: ./.github/workflows/setup-beam.yml
       - name: Run Client Tests
         run: |
           cd client
@@ -50,19 +40,12 @@ jobs:
     needs: client-tests
     steps:
       - uses: actions/checkout@v4
-      - uses: erlef/setup-beam@v1
-        with:
-          otp-version: "27.1.2"
-          gleam-version: "1.6.1"
-          rebar3-version: "3"
-          # elixir-version: "1.15.4"
-      
+      - uses: ./.github/workflows/setup-beam.yml
       - name: Set environment variables from secrets
         run: |
           cd server
           echo "COIN_MARKET_CAP_API_KEY=${{ secrets.COIN_MARKET_CAP_API_KEY }}" >> .env
         shell: bash
-
       - name: Run Server Tests
         run: |
           cd server
