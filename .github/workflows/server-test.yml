@@ -1,9 +1,8 @@
-name: test
+name: Server Tests
 
 on:
   push:
     branches:
-      - master
       - main
   pull_request:
 
@@ -18,6 +17,17 @@ jobs:
           gleam-version: "1.6.1"
           rebar3-version: "3"
           # elixir-version: "1.15.4"
+
+      - name: Set environment variables from secrets
+        run: |
+          echo "COIN_MARKET_CAP_API_KEY=${{ secrets.COIN_MARKET_CAP_API_KEY }}" >> .env
+        shell: bash
+
       - run: gleam deps download
+        working-directory: client
+
       - run: gleam test
+        working-directory: client
+
       - run: gleam format --check src test
+        working-directory: client
