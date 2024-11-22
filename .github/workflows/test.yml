@@ -56,6 +56,12 @@ jobs:
           gleam-version: "1.6.1"
           rebar3-version: "3"
           # elixir-version: "1.15.4"
+      
+      - name: Set environment variables from secrets
+        run: |
+          echo "COIN_MARKET_CAP_API_KEY=${{ secrets.COIN_MARKET_CAP_API_KEY }}" >> .env
+        shell: bash
+
       - name: Run Server Tests
         run: |
           cd server
