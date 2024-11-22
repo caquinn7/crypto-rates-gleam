@@ -1,0 +1,7 @@
+---
+version: 1.2.4
+title: fiat_currency_encoder_test
+file: ./test/shared/coin_market_cap_types_test.gleam
+test_name: fiat_currency_encoder_test
+---
+{"id":2,"name":"United States Dollar","sign":"$","symbol":"USD"}

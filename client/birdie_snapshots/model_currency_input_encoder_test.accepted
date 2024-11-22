@@ -1,0 +1,7 @@
+---
+version: 1.2.3
+title: model_currency_input_encoder_test
+file: ./test/client/model_test.gleam
+test_name: currency_input_encoder_test
+---
+{"id":1,"amount":1.5}

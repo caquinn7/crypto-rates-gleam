@@ -1,0 +1,7 @@
+---
+version: 1.2.3
+title: currency_input_encoder_nulls_test
+file: ./test/client/model_test.gleam
+test_name: currency_input_encoder_nulls_test
+---
+{"id":null,"amount":null}

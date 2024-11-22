@@ -1,0 +1,7 @@
+---
+version: 1.2.3
+title: model_encoder_test
+file: ./test/client/model_test.gleam
+test_name: model_encoder_test
+---
+{"crypto":[{"id":1,"rank":2,"name":"CQ Token","symbol":"CQT"}],"fiat":[{"id":2,"name":"United States Dollar","sign":"$","symbol":"USD"}],"currency_input1":{"id":1,"amount":1.5},"currency_input2":{"id":2,"amount":2.5}}

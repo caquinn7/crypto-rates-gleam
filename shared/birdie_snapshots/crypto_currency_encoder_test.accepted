@@ -1,0 +1,7 @@
+---
+version: 1.2.4
+title: crypto_currency_encoder_test
+file: ./test/shared/coin_market_cap_types_test.gleam
+test_name: crypto_currency_encoder_test
+---
+{"id":1,"rank":2,"name":"CQ Token","symbol":"CQT"}
