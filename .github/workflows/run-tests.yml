@@ -12,7 +12,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Setup BEAM
-        uses: ./.github/workflows/setup-beam.yml
+        uses: erlef/setup-beam@v1
+        with:
+          otp-version: "27.1.2"
+          gleam-version: "1.6.1"
+          rebar3-version: "3"
+          # elixir-version: "1.15.4"
 
   shared-tests:
     name: Shared Tests
