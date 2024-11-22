@@ -6,25 +6,23 @@ on:
       - main
   pull_request:
 
-jobs:
-  setup-beam:
-    name: Setup BEAM Environment
-    runs-on: ubuntu-latest
-    steps:
-      - name: Setup BEAM
-        uses: erlef/setup-beam@v1
-        with:
-          otp-version: "27.1.2"
-          gleam-version: "1.6.1"
-          rebar3-version: "3"
-          # elixir-version: "1.15.4"
+env:  # Define global variables
+  OTP_VERSION: "27.1.2"
+  GLEAM_VERSION: "1.6.1"
+  REBAR3_VERSION: "3"
 
+jobs:
   shared-tests:
     name: Shared Tests
     runs-on: ubuntu-latest
-    needs: setup-beam
     steps:
       - uses: actions/checkout@v4
+      - name: Setup BEAM
+        uses: erlef/setup-beam@v1
+        with:
+          otp-version: ${{ env.OTP_VERSION }}
+          gleam-version: ${{ env.GLEAM_VERSION }}
+          rebar3-version: ${{ env.REBAR3_VERSION }}
       - name: Run Shared Tests
         run: |
           cd shared
@@ -38,6 +36,12 @@ jobs:
     needs: shared-tests
     steps:
       - uses: actions/checkout@v4
+      - name: Setup BEAM
+        uses: erlef/setup-beam@v1
+        with:
+          otp-version: ${{ env.OTP_VERSION }}
+          gleam-version: ${{ env.GLEAM_VERSION }}
+          rebar3-version: ${{ env.REBAR3_VERSION }}
       - name: Run Client Tests
         run: |
           cd client
@@ -51,6 +55,12 @@ jobs:
     needs: client-tests
     steps:
       - uses: actions/checkout@v4
+      - name: Setup BEAM
+        uses: erlef/setup-beam@v1
+        with:
+          otp-version: ${{ env.OTP_VERSION }}
+          gleam-version: ${{ env.GLEAM_VERSION }}
+          rebar3-version: ${{ env.REBAR3_VERSION }}
       - name: Set environment variables from secrets
         run: |
           cd server
