@@ -1,3 +1,4 @@
+import client/api
 import client/model.{type Model, CurrencyInput, Model}
 import decode/zero
 import gleam/json
@@ -31,12 +32,15 @@ pub fn main() {
   Nil
 }
 
-pub fn init(model) -> #(Model, Effect(Msg)) {
-  case model {
-    Some(m) -> #(m, effect.none())
+pub fn init(maybe_model) -> #(Model, Effect(Msg)) {
+  case maybe_model {
+    Some(model) -> #(model, effect.none())
     None -> #(
       Model([], [], CurrencyInput(None, None), CurrencyInput(None, None)),
-      effect.batch([get_crypto(), get_fiat()]),
+      effect.batch([
+        api.get_crypto(ApiReturnedCrypto),
+        api.get_fiat(ApiReturnedFiat),
+      ]),
     )
   }
 }
@@ -74,22 +78,3 @@ fn ssr_model() -> Result(Model, Nil) {
   )
   Ok(model)
 }
-
-fn get_crypto() -> Effect(Msg) {
-  let decoder = zero.run(_, zero.list(
-    coin_market_cap_types.crypto_currency_decoder(),
-  ))
-  let expect = lustre_http.expect_json(decoder, ApiReturnedCrypto)
-  lustre_http.get(get_app_url() <> "/api/currencies/crypto", expect)
-}
-
-fn get_fiat() -> Effect(Msg) {
-  let decoder = zero.run(_, zero.list(
-    coin_market_cap_types.fiat_currency_decoder(),
-  ))
-  let expect = lustre_http.expect_json(decoder, ApiReturnedFiat)
-  lustre_http.get(get_app_url() <> "/api/currencies/fiat", expect)
-}
-
-@external(javascript, "./ffi.mjs", "get_app_url")
-fn get_app_url() -> String
