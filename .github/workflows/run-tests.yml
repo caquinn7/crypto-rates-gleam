@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: ./.github/workflows/setup-beam.yml
+      - uses: .setup-beam.yml
       - name: Run Shared Tests
         run: |
           cd shared
@@ -26,7 +26,7 @@ jobs:
     needs: shared-tests
     steps:
       - uses: actions/checkout@v4
-      - uses: ./.github/workflows/setup-beam.yml
+      - uses: .setup-beam.yml
       - name: Run Client Tests
         run: |
           cd client
@@ -40,7 +40,7 @@ jobs:
     needs: client-tests
     steps:
       - uses: actions/checkout@v4
-      - uses: ./.github/workflows/setup-beam.yml
+      - uses: .setup-beam.yml
       - name: Set environment variables from secrets
         run: |
           cd server
