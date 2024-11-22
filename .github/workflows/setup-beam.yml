@@ -7,9 +7,6 @@ jobs:
   setup-beam:
     name: Setup BEAM Environment
     runs-on: ubuntu-latest
-    outputs:
-      otp-version: "27.1.2"
-      gleam-version: "1.6.1"
     steps:
       - name: Setup BEAM
         uses: erlef/setup-beam@v1
