@@ -1,4 +1,4 @@
-import client/model.{type Model, CurrencyInput, Model}
+import client/model.{type Model, CurrencyInput, Loaded, Model}
 import gleam/http
 import gleam/option.{None, Some}
 import gleam/result
@@ -40,8 +40,8 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
 
       let model =
         Model(
-          crypto,
-          fiat,
+          Loaded(crypto),
+          Loaded(fiat),
           CurrencyInput(None, None),
           CurrencyInput(None, None),
         )

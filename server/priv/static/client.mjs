@@ -109,11 +109,6 @@ var BitArray = class _BitArray {
     return new _BitArray(this.buffer.slice(index4));
   }
 };
-var UtfCodepoint = class {
-  constructor(value2) {
-    this.value = value2;
-  }
-};
 function byteArrayToInt(byteArray, start3, end, isBigEndian, isSigned) {
   const byteSize = end - start3;
   if (byteSize <= 6) {
@@ -400,30 +395,6 @@ function map_loop(loop$list, loop$fun, loop$acc) {
 function map2(list3, fun) {
   return map_loop(list3, fun, toList([]));
 }
-function take_loop(loop$list, loop$n, loop$acc) {
-  while (true) {
-    let list3 = loop$list;
-    let n = loop$n;
-    let acc = loop$acc;
-    let $ = n <= 0;
-    if ($) {
-      return reverse(acc);
-    } else {
-      if (list3.hasLength(0)) {
-        return reverse(acc);
-      } else {
-        let first$1 = list3.head;
-        let rest$1 = list3.tail;
-        loop$list = rest$1;
-        loop$n = n - 1;
-        loop$acc = prepend(first$1, acc);
-      }
-    }
-  }
-}
-function take(list3, n) {
-  return take_loop(list3, n, toList([]));
-}
 function append_loop(loop$first, loop$second) {
   while (true) {
     let first3 = loop$first;
@@ -553,10 +524,6 @@ function concat2(strings) {
 function pop_grapheme2(string4) {
   return pop_grapheme(string4);
 }
-function inspect2(term) {
-  let _pipe = inspect(term);
-  return to_string3(_pipe);
-}
 
 // build/dev/javascript/gleam_stdlib/gleam/result.mjs
 function map3(result, fun) {
@@ -620,6 +587,9 @@ function classify(data) {
 }
 function int(data) {
   return decode_int(data);
+}
+function float(data) {
+  return decode_float(data);
 }
 function optional(decode3) {
   return (value2) => {
@@ -1361,19 +1331,6 @@ function parse_int(value2) {
 function to_string(term) {
   return term.toString();
 }
-function float_to_string(float3) {
-  const string4 = float3.toString().replace("+", "");
-  if (string4.indexOf(".") >= 0) {
-    return string4;
-  } else {
-    const index4 = string4.indexOf("e");
-    if (index4 >= 0) {
-      return string4.slice(0, index4) + ".0" + string4.slice(index4);
-    } else {
-      return string4 + ".0";
-    }
-  }
-}
 function string_length(string4) {
   if (string4 === "") {
     return 0;
@@ -1467,18 +1424,6 @@ var unicode_whitespaces = [
 ].join("");
 var left_trim_regex = new RegExp(`^([${unicode_whitespaces}]*)`, "g");
 var right_trim_regex = new RegExp(`([${unicode_whitespaces}]*)$`, "g");
-function console_error(term) {
-  console.error(term);
-}
-function print_debug(string4) {
-  if (typeof process === "object" && process.stderr?.write) {
-    process.stderr.write(string4 + "\n");
-  } else if (typeof Deno === "object") {
-    Deno.stderr.writeSync(new TextEncoder().encode(string4 + "\n"));
-  } else {
-    console.log(string4);
-  }
-}
 function compile_regex(pattern, options) {
   try {
     let flags = "gu";
@@ -1560,6 +1505,9 @@ function decode_string(data) {
 function decode_int(data) {
   return Number.isInteger(data) ? new Ok(data) : decoder_error("Int", data);
 }
+function decode_float(data) {
+  return typeof data === "number" ? new Ok(data) : decoder_error("Float", data);
+}
 function decode_option(data, decoder2) {
   if (data === null || data === void 0 || data instanceof None)
     return new Ok(new None());
@@ -1571,119 +1519,6 @@ function decode_option(data, decoder2) {
   } else {
     return result;
   }
-}
-function inspect(v) {
-  const t = typeof v;
-  if (v === true)
-    return "True";
-  if (v === false)
-    return "False";
-  if (v === null)
-    return "//js(null)";
-  if (v === void 0)
-    return "Nil";
-  if (t === "string")
-    return inspectString(v);
-  if (t === "bigint" || Number.isInteger(v))
-    return v.toString();
-  if (t === "number")
-    return float_to_string(v);
-  if (Array.isArray(v))
-    return `#(${v.map(inspect).join(", ")})`;
-  if (v instanceof List)
-    return inspectList(v);
-  if (v instanceof UtfCodepoint)
-    return inspectUtfCodepoint(v);
-  if (v instanceof BitArray)
-    return inspectBitArray(v);
-  if (v instanceof CustomType)
-    return inspectCustomType(v);
-  if (v instanceof Dict)
-    return inspectDict(v);
-  if (v instanceof Set)
-    return `//js(Set(${[...v].map(inspect).join(", ")}))`;
-  if (v instanceof RegExp)
-    return `//js(${v})`;
-  if (v instanceof Date)
-    return `//js(Date("${v.toISOString()}"))`;
-  if (v instanceof Function) {
-    const args = [];
-    for (const i of Array(v.length).keys())
-      args.push(String.fromCharCode(i + 97));
-    return `//fn(${args.join(", ")}) { ... }`;
-  }
-  return inspectObject(v);
-}
-function inspectString(str) {
-  let new_str = '"';
-  for (let i = 0; i < str.length; i++) {
-    let char = str[i];
-    switch (char) {
-      case "\n":
-        new_str += "\\n";
-        break;
-      case "\r":
-        new_str += "\\r";
-        break;
-      case "	":
-        new_str += "\\t";
-        break;
-      case "\f":
-        new_str += "\\f";
-        break;
-      case "\\":
-        new_str += "\\\\";
-        break;
-      case '"':
-        new_str += '\\"';
-        break;
-      default:
-        if (char < " " || char > "~" && char < "\xA0") {
-          new_str += "\\u{" + char.charCodeAt(0).toString(16).toUpperCase().padStart(4, "0") + "}";
-        } else {
-          new_str += char;
-        }
-    }
-  }
-  new_str += '"';
-  return new_str;
-}
-function inspectDict(map6) {
-  let body2 = "dict.from_list([";
-  let first3 = true;
-  map6.forEach((value2, key2) => {
-    if (!first3)
-      body2 = body2 + ", ";
-    body2 = body2 + "#(" + inspect(key2) + ", " + inspect(value2) + ")";
-    first3 = false;
-  });
-  return body2 + "])";
-}
-function inspectObject(v) {
-  const name = Object.getPrototypeOf(v)?.constructor?.name || "Object";
-  const props = [];
-  for (const k of Object.keys(v)) {
-    props.push(`${inspect(k)}: ${inspect(v[k])}`);
-  }
-  const body2 = props.length ? " " + props.join(", ") + " " : "";
-  const head = name === "Object" ? "" : name + " ";
-  return `//js(${head}{${body2}})`;
-}
-function inspectCustomType(record) {
-  const props = Object.keys(record).map((label) => {
-    const value2 = inspect(record[label]);
-    return isNaN(parseInt(label)) ? `${label}: ${value2}` : value2;
-  }).join(", ");
-  return props ? `${record.constructor.name}(${props})` : record.constructor.name;
-}
-function inspectList(list3) {
-  return `[${list3.toArray().map(inspect).join(", ")}]`;
-}
-function inspectBitArray(bits) {
-  return `<<${Array.from(bits.buffer).join(", ")}>>`;
-}
-function inspectUtfCodepoint(codepoint2) {
-  return `//utfcodepoint(${String.fromCodePoint(codepoint2.value)})`;
 }
 
 // build/dev/javascript/gleam_stdlib/gleam/dict.mjs
@@ -1812,6 +1647,9 @@ function decode_string2(data) {
 function decode_int2(data) {
   return run_dynamic_function(data, 0, int);
 }
+function decode_float2(data) {
+  return run_dynamic_function(data, 0, float);
+}
 function optional2(inner) {
   return new Decoder(
     (data) => {
@@ -1837,6 +1675,7 @@ function optional2(inner) {
 }
 var string2 = /* @__PURE__ */ new Decoder(decode_string2);
 var int2 = /* @__PURE__ */ new Decoder(decode_int2);
+var float2 = /* @__PURE__ */ new Decoder(decode_float2);
 function list2(inner) {
   return new Decoder(
     (data) => {
@@ -2097,17 +1936,6 @@ function do_decode(json, decoder2) {
 }
 function decode2(json, decoder2) {
   return do_decode(json, decoder2);
-}
-
-// build/dev/javascript/gleam_stdlib/gleam/io.mjs
-function println_error(string4) {
-  return console_error(string4);
-}
-function debug(term) {
-  let _pipe = term;
-  let _pipe$1 = inspect2(_pipe);
-  print_debug(_pipe$1);
-  return term;
 }
 
 // build/dev/javascript/gleam_stdlib/gleam/bool.mjs
@@ -3667,47 +3495,7 @@ function fiat_currency_decoder() {
                 "symbol",
                 string2,
                 (symbol) => {
-                  return success(new FiatCurrency(id, sign, name, symbol));
-                }
-              );
-            }
-          );
-        }
-      );
-    }
-  );
-}
-
-// build/dev/javascript/client/client/model.mjs
-var Model2 = class extends CustomType {
-  constructor(crypto, fiat, currency1, currency2) {
-    super();
-    this.crypto = crypto;
-    this.fiat = fiat;
-    this.currency1 = currency1;
-    this.currency2 = currency2;
-  }
-};
-function decoder() {
-  return field(
-    "crypto",
-    list2(crypto_currency_decoder()),
-    (crypto) => {
-      return field(
-        "fiat",
-        list2(fiat_currency_decoder()),
-        (fiat) => {
-          return field(
-            "currency1",
-            optional2(int2),
-            (currency1) => {
-              return field(
-                "currency1",
-                optional2(int2),
-                (currency2) => {
-                  return success(
-                    new Model2(crypto, fiat, currency1, currency2)
-                  );
+                  return success(new FiatCurrency(id, name, sign, symbol));
                 }
               );
             }
@@ -3723,6 +3511,97 @@ function get_app_url() {
   return window["__ENV__"] ? window.location.origin : "http://localhost:8080";
 }
 
+// build/dev/javascript/client/client/api.mjs
+function get_crypto(on_result_msg) {
+  let decoder2 = (_capture) => {
+    return run(_capture, list2(crypto_currency_decoder()));
+  };
+  let expect = expect_json(decoder2, on_result_msg);
+  return get2(get_app_url() + "/api/currencies/crypto", expect);
+}
+function get_fiat(on_result_msg) {
+  let decoder2 = (_capture) => {
+    return run(_capture, list2(fiat_currency_decoder()));
+  };
+  let expect = expect_json(decoder2, on_result_msg);
+  return get2(get_app_url() + "/api/currencies/fiat", expect);
+}
+
+// build/dev/javascript/client/client/model.mjs
+var Model2 = class extends CustomType {
+  constructor(crypto, fiat, currency_input1, currency_input2) {
+    super();
+    this.crypto = crypto;
+    this.fiat = fiat;
+    this.currency_input1 = currency_input1;
+    this.currency_input2 = currency_input2;
+  }
+};
+var Loading = class extends CustomType {
+};
+var Loaded = class extends CustomType {
+  constructor(x0) {
+    super();
+    this[0] = x0;
+  }
+};
+var CurrencyInput = class extends CustomType {
+  constructor(id, amount) {
+    super();
+    this.id = id;
+    this.amount = amount;
+  }
+};
+function currency_input_decoder() {
+  return field(
+    "id",
+    optional2(int2),
+    (id) => {
+      return field(
+        "amount",
+        optional2(float2),
+        (amount) => {
+          return success(new CurrencyInput(id, amount));
+        }
+      );
+    }
+  );
+}
+function decoder() {
+  return field(
+    "crypto",
+    list2(crypto_currency_decoder()),
+    (crypto) => {
+      return field(
+        "fiat",
+        list2(fiat_currency_decoder()),
+        (fiat) => {
+          return field(
+            "currency_input1",
+            currency_input_decoder(),
+            (currency_input1) => {
+              return field(
+                "currency_input2",
+                currency_input_decoder(),
+                (currency_input2) => {
+                  return success(
+                    new Model2(
+                      new Loaded(crypto),
+                      new Loaded(fiat),
+                      currency_input1,
+                      currency_input2
+                    )
+                  );
+                }
+              );
+            }
+          );
+        }
+      );
+    }
+  );
+}
+
 // build/dev/javascript/client/client.mjs
 var ApiReturnedCrypto = class extends CustomType {
   constructor(x0) {
@@ -3736,6 +3615,50 @@ var ApiReturnedFiat = class extends CustomType {
     this[0] = x0;
   }
 };
+function init2(maybe_model) {
+  if (maybe_model instanceof Some) {
+    let model = maybe_model[0];
+    return [model, none()];
+  } else {
+    return [
+      new Model2(
+        new Loading(),
+        new Loading(),
+        new CurrencyInput(new None(), new None()),
+        new CurrencyInput(new None(), new None())
+      ),
+      batch(
+        toList([
+          get_crypto((var0) => {
+            return new ApiReturnedCrypto(var0);
+          }),
+          get_fiat((var0) => {
+            return new ApiReturnedFiat(var0);
+          })
+        ])
+      )
+    ];
+  }
+}
+function update(model, msg) {
+  if (msg instanceof ApiReturnedCrypto && msg[0].isOk()) {
+    let currencies = msg[0][0];
+    return [
+      model.withFields({ crypto: new Loaded(currencies) }),
+      none()
+    ];
+  } else if (msg instanceof ApiReturnedCrypto && !msg[0].isOk()) {
+    return [model, none()];
+  } else if (msg instanceof ApiReturnedFiat && msg[0].isOk()) {
+    let currencies = msg[0][0];
+    return [model.withFields({ fiat: new Loaded(currencies) }), none()];
+  } else {
+    return [model, none()];
+  }
+}
+function view(_) {
+  return h1(toList([]), toList([text("Hello, worldz!")]));
+}
 function ssr_model() {
   return try$(
     (() => {
@@ -3760,85 +3683,18 @@ function ssr_model() {
     }
   );
 }
-function update(model, msg) {
-  if (msg instanceof ApiReturnedCrypto && msg[0].isOk()) {
-    let currencies = msg[0][0];
-    let _pipe = currencies;
-    let _pipe$1 = take(_pipe, 3);
-    debug(_pipe$1);
-    return [model.withFields({ crypto: currencies }), none()];
-  } else if (msg instanceof ApiReturnedCrypto && !msg[0].isOk()) {
-    let err = msg[0][0];
-    println_error("failed to get crypto: " + inspect2(err));
-    return [model, none()];
-  } else if (msg instanceof ApiReturnedFiat && msg[0].isOk()) {
-    let currencies = msg[0][0];
-    let _pipe = currencies;
-    let _pipe$1 = take(_pipe, 3);
-    debug(_pipe$1);
-    return [model.withFields({ fiat: currencies }), none()];
-  } else {
-    let err = msg[0][0];
-    println_error("failed to get fiat: " + inspect2(err));
-    return [model, none()];
-  }
-}
-function view(_) {
-  return h1(toList([]), toList([text("Hello, worldz!")]));
-}
-function get_crypto() {
-  let decoder2 = (_capture) => {
-    return run(
-      _capture,
-      list2(crypto_currency_decoder())
-    );
-  };
-  let expect = expect_json(
-    decoder2,
-    (var0) => {
-      return new ApiReturnedCrypto(var0);
-    }
-  );
-  return get2(get_app_url() + "/api/currencies/crypto", expect);
-}
-function get_fiat() {
-  let decoder2 = (_capture) => {
-    return run(
-      _capture,
-      list2(fiat_currency_decoder())
-    );
-  };
-  let expect = expect_json(
-    decoder2,
-    (var0) => {
-      return new ApiReturnedFiat(var0);
-    }
-  );
-  return get2(get_app_url() + "/api/currencies/fiat", expect);
-}
-function init2(model) {
-  if (model instanceof Some) {
-    let m = model[0];
-    return [m, none()];
-  } else {
-    return [
-      new Model2(toList([]), toList([]), new None(), new None()),
-      batch(toList([get_crypto(), get_fiat()]))
-    ];
-  }
-}
 function main() {
+  let app = application(init2, update, view);
   let model = (() => {
     let _pipe = ssr_model();
     return from_result(_pipe);
   })();
-  let app = application(init2, update, view);
   let $ = start2(app, "#app", model);
   if (!$.isOk()) {
     throw makeError(
       "let_assert",
       "client",
-      34,
+      33,
       "main",
       "Pattern match failed, no pattern matched the value.",
       { value: $ }

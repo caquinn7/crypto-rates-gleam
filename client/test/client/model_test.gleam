@@ -1,5 +1,5 @@
 import birdie
-import client/model.{CurrencyInput, Model}
+import client/model.{CurrencyInput, Loaded, Model}
 import decode/zero
 import gleam/json
 import gleam/option.{None, Some}
@@ -50,8 +50,8 @@ pub fn model_encoder_test() {
   let crypto = [CryptoCurrency(1, Some(2), "CQ Token", "CQT")]
   let fiat = [FiatCurrency(2, "United States Dollar", "$", "USD")]
   Model(
-    crypto,
-    fiat,
+    Loaded(crypto),
+    Loaded(fiat),
     CurrencyInput(Some(1), Some(1.5)),
     CurrencyInput(Some(2), Some(2.5)),
   )
@@ -65,8 +65,8 @@ pub fn model_decoder_test() {
   let fiat = [FiatCurrency(2, "United States Dollar", "$", "USD")]
   let model =
     Model(
-      crypto,
-      fiat,
+      Loaded(crypto),
+      Loaded(fiat),
       CurrencyInput(Some(1), Some(1.5)),
       CurrencyInput(Some(2), Some(2.5)),
     )

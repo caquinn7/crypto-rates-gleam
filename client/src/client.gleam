@@ -1,5 +1,5 @@
 import client/api
-import client/model.{type Model, CurrencyInput, Model}
+import client/model.{type Model, CurrencyInput, Loaded, Loading, Model}
 import decode/zero
 import gleam/json
 import gleam/option.{None, Some}
@@ -36,7 +36,12 @@ pub fn init(maybe_model) -> #(Model, Effect(Msg)) {
   case maybe_model {
     Some(model) -> #(model, effect.none())
     None -> #(
-      Model([], [], CurrencyInput(None, None), CurrencyInput(None, None)),
+      Model(
+        Loading,
+        Loading,
+        CurrencyInput(None, None),
+        CurrencyInput(None, None),
+      ),
       effect.batch([
         api.get_crypto(ApiReturnedCrypto),
         api.get_fiat(ApiReturnedFiat),
@@ -48,14 +53,14 @@ pub fn init(maybe_model) -> #(Model, Effect(Msg)) {
 pub fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
   case msg {
     ApiReturnedCrypto(Ok(currencies)) -> #(
-      Model(..model, crypto: currencies),
+      Model(..model, crypto: Loaded(currencies)),
       effect.none(),
     )
 
     ApiReturnedCrypto(Error(_)) -> #(model, effect.none())
 
     ApiReturnedFiat(Ok(currencies)) -> #(
-      Model(..model, fiat: currencies),
+      Model(..model, fiat: Loaded(currencies)),
       effect.none(),
     )
 
