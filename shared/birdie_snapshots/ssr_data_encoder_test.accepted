@@ -1,0 +1,7 @@
+---
+version: 1.2.5
+title: ssr_data_encoder_test
+file: ./test/shared/ssr_data_test.gleam
+test_name: ssr_data_encoder_test
+---
+{"crypto":[{"id":1,"rank":2,"name":"CQ Token","symbol":"CQT"}],"fiat":[{"id":2,"name":"United States Dollar","sign":"$","symbol":"USD"}],"currency_1":{"amount":null,"id":1},"currency_2":{"amount":1.1,"id":null}}

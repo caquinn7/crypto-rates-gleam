@@ -19,5 +19,8 @@ pub fn get_fiat(
   lustre_http.get(get_app_url() <> "/api/currencies/fiat", expect)
 }
 
-@external(javascript, "../ffi.mjs", "get_app_url")
+@external(javascript, "../window_ffi.mjs", "get_app_url")
 fn get_app_url() -> String
+// fn get_app_url() -> String {
+//   "https://crypto-rates.fly.dev"
+// }

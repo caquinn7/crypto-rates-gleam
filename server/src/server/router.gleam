@@ -1,4 +1,3 @@
-import client/model.{type Model, CurrencyInput, Loaded, Model}
 import gleam/http
 import gleam/option.{None, Some}
 import gleam/result
@@ -8,6 +7,7 @@ import server/routes/conversions
 import server/routes/currencies
 import server/routes/pages
 import server/web.{type Context}
+import shared/ssr_data.{Currency, SsrData}
 import timestamps
 import wisp.{type Request, type Response}
 
@@ -16,6 +16,7 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
   let request_fiat = cmc.get_fiat_currencies(ctx.cmc_api_key, _)
 
   use req <- web.middleware(req, ctx)
+
   case wisp.path_segments(req) {
     [] -> {
       let crypto =
@@ -38,14 +39,8 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
         })
         |> result.unwrap([])
 
-      let model =
-        Model(
-          Loaded(crypto),
-          Loaded(fiat),
-          CurrencyInput(None, None),
-          CurrencyInput(None, None),
-        )
-      pages.home(model, ctx)
+      SsrData(crypto, fiat, #(Currency(None, None), Currency(None, None)))
+      |> pages.home(ctx)
     }
 
     ["api", "ping"] -> {
@@ -69,8 +64,7 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
 
     ["api", "conversions"] -> {
       use <- wisp.require_method(req, http.Get)
-      req
-      |> conversions.get(cmc.get_conversion(ctx.cmc_api_key, _))
+      conversions.get(req, cmc.get_conversion(ctx.cmc_api_key, _))
     }
 
     _ -> wisp.not_found()

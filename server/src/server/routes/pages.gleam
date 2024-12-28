@@ -1,27 +1,34 @@
-import client
-import client/model.{type Model}
+import client.{
+  UserClickedCurrencySelector, UserFilteredCurrencies, UserSelectedCurrency,
+}
+import client/model
 import gleam/json
 import lustre/attribute
 import lustre/element.{type Element}
 import lustre/element/html
 import server/web.{type Context}
+import shared/ssr_data.{type SsrData, SsrData}
 import wisp.{type Response}
 
-pub fn home(model: Model, ctx: Context) -> Response {
-  let model_json =
-    model
-    |> model.encoder()
+pub fn home(ssr_data: SsrData, ctx: Context) -> Response {
+  let ssr_json =
+    ssr_data
+    |> ssr_data.encoder()
     |> json.to_string
 
   let content =
-    client.view(model)
-    |> page_scaffold(model_json, ctx)
+    model.from_ssr_data(
+      ssr_data,
+      UserClickedCurrencySelector,
+      UserFilteredCurrencies,
+      UserSelectedCurrency,
+    )
+    |> client.view
+    |> page_scaffold(ssr_json, ctx)
 
-  wisp.response(200)
-  |> wisp.html_body(
-    content
-    |> element.to_document_string_builder(),
-  )
+  content
+  |> element.to_document_string_builder
+  |> wisp.html_body(wisp.response(200), _)
 }
 
 fn page_scaffold(
@@ -37,6 +44,11 @@ fn page_scaffold(
         attribute.name("viewport"),
       ]),
       html.title([], "🚧 client"),
+      html.link([
+        attribute.rel("stylesheet"),
+        attribute.type_("text/css"),
+        attribute.href("/static/client.css"),
+      ]),
       html.script(
         [attribute.src("/static/client.mjs"), attribute.type_("module")],
         "",

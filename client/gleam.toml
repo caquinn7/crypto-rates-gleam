@@ -19,9 +19,10 @@ lustre = ">= 4.6.1 and < 5.0.0"
 shared = { path = "../shared" }
 plinth = ">= 0.5.1 and < 1.0.0"
 decode = ">= 0.5.0 and < 1.0.0"
-gleam_json = ">= 1.0.1 and < 2.0.0"
 lustre_http = ">= 0.5.2 and < 1.0.0"
-birdie = ">= 1.2.3 and < 2.0.0"
+filepath = ">= 1.1.0 and < 2.0.0"
+birdie = ">= 1.2.5 and < 2.0.0"
+gleam_json = ">= 1.0.1 and < 2.0.0"
 
 [dev-dependencies]
 gleeunit = ">= 1.0.0 and < 2.0.0"

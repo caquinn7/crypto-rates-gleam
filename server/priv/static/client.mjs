@@ -112,41 +112,41 @@ var BitArray = class _BitArray {
 function byteArrayToInt(byteArray, start3, end, isBigEndian, isSigned) {
   const byteSize = end - start3;
   if (byteSize <= 6) {
-    let value2 = 0;
+    let value3 = 0;
     if (isBigEndian) {
       for (let i = start3; i < end; i++) {
-        value2 = value2 * 256 + byteArray[i];
+        value3 = value3 * 256 + byteArray[i];
       }
     } else {
       for (let i = end - 1; i >= start3; i--) {
-        value2 = value2 * 256 + byteArray[i];
+        value3 = value3 * 256 + byteArray[i];
       }
     }
     if (isSigned) {
       const highBit = 2 ** (byteSize * 8 - 1);
-      if (value2 >= highBit) {
-        value2 -= highBit * 2;
+      if (value3 >= highBit) {
+        value3 -= highBit * 2;
       }
     }
-    return value2;
+    return value3;
   } else {
-    let value2 = 0n;
+    let value3 = 0n;
     if (isBigEndian) {
       for (let i = start3; i < end; i++) {
-        value2 = (value2 << 8n) + BigInt(byteArray[i]);
+        value3 = (value3 << 8n) + BigInt(byteArray[i]);
       }
     } else {
       for (let i = end - 1; i >= start3; i--) {
-        value2 = (value2 << 8n) + BigInt(byteArray[i]);
+        value3 = (value3 << 8n) + BigInt(byteArray[i]);
       }
     }
     if (isSigned) {
       const highBit = 1n << BigInt(byteSize * 8 - 1);
-      if (value2 >= highBit) {
-        value2 -= highBit * 2n;
+      if (value3 >= highBit) {
+        value3 -= highBit * 2n;
       }
     }
-    return Number(value2);
+    return Number(value3);
   }
 }
 function byteArrayToFloat(byteArray, start3, end, isBigEndian) {
@@ -168,9 +168,9 @@ var Result = class _Result extends CustomType {
   }
 };
 var Ok = class extends Result {
-  constructor(value2) {
+  constructor(value3) {
     super();
-    this[0] = value2;
+    this[0] = value3;
   }
   // @internal
   isOk() {
@@ -274,9 +274,9 @@ var Some = class extends CustomType {
 };
 var None = class extends CustomType {
 };
-function to_result(option, e) {
-  if (option instanceof Some) {
-    let a = option[0];
+function to_result(option2, e) {
+  if (option2 instanceof Some) {
+    let a = option2[0];
     return new Ok(a);
   } else {
     return new Error(e);
@@ -290,64 +290,18 @@ function from_result(result) {
     return new None();
   }
 }
-function unwrap(option, default$) {
-  if (option instanceof Some) {
-    let x = option[0];
+function unwrap(option2, default$) {
+  if (option2 instanceof Some) {
+    let x = option2[0];
     return x;
   } else {
     return default$;
   }
 }
-function map(option, fun) {
-  if (option instanceof Some) {
-    let x = option[0];
-    return new Some(fun(x));
-  } else {
-    return new None();
-  }
-}
-
-// build/dev/javascript/gleam_stdlib/gleam/regex.mjs
-var Match = class extends CustomType {
-  constructor(content, submatches) {
-    super();
-    this.content = content;
-    this.submatches = submatches;
-  }
-};
-var CompileError = class extends CustomType {
-  constructor(error, byte_index) {
-    super();
-    this.error = error;
-    this.byte_index = byte_index;
-  }
-};
-var Options = class extends CustomType {
-  constructor(case_insensitive, multi_line) {
-    super();
-    this.case_insensitive = case_insensitive;
-    this.multi_line = multi_line;
-  }
-};
-function compile(pattern, options) {
-  return compile_regex(pattern, options);
-}
-function scan(regex, string4) {
-  return regex_scan(regex, string4);
-}
 
 // build/dev/javascript/gleam_stdlib/gleam/int.mjs
-function parse(string4) {
-  return parse_int(string4);
-}
 function to_string2(x) {
   return to_string(x);
-}
-
-// build/dev/javascript/gleam_stdlib/gleam/pair.mjs
-function second(pair) {
-  let a = pair[1];
-  return a;
 }
 
 // build/dev/javascript/gleam_stdlib/gleam/list.mjs
@@ -368,14 +322,6 @@ function reverse_loop(loop$remaining, loop$accumulator) {
 function reverse(list3) {
   return reverse_loop(list3, toList([]));
 }
-function first(list3) {
-  if (list3.hasLength(0)) {
-    return new Error(void 0);
-  } else {
-    let x = list3.head;
-    return new Ok(x);
-  }
-}
 function map_loop(loop$list, loop$fun, loop$acc) {
   while (true) {
     let list3 = loop$list;
@@ -392,25 +338,25 @@ function map_loop(loop$list, loop$fun, loop$acc) {
     }
   }
 }
-function map2(list3, fun) {
+function map(list3, fun) {
   return map_loop(list3, fun, toList([]));
 }
 function append_loop(loop$first, loop$second) {
   while (true) {
-    let first3 = loop$first;
-    let second2 = loop$second;
-    if (first3.hasLength(0)) {
-      return second2;
+    let first2 = loop$first;
+    let second = loop$second;
+    if (first2.hasLength(0)) {
+      return second;
     } else {
-      let item = first3.head;
-      let rest$1 = first3.tail;
+      let item = first2.head;
+      let rest$1 = first2.tail;
       loop$first = rest$1;
-      loop$second = prepend(item, second2);
+      loop$second = prepend(item, second);
     }
   }
 }
-function append(first3, second2) {
-  return append_loop(reverse(first3), second2);
+function append(first2, second) {
+  return append_loop(reverse(first2), second);
 }
 function fold(loop$list, loop$initial, loop$fun) {
   while (true) {
@@ -449,24 +395,6 @@ function index_fold_loop(loop$over, loop$acc, loop$with, loop$index) {
 function index_fold(list3, initial, fun) {
   return index_fold_loop(list3, initial, fun, 0);
 }
-function repeat_loop(loop$item, loop$times, loop$acc) {
-  while (true) {
-    let item = loop$item;
-    let times = loop$times;
-    let acc = loop$acc;
-    let $ = times <= 0;
-    if ($) {
-      return acc;
-    } else {
-      loop$item = item;
-      loop$times = times - 1;
-      loop$acc = prepend(item, acc);
-    }
-  }
-}
-function repeat(a, times) {
-  return repeat_loop(a, times, toList([]));
-}
 
 // build/dev/javascript/gleam_stdlib/gleam/string_tree.mjs
 function from_strings(strings) {
@@ -477,56 +405,50 @@ function to_string3(tree) {
 }
 
 // build/dev/javascript/gleam_stdlib/gleam/string.mjs
-function length2(string4) {
-  return string_length(string4);
+function length2(string5) {
+  return string_length(string5);
 }
-function lowercase2(string4) {
-  return lowercase(string4);
+function lowercase2(string5) {
+  return lowercase(string5);
 }
-function slice(string4, idx, len) {
+function slice(string5, idx, len) {
   let $ = len < 0;
   if ($) {
     return "";
   } else {
     let $1 = idx < 0;
     if ($1) {
-      let translated_idx = length2(string4) + idx;
+      let translated_idx = length2(string5) + idx;
       let $2 = translated_idx < 0;
       if ($2) {
         return "";
       } else {
-        return string_slice(string4, translated_idx, len);
+        return string_slice(string5, translated_idx, len);
       }
     } else {
-      return string_slice(string4, idx, len);
+      return string_slice(string5, idx, len);
     }
   }
 }
-function drop_start(string4, num_graphemes) {
+function drop_start(string5, num_graphemes) {
   let $ = num_graphemes < 0;
   if ($) {
-    return string4;
+    return string5;
   } else {
-    return slice(string4, num_graphemes, length2(string4) - num_graphemes);
+    return slice(string5, num_graphemes, length2(string5) - num_graphemes);
   }
 }
-function drop_left(string4, num_graphemes) {
-  return drop_start(string4, num_graphemes);
-}
-function starts_with2(string4, prefix) {
-  return starts_with(string4, prefix);
+function starts_with2(string5, prefix) {
+  return starts_with(string5, prefix);
 }
 function concat2(strings) {
   let _pipe = strings;
   let _pipe$1 = from_strings(_pipe);
   return to_string3(_pipe$1);
 }
-function pop_grapheme2(string4) {
-  return pop_grapheme(string4);
-}
 
 // build/dev/javascript/gleam_stdlib/gleam/result.mjs
-function map3(result, fun) {
+function map2(result, fun) {
   if (result.isOk()) {
     let x = result[0];
     return new Ok(fun(x));
@@ -556,14 +478,6 @@ function try$(result, fun) {
 function then$(result, fun) {
   return try$(result, fun);
 }
-function unwrap2(result, default$) {
-  if (result.isOk()) {
-    let v = result[0];
-    return v;
-  } else {
-    return default$;
-  }
-}
 function replace_error(result, error) {
   if (result.isOk()) {
     let x = result[0];
@@ -592,8 +506,8 @@ function float(data) {
   return decode_float(data);
 }
 function optional(decode3) {
-  return (value2) => {
-    return decode_option(value2, decode3);
+  return (value3) => {
+    return decode_option(value3, decode3);
   };
 }
 function any(decoders) {
@@ -615,8 +529,55 @@ function any(decoders) {
     }
   };
 }
-function string(data) {
+function push_path(error, name) {
+  let name$1 = identity(name);
+  let decoder2 = any(
+    toList([string2, (x) => {
+      return map2(int(x), to_string2);
+    }])
+  );
+  let name$2 = (() => {
+    let $ = decoder2(name$1);
+    if ($.isOk()) {
+      let name$22 = $[0];
+      return name$22;
+    } else {
+      let _pipe = toList(["<", classify(name$1), ">"]);
+      let _pipe$1 = from_strings(_pipe);
+      return to_string3(_pipe$1);
+    }
+  })();
+  return error.withFields({ path: prepend(name$2, error.path) });
+}
+function map_errors(result, f) {
+  return map_error(
+    result,
+    (_capture) => {
+      return map(_capture, f);
+    }
+  );
+}
+function string2(data) {
   return decode_string(data);
+}
+function field(name, inner_type) {
+  return (value3) => {
+    let missing_field_error = new DecodeError("field", "nothing", toList([]));
+    return try$(
+      decode_field(value3, name),
+      (maybe_inner) => {
+        let _pipe = maybe_inner;
+        let _pipe$1 = to_result(_pipe, toList([missing_field_error]));
+        let _pipe$2 = try$(_pipe$1, inner_type);
+        return map_errors(
+          _pipe$2,
+          (_capture) => {
+            return push_path(_capture, name);
+          }
+        );
+      }
+    );
+  };
 }
 
 // build/dev/javascript/gleam_stdlib/dict.mjs
@@ -1318,24 +1279,18 @@ var Dict = class _Dict {
 
 // build/dev/javascript/gleam_stdlib/gleam_stdlib.mjs
 var Nil = void 0;
+var NOT_FOUND = {};
 function identity(x) {
   return x;
-}
-function parse_int(value2) {
-  if (/^[-+]?(\d+)$/.test(value2)) {
-    return new Ok(parseInt(value2));
-  } else {
-    return new Error(Nil);
-  }
 }
 function to_string(term) {
   return term.toString();
 }
-function string_length(string4) {
-  if (string4 === "") {
+function string_length(string5) {
+  if (string5 === "") {
     return 0;
   }
-  const iterator = graphemes_iterator(string4);
+  const iterator = graphemes_iterator(string5);
   if (iterator) {
     let i = 0;
     for (const _ of iterator) {
@@ -1343,32 +1298,21 @@ function string_length(string4) {
     }
     return i;
   } else {
-    return string4.match(/./gsu).length;
+    return string5.match(/./gsu).length;
   }
 }
 var segmenter = void 0;
-function graphemes_iterator(string4) {
+function graphemes_iterator(string5) {
   if (globalThis.Intl && Intl.Segmenter) {
     segmenter ||= new Intl.Segmenter();
-    return segmenter.segment(string4)[Symbol.iterator]();
+    return segmenter.segment(string5)[Symbol.iterator]();
   }
 }
-function pop_grapheme(string4) {
-  let first3;
-  const iterator = graphemes_iterator(string4);
-  if (iterator) {
-    first3 = iterator.next().value?.segment;
-  } else {
-    first3 = string4.match(/./su)?.[0];
-  }
-  if (first3) {
-    return new Ok([first3, string4.slice(first3.length)]);
-  } else {
-    return new Error(Nil);
-  }
+function pop_codeunit(str) {
+  return [str.charCodeAt(0) | 0, str.slice(1)];
 }
-function lowercase(string4) {
-  return string4.toLowerCase();
+function lowercase(string5) {
+  return string5.toLowerCase();
 }
 function concat(xs) {
   let result = "";
@@ -1377,11 +1321,11 @@ function concat(xs) {
   }
   return result;
 }
-function string_slice(string4, idx, len) {
-  if (len <= 0 || idx >= string4.length) {
+function string_slice(string5, idx, len) {
+  if (len <= 0 || idx >= string5.length) {
     return "";
   }
-  const iterator = graphemes_iterator(string4);
+  const iterator = graphemes_iterator(string5);
   if (iterator) {
     while (idx-- > 0) {
       iterator.next();
@@ -1396,8 +1340,11 @@ function string_slice(string4, idx, len) {
     }
     return result;
   } else {
-    return string4.match(/./gsu).slice(idx, idx + len).join("");
+    return string5.match(/./gsu).slice(idx, idx + len).join("");
   }
+}
+function string_codeunit_slice(str, from2, length5) {
+  return str.slice(from2, from2 + length5);
 }
 function starts_with(haystack, needle) {
   return haystack.startsWith(needle);
@@ -1424,44 +1371,21 @@ var unicode_whitespaces = [
 ].join("");
 var left_trim_regex = new RegExp(`^([${unicode_whitespaces}]*)`, "g");
 var right_trim_regex = new RegExp(`([${unicode_whitespaces}]*)$`, "g");
-function compile_regex(pattern, options) {
-  try {
-    let flags = "gu";
-    if (options.case_insensitive)
-      flags += "i";
-    if (options.multi_line)
-      flags += "m";
-    return new Ok(new RegExp(pattern, flags));
-  } catch (error) {
-    const number = (error.columnNumber || 0) | 0;
-    return new Error(new CompileError(error.message, number));
-  }
-}
-function regex_scan(regex, string4) {
-  const matches = Array.from(string4.matchAll(regex)).map((match) => {
-    const content = match[0];
-    const submatches = [];
-    for (let n = match.length - 1; n > 0; n--) {
-      if (match[n]) {
-        submatches[n - 1] = new Some(match[n]);
-        continue;
-      }
-      if (submatches.length > 0) {
-        submatches[n - 1] = new None();
-      }
-    }
-    return new Match(content, List.fromArray(submatches));
-  });
-  return List.fromArray(matches);
-}
 function new_map() {
   return Dict.new();
 }
 function map_to_list(map6) {
   return List.fromArray(map6.entries());
 }
-function map_insert(key2, value2, map6) {
-  return map6.set(key2, value2);
+function map_get(map6, key2) {
+  const value3 = map6.get(key2, NOT_FOUND);
+  if (value3 === NOT_FOUND) {
+    return new Error(Nil);
+  }
+  return new Ok(value3);
+}
+function map_insert(key2, value3, map6) {
+  return map6.set(key2, value3);
 }
 function classify_dynamic(data) {
   if (typeof data === "string") {
@@ -1520,13 +1444,33 @@ function decode_option(data, decoder2) {
     return result;
   }
 }
+function decode_field(value3, name) {
+  const not_a_map_error = () => decoder_error("Dict", value3);
+  if (value3 instanceof Dict || value3 instanceof WeakMap || value3 instanceof Map) {
+    const entry = map_get(value3, name);
+    return new Ok(entry.isOk() ? new Some(entry[0]) : new None());
+  } else if (value3 === null) {
+    return not_a_map_error();
+  } else if (Object.getPrototypeOf(value3) == Object.prototype) {
+    return try_get_field(value3, name, () => new Ok(new None()));
+  } else {
+    return try_get_field(value3, name, not_a_map_error);
+  }
+}
+function try_get_field(value3, field3, or_else) {
+  try {
+    return field3 in value3 ? new Ok(new Some(value3[field3])) : or_else();
+  } catch {
+    return or_else();
+  }
+}
 
 // build/dev/javascript/gleam_stdlib/gleam/dict.mjs
 function new$() {
   return new_map();
 }
-function insert(dict2, key2, value2) {
-  return map_insert(key2, value2, dict2);
+function insert(dict2, key2, value3) {
+  return map_insert(key2, value3, dict2);
 }
 function reverse_and_concat(loop$remaining, loop$accumulator) {
   while (true) {
@@ -1549,10 +1493,10 @@ function do_keys_loop(loop$list, loop$acc) {
     if (list3.hasLength(0)) {
       return reverse_and_concat(acc, toList([]));
     } else {
-      let first3 = list3.head;
+      let first2 = list3.head;
       let rest = list3.tail;
       loop$list = rest;
-      loop$acc = prepend(first3[0], acc);
+      loop$acc = prepend(first2[0], acc);
     }
   }
 }
@@ -1576,9 +1520,9 @@ function strict_index(data, key2) {
   }
   if ((key2 === 0 || key2 === 1 || key2 === 2) && data instanceof List) {
     let i = 0;
-    for (const value2 of data) {
+    for (const value3 of data) {
       if (i === key2)
-        return new Ok(new Some(value2));
+        return new Ok(new Some(value3));
       i++;
     }
     return new Error("Indexable");
@@ -1642,7 +1586,7 @@ function run_dynamic_function(data, zero, f) {
   }
 }
 function decode_string2(data) {
-  return run_dynamic_function(data, "", string);
+  return run_dynamic_function(data, "", string2);
 }
 function decode_int2(data) {
   return run_dynamic_function(data, 0, int);
@@ -1673,7 +1617,7 @@ function optional2(inner) {
     }
   );
 }
-var string2 = /* @__PURE__ */ new Decoder(decode_string2);
+var string3 = /* @__PURE__ */ new Decoder(decode_string2);
 var int2 = /* @__PURE__ */ new Decoder(decode_int2);
 var float2 = /* @__PURE__ */ new Decoder(decode_float2);
 function list2(inner) {
@@ -1682,8 +1626,8 @@ function list2(inner) {
       return list(
         data,
         inner.function,
-        (p, k) => {
-          return push_path(p, toList([k]));
+        (p2, k) => {
+          return push_path2(p2, toList([k]));
         },
         0,
         toList([])
@@ -1691,16 +1635,16 @@ function list2(inner) {
     }
   );
 }
-function push_path(layer, path) {
+function push_path2(layer, path) {
   let decoder2 = any(
     toList([
-      string,
+      string2,
       (x) => {
-        return map3(int(x), to_string2);
+        return map2(int(x), to_string2);
       }
     ])
   );
-  let path$1 = map2(
+  let path$1 = map(
     path,
     (key2) => {
       let key$1 = identity(key2);
@@ -1713,7 +1657,7 @@ function push_path(layer, path) {
       }
     }
   );
-  let errors = map2(
+  let errors = map(
     layer[1],
     (error) => {
       return error.withFields({ path: append(path$1, error.path) });
@@ -1730,7 +1674,7 @@ function index2(loop$path, loop$position, loop$inner, loop$data, loop$handle_mis
     let handle_miss = loop$handle_miss;
     if (path.hasLength(0)) {
       let _pipe = inner(data);
-      return push_path(_pipe, reverse(position));
+      return push_path2(_pipe, reverse(position));
     } else {
       let key2 = path.head;
       let path$1 = path.tail;
@@ -1752,7 +1696,7 @@ function index2(loop$path, loop$position, loop$inner, loop$data, loop$handle_mis
           default$,
           toList([new DecodeError(kind, classify(data), toList([]))])
         ];
-        return push_path(_pipe, reverse(position));
+        return push_path2(_pipe, reverse(position));
       }
     }
   }
@@ -1772,7 +1716,7 @@ function subfield(field_path, field_decoder, next) {
             default$,
             toList([new DecodeError("Field", "Nothing", toList([]))])
           ];
-          return push_path(_pipe, reverse(position));
+          return push_path2(_pipe, reverse(position));
         }
       );
       let out = $[0];
@@ -1784,7 +1728,7 @@ function subfield(field_path, field_decoder, next) {
     }
   );
 }
-function field(field_name, field_decoder, next) {
+function field2(field_name, field_decoder, next) {
   return subfield(toList([field_name]), field_decoder, next);
 }
 function optional_field(key2, default$, field_decoder, next) {
@@ -1803,7 +1747,7 @@ function optional_field(key2, default$, field_decoder, next) {
             default$,
             toList([new DecodeError(kind, classify(data), toList([]))])
           ];
-          return push_path(_pipe, toList([key2]));
+          return push_path2(_pipe, toList([key2]));
         }
       })();
       let out = $[0];
@@ -1816,13 +1760,54 @@ function optional_field(key2, default$, field_decoder, next) {
   );
 }
 
+// build/dev/javascript/gleam_javascript/gleam_javascript_ffi.mjs
+function reduceRight(thing, acc, fn) {
+  return thing.reduceRight(fn, acc);
+}
+var PromiseLayer = class _PromiseLayer {
+  constructor(promise) {
+    this.promise = promise;
+  }
+  static wrap(value3) {
+    return value3 instanceof Promise ? new _PromiseLayer(value3) : value3;
+  }
+  static unwrap(value3) {
+    return value3 instanceof _PromiseLayer ? value3.promise : value3;
+  }
+};
+function resolve(value3) {
+  return Promise.resolve(PromiseLayer.wrap(value3));
+}
+function then_await(promise, fn) {
+  return promise.then((value3) => fn(PromiseLayer.unwrap(value3)));
+}
+function map_promise(promise, fn) {
+  return promise.then(
+    (value3) => PromiseLayer.wrap(fn(PromiseLayer.unwrap(value3)))
+  );
+}
+function rescue(promise, fn) {
+  return promise.catch((error) => fn(error));
+}
+
+// build/dev/javascript/gleam_javascript/gleam/javascript/array.mjs
+function to_list(items) {
+  return reduceRight(
+    items,
+    toList([]),
+    (list3, item) => {
+      return prepend(item, list3);
+    }
+  );
+}
+
 // build/dev/javascript/gleam_json/gleam_json_ffi.mjs
-function decode(string4) {
+function decode(string5) {
   try {
-    const result = JSON.parse(string4);
+    const result = JSON.parse(string5);
     return new Ok(result);
   } catch (err) {
-    return new Error(getJsonDecodeError(err, string4));
+    return new Error(getJsonDecodeError(err, string5));
   }
 }
 function getJsonDecodeError(stdErr, json) {
@@ -1887,12 +1872,12 @@ function jsCoreUnexpectedByteError(err) {
 function toHex(char) {
   return "0x" + char.charCodeAt(0).toString(16).toUpperCase();
 }
-function getPositionFromMultiline(line, column, string4) {
+function getPositionFromMultiline(line, column, string5) {
   if (line === 1)
     return column - 1;
   let currentLn = 1;
   let position = 0;
-  string4.split("").find((char, idx) => {
+  string5.split("").find((char, idx) => {
     if (char === "\n")
       currentLn += 1;
     if (currentLn === line) {
@@ -1964,8 +1949,8 @@ function custom(run2) {
   );
 }
 function from(effect) {
-  return custom((dispatch, _, _1, _2) => {
-    return effect(dispatch);
+  return custom((dispatch2, _, _1, _2) => {
+    return effect(dispatch2);
   });
 }
 function none() {
@@ -2017,13 +2002,20 @@ var Attribute = class extends CustomType {
     this.as_property = as_property;
   }
 };
+var Event2 = class extends CustomType {
+  constructor(x0, x1) {
+    super();
+    this[0] = x0;
+    this[1] = x1;
+  }
+};
 function attribute_to_event_handler(attribute2) {
   if (attribute2 instanceof Attribute) {
     return new Error(void 0);
   } else {
     let name = attribute2[0];
     let handler = attribute2[1];
-    let name$1 = drop_left(name, 2);
+    let name$1 = drop_start(name, 2);
     return new Ok([name$1, handler]);
   }
 }
@@ -2072,6 +2064,26 @@ function do_handlers(loop$element, loop$handlers, loop$key) {
 }
 function handlers(element2) {
   return do_handlers(element2, new$(), "0");
+}
+
+// build/dev/javascript/lustre/lustre/attribute.mjs
+function attribute(name, value3) {
+  return new Attribute(name, identity(value3), false);
+}
+function on(name, handler) {
+  return new Event2("on" + name, handler);
+}
+function class$(name) {
+  return attribute("class", name);
+}
+function id(name) {
+  return attribute("id", name);
+}
+function type_(name) {
+  return attribute("type", name);
+}
+function placeholder(text3) {
+  return attribute("placeholder", text3);
 }
 
 // build/dev/javascript/lustre/lustre/element.mjs
@@ -2214,8 +2226,8 @@ var ForceModel = class extends CustomType {
 };
 
 // build/dev/javascript/lustre/vdom.ffi.mjs
-if (window && window.customElements) {
-  window.customElements.define(
+if (globalThis.customElements && !globalThis.customElements.get("lustre-fragment")) {
+  globalThis.customElements.define(
     "lustre-fragment",
     class LustreFragment extends HTMLElement {
       constructor() {
@@ -2224,7 +2236,7 @@ if (window && window.customElements) {
     }
   );
 }
-function morph(prev, next, dispatch) {
+function morph(prev, next, dispatch2) {
   let out;
   let stack = [{ prev, next, parent: prev.parentNode }];
   while (stack.length) {
@@ -2249,7 +2261,7 @@ function morph(prev, next, dispatch) {
       const created = createElementNode({
         prev: prev2,
         next: next2,
-        dispatch,
+        dispatch: dispatch2,
         stack
       });
       if (!prev2) {
@@ -2262,7 +2274,7 @@ function morph(prev, next, dispatch) {
   }
   return out;
 }
-function createElementNode({ prev, next, dispatch, stack }) {
+function createElementNode({ prev, next, dispatch: dispatch2, stack }) {
   const namespace = next.namespace || "http://www.w3.org/1999/xhtml";
   const canMorph = prev && prev.nodeType === Node.ELEMENT_NODE && prev.localName === next.tag && prev.namespaceURI === (next.namespace || "http://www.w3.org/1999/xhtml");
   const el = canMorph ? prev : namespace ? document.createElementNS(namespace, next.tag) : document.createElement(next.tag);
@@ -2287,15 +2299,15 @@ function createElementNode({ prev, next, dispatch, stack }) {
   const delegated = [];
   for (const attr of next.attrs) {
     const name = attr[0];
-    const value2 = attr[1];
+    const value3 = attr[1];
     if (attr.as_property) {
-      if (el[name] !== value2)
-        el[name] = value2;
+      if (el[name] !== value3)
+        el[name] = value3;
       if (canMorph)
         prevAttributes.delete(name);
     } else if (name.startsWith("on")) {
       const eventName = name.slice(2);
-      const callback = dispatch(value2, eventName === "input");
+      const callback = dispatch2(value3, eventName === "input");
       if (!handlersForEl.has(eventName)) {
         el.addEventListener(eventName, lustreGenericEventHandler);
       }
@@ -2304,26 +2316,30 @@ function createElementNode({ prev, next, dispatch, stack }) {
         prevHandlers.delete(eventName);
     } else if (name.startsWith("data-lustre-on-")) {
       const eventName = name.slice(15);
-      const callback = dispatch(lustreServerEventHandler);
+      const callback = dispatch2(lustreServerEventHandler);
       if (!handlersForEl.has(eventName)) {
         el.addEventListener(eventName, lustreGenericEventHandler);
       }
       handlersForEl.set(eventName, callback);
-      el.setAttribute(name, value2);
+      el.setAttribute(name, value3);
+      if (canMorph) {
+        prevHandlers.delete(eventName);
+        prevAttributes.delete(name);
+      }
     } else if (name.startsWith("delegate:data-") || name.startsWith("delegate:aria-")) {
-      el.setAttribute(name, value2);
-      delegated.push([name.slice(10), value2]);
+      el.setAttribute(name, value3);
+      delegated.push([name.slice(10), value3]);
     } else if (name === "class") {
-      className = className === null ? value2 : className + " " + value2;
+      className = className === null ? value3 : className + " " + value3;
     } else if (name === "style") {
-      style2 = style2 === null ? value2 : style2 + value2;
+      style2 = style2 === null ? value3 : style2 + value3;
     } else if (name === "dangerous-unescaped-html") {
-      innerHTML = value2;
+      innerHTML = value3;
     } else {
-      if (el.getAttribute(name) !== value2)
-        el.setAttribute(name, value2);
+      if (el.getAttribute(name) !== value3)
+        el.setAttribute(name, value3);
       if (name === "value" || name === "selected")
-        el[name] = value2;
+        el[name] = value3;
       if (canMorph)
         prevAttributes.delete(name);
     }
@@ -2350,9 +2366,9 @@ function createElementNode({ prev, next, dispatch, stack }) {
   if (next.tag === "slot") {
     window.queueMicrotask(() => {
       for (const child of el.assignedElements()) {
-        for (const [name, value2] of delegated) {
+        for (const [name, value3] of delegated) {
           if (!child.hasAttribute(name)) {
-            child.setAttribute(name, value2);
+            child.setAttribute(name, value3);
           }
         }
       }
@@ -2400,25 +2416,25 @@ function createElementNode({ prev, next, dispatch, stack }) {
   return el;
 }
 var registeredHandlers = /* @__PURE__ */ new WeakMap();
-function lustreGenericEventHandler(event) {
-  const target2 = event.currentTarget;
+function lustreGenericEventHandler(event2) {
+  const target2 = event2.currentTarget;
   if (!registeredHandlers.has(target2)) {
-    target2.removeEventListener(event.type, lustreGenericEventHandler);
+    target2.removeEventListener(event2.type, lustreGenericEventHandler);
     return;
   }
   const handlersForEventTarget = registeredHandlers.get(target2);
-  if (!handlersForEventTarget.has(event.type)) {
-    target2.removeEventListener(event.type, lustreGenericEventHandler);
+  if (!handlersForEventTarget.has(event2.type)) {
+    target2.removeEventListener(event2.type, lustreGenericEventHandler);
     return;
   }
-  handlersForEventTarget.get(event.type)(event);
+  handlersForEventTarget.get(event2.type)(event2);
 }
-function lustreServerEventHandler(event) {
-  const el = event.currentTarget;
-  const tag = el.getAttribute(`data-lustre-on-${event.type}`);
+function lustreServerEventHandler(event2) {
+  const el = event2.currentTarget;
+  const tag = el.getAttribute(`data-lustre-on-${event2.type}`);
   const data = JSON.parse(el.getAttribute("data-lustre-data") || "{}");
   const include = JSON.parse(el.getAttribute("data-lustre-include") || "[]");
-  switch (event.type) {
+  switch (event2.type) {
     case "input":
     case "change":
       include.push("target.value");
@@ -2429,7 +2445,7 @@ function lustreServerEventHandler(event) {
     data: include.reduce(
       (data2, property) => {
         const path = property.split(".");
-        for (let i = 0, o = data2, e = event; i < path.length; i++) {
+        for (let i = 0, o = data2, e = event2; i < path.length; i++) {
           if (i === path.length - 1) {
             o[path[i]] = e[path[i]];
           } else {
@@ -2478,9 +2494,9 @@ function diffKeyedChild(prevChild, child, el, stack, incomingKeyedChildren, keye
     return prevChild;
   }
   if (!keyedChild && prevChild !== null) {
-    const placeholder = document.createTextNode("");
-    el.insertBefore(placeholder, prevChild);
-    stack.unshift({ prev: placeholder, next: child, parent: el });
+    const placeholder2 = document.createTextNode("");
+    el.insertBefore(placeholder2, prevChild);
+    stack.unshift({ prev: placeholder2, next: child, parent: el });
     return prevChild;
   }
   if (!keyedChild || keyedChild === prevChild) {
@@ -2559,14 +2575,14 @@ var LustreClientApplication = class _LustreClientApplication {
         this.#queue = [];
         this.#model = action[0][0];
         const vdom = this.#view(this.#model);
-        const dispatch = (handler, immediate = false) => (event) => {
-          const result = handler(event);
+        const dispatch2 = (handler, immediate = false) => (event2) => {
+          const result = handler(event2);
           if (result instanceof Ok) {
             this.send(new Dispatch(result[0], immediate));
           }
         };
         const prev = this.root.firstChild ?? this.root.appendChild(document.createTextNode(""));
-        morph(prev, vdom, dispatch);
+        morph(prev, vdom, dispatch2);
       }
     } else if (action instanceof Dispatch) {
       const msg = action[0];
@@ -2579,10 +2595,10 @@ var LustreClientApplication = class _LustreClientApplication {
         this.#tickScheduled = window.requestAnimationFrame(() => this.#tick());
       }
     } else if (action instanceof Emit2) {
-      const event = action[0];
+      const event2 = action[0];
       const data = action[1];
       this.root.dispatchEvent(
-        new CustomEvent(event, {
+        new CustomEvent(event2, {
           detail: data,
           bubbles: true,
           composed: true
@@ -2611,35 +2627,32 @@ var LustreClientApplication = class _LustreClientApplication {
   #tickScheduled;
   /**
    * @param {Lustre.Effect<Msg>[]} effects
-   * @param {boolean} isFirstRender
    */
-  #tick(effects = [], isFirstRender = false) {
+  #tick(effects = []) {
     this.#tickScheduled = void 0;
-    if (!this.#flush(effects, isFirstRender))
-      return;
+    this.#flush(effects);
     const vdom = this.#view(this.#model);
-    const dispatch = (handler, immediate = false) => (event) => {
-      const result = handler(event);
+    const dispatch2 = (handler, immediate = false) => (event2) => {
+      const result = handler(event2);
       if (result instanceof Ok) {
         this.send(new Dispatch(result[0], immediate));
       }
     };
     const prev = this.root.firstChild ?? this.root.appendChild(document.createTextNode(""));
-    morph(prev, vdom, dispatch);
+    morph(prev, vdom, dispatch2);
   }
-  #flush(effects = [], didUpdate = false) {
+  #flush(effects = []) {
     while (this.#queue.length > 0) {
       const msg = this.#queue.shift();
       const [next, effect] = this.#update(this.#model, msg);
-      didUpdate ||= this.#model !== next;
       effects = effects.concat(effect.all.toArray());
       this.#model = next;
     }
     while (effects.length > 0) {
       const effect = effects.shift();
-      const dispatch = (msg) => this.send(new Dispatch(msg));
-      const emit2 = (event, data) => this.root.dispatchEvent(
-        new CustomEvent(event, {
+      const dispatch2 = (msg) => this.send(new Dispatch(msg));
+      const emit2 = (event2, data) => this.root.dispatchEvent(
+        new CustomEvent(event2, {
           detail: data,
           bubbles: true,
           composed: true
@@ -2648,12 +2661,10 @@ var LustreClientApplication = class _LustreClientApplication {
       const select = () => {
       };
       const root = this.root;
-      effect({ dispatch, emit: emit2, select, root });
+      effect({ dispatch: dispatch2, emit: emit2, select, root });
     }
     if (this.#queue.length > 0) {
-      return this.#flush(effects, didUpdate);
-    } else {
-      return didUpdate;
+      this.#flush(effects);
     }
   }
 };
@@ -2698,9 +2709,9 @@ var LustreServerApplication = class _LustreServerApplication {
       this.#queue.push(action[0]);
       this.#tick();
     } else if (action instanceof Emit2) {
-      const event = new Emit(action[0], action[1]);
+      const event2 = new Emit(action[0], action[1]);
       for (const [_, renderer] of this.#renderers) {
-        renderer(event);
+        renderer(event2);
       }
     } else if (action instanceof Event3) {
       const handler = this.#handlers.get(action[0]);
@@ -2729,8 +2740,7 @@ var LustreServerApplication = class _LustreServerApplication {
   #handlers;
   #onAttributeChange;
   #tick(effects = []) {
-    if (!this.#flush(false, effects))
-      return;
+    this.#flush(effects);
     const vdom = this.#view(this.#model);
     const diff2 = elements(this.#html, vdom);
     if (!is_empty_element_diff(diff2)) {
@@ -2742,19 +2752,18 @@ var LustreServerApplication = class _LustreServerApplication {
     this.#html = vdom;
     this.#handlers = diff2.handlers;
   }
-  #flush(didUpdate = false, effects = []) {
+  #flush(effects = []) {
     while (this.#queue.length > 0) {
       const msg = this.#queue.shift();
       const [next, effect] = this.#update(this.#model, msg);
-      didUpdate ||= this.#model !== next;
       effects = effects.concat(effect.all.toArray());
       this.#model = next;
     }
     while (effects.length > 0) {
       const effect = effects.shift();
-      const dispatch = (msg) => this.send(new Dispatch(msg));
-      const emit2 = (event, data) => this.root.dispatchEvent(
-        new CustomEvent(event, {
+      const dispatch2 = (msg) => this.send(new Dispatch(msg));
+      const emit2 = (event2, data) => this.root.dispatchEvent(
+        new CustomEvent(event2, {
           detail: data,
           bubbles: true,
           composed: true
@@ -2763,12 +2772,10 @@ var LustreServerApplication = class _LustreServerApplication {
       const select = () => {
       };
       const root = null;
-      effect({ dispatch, emit: emit2, select, root });
+      effect({ dispatch: dispatch2, emit: emit2, select, root });
     }
     if (this.#queue.length > 0) {
-      return this.#flush(didUpdate, effects);
-    } else {
-      return didUpdate;
+      this.#flush(effects);
     }
   }
 };
@@ -2796,6 +2803,9 @@ var NotABrowser = class extends CustomType {
 function application(init3, update2, view2) {
   return new App(init3, update2, view2, new None());
 }
+function dispatch(msg) {
+  return new Dispatch(msg);
+}
 function start2(app, selector, flags) {
   return guard(
     !is_browser(),
@@ -2807,8 +2817,57 @@ function start2(app, selector, flags) {
 }
 
 // build/dev/javascript/lustre/lustre/element/html.mjs
+function text2(content) {
+  return text(content);
+}
+function header(attrs, children2) {
+  return element("header", attrs, children2);
+}
 function h1(attrs, children2) {
   return element("h1", attrs, children2);
+}
+function main(attrs, children2) {
+  return element("main", attrs, children2);
+}
+function div(attrs, children2) {
+  return element("div", attrs, children2);
+}
+function p(attrs, children2) {
+  return element("p", attrs, children2);
+}
+function button(attrs, children2) {
+  return element("button", attrs, children2);
+}
+function input(attrs) {
+  return element("input", attrs, toList([]));
+}
+function option(attrs, label) {
+  return element("option", attrs, toList([text(label)]));
+}
+
+// build/dev/javascript/lustre/lustre/event.mjs
+function on2(name, handler) {
+  return on(name, handler);
+}
+function on_click(msg) {
+  return on2("click", (_) => {
+    return new Ok(msg);
+  });
+}
+function value(event2) {
+  let _pipe = event2;
+  return field("target", field("value", string2))(
+    _pipe
+  );
+}
+function on_input(msg) {
+  return on2(
+    "input",
+    (event2) => {
+      let _pipe = value(event2);
+      return map2(_pipe, msg);
+    }
+  );
 }
 
 // build/dev/javascript/gleam_stdlib/gleam/uri.mjs
@@ -2824,155 +2883,421 @@ var Uri = class extends CustomType {
     this.fragment = fragment;
   }
 };
-function regex_submatches(pattern, string4) {
-  let _pipe = pattern;
-  let _pipe$1 = compile(_pipe, new Options(true, false));
-  let _pipe$2 = replace_error(_pipe$1, void 0);
-  let _pipe$3 = map3(
-    _pipe$2,
-    (_capture) => {
-      return scan(_capture, string4);
-    }
-  );
-  let _pipe$4 = try$(_pipe$3, first);
-  let _pipe$5 = map3(_pipe$4, (m) => {
-    return m.submatches;
-  });
-  return unwrap2(_pipe$5, toList([]));
+function is_valid_host_withing_brackets_char(char) {
+  return 48 >= char && char <= 57 || 65 >= char && char <= 90 || 97 >= char && char <= 122 || char === 58 || char === 46;
 }
-function noneify_query(x) {
-  if (x instanceof None) {
-    return new None();
-  } else {
-    let x$1 = x[0];
-    let $ = pop_grapheme2(x$1);
-    if ($.isOk() && $[0][0] === "?") {
-      let query = $[0][1];
-      return new Some(query);
-    } else {
-      return new None();
-    }
-  }
+function parse_fragment(rest, pieces) {
+  return new Ok(pieces.withFields({ fragment: new Some(rest) }));
 }
-function noneify_empty_string(x) {
-  if (x instanceof Some && x[0] === "") {
-    return new None();
-  } else if (x instanceof None) {
-    return new None();
-  } else {
-    return x;
-  }
-}
-function extra_required(loop$list, loop$remaining) {
+function parse_query_with_question_mark_loop(loop$original, loop$uri_string, loop$pieces, loop$size) {
   while (true) {
-    let list3 = loop$list;
-    let remaining = loop$remaining;
-    if (remaining === 0) {
-      return 0;
-    } else if (list3.hasLength(0)) {
-      return remaining;
+    let original = loop$original;
+    let uri_string = loop$uri_string;
+    let pieces = loop$pieces;
+    let size = loop$size;
+    if (uri_string.startsWith("#") && size === 0) {
+      let rest = uri_string.slice(1);
+      return parse_fragment(rest, pieces);
+    } else if (uri_string.startsWith("#")) {
+      let rest = uri_string.slice(1);
+      let query = string_codeunit_slice(original, 0, size);
+      let pieces$1 = pieces.withFields({ query: new Some(query) });
+      return parse_fragment(rest, pieces$1);
+    } else if (uri_string === "") {
+      return new Ok(pieces.withFields({ query: new Some(original) }));
     } else {
-      let rest = list3.tail;
-      loop$list = rest;
-      loop$remaining = remaining - 1;
+      let $ = pop_codeunit(uri_string);
+      let rest = $[1];
+      loop$original = original;
+      loop$uri_string = rest;
+      loop$pieces = pieces;
+      loop$size = size + 1;
     }
   }
 }
-function pad_list(list3, size) {
-  let _pipe = list3;
-  return append(
-    _pipe,
-    repeat(new None(), extra_required(list3, size))
-  );
+function parse_query_with_question_mark(uri_string, pieces) {
+  return parse_query_with_question_mark_loop(uri_string, uri_string, pieces, 0);
 }
-function split_authority(authority) {
-  let $ = unwrap(authority, "");
-  if ($ === "") {
-    return [new None(), new None(), new None()];
-  } else if ($ === "//") {
-    return [new None(), new Some(""), new None()];
-  } else {
-    let authority$1 = $;
-    let matches = (() => {
-      let _pipe = "^(//)?((.*)@)?(\\[[a-zA-Z0-9:.]*\\]|[^:]*)(:(\\d*))?";
-      let _pipe$1 = regex_submatches(_pipe, authority$1);
-      return pad_list(_pipe$1, 6);
-    })();
-    if (matches.hasLength(6)) {
-      let userinfo = matches.tail.tail.head;
-      let host = matches.tail.tail.tail.head;
-      let port = matches.tail.tail.tail.tail.tail.head;
-      let userinfo$1 = noneify_empty_string(userinfo);
-      let host$1 = noneify_empty_string(host);
-      let port$1 = (() => {
-        let _pipe = port;
-        let _pipe$1 = unwrap(_pipe, "");
-        let _pipe$2 = parse(_pipe$1);
-        return from_result(_pipe$2);
-      })();
-      return [userinfo$1, host$1, port$1];
+function parse_path_loop(loop$original, loop$uri_string, loop$pieces, loop$size) {
+  while (true) {
+    let original = loop$original;
+    let uri_string = loop$uri_string;
+    let pieces = loop$pieces;
+    let size = loop$size;
+    if (uri_string.startsWith("?")) {
+      let rest = uri_string.slice(1);
+      let path = string_codeunit_slice(original, 0, size);
+      let pieces$1 = pieces.withFields({ path });
+      return parse_query_with_question_mark(rest, pieces$1);
+    } else if (uri_string.startsWith("#")) {
+      let rest = uri_string.slice(1);
+      let path = string_codeunit_slice(original, 0, size);
+      let pieces$1 = pieces.withFields({ path });
+      return parse_fragment(rest, pieces$1);
+    } else if (uri_string === "") {
+      return new Ok(pieces.withFields({ path: original }));
     } else {
-      return [new None(), new None(), new None()];
+      let $ = pop_codeunit(uri_string);
+      let rest = $[1];
+      loop$original = original;
+      loop$uri_string = rest;
+      loop$pieces = pieces;
+      loop$size = size + 1;
+    }
+  }
+}
+function parse_path(uri_string, pieces) {
+  return parse_path_loop(uri_string, uri_string, pieces, 0);
+}
+function parse_port_loop(loop$uri_string, loop$pieces, loop$port) {
+  while (true) {
+    let uri_string = loop$uri_string;
+    let pieces = loop$pieces;
+    let port = loop$port;
+    if (uri_string.startsWith("0")) {
+      let rest = uri_string.slice(1);
+      loop$uri_string = rest;
+      loop$pieces = pieces;
+      loop$port = port * 10;
+    } else if (uri_string.startsWith("1")) {
+      let rest = uri_string.slice(1);
+      loop$uri_string = rest;
+      loop$pieces = pieces;
+      loop$port = port * 10 + 1;
+    } else if (uri_string.startsWith("2")) {
+      let rest = uri_string.slice(1);
+      loop$uri_string = rest;
+      loop$pieces = pieces;
+      loop$port = port * 10 + 2;
+    } else if (uri_string.startsWith("3")) {
+      let rest = uri_string.slice(1);
+      loop$uri_string = rest;
+      loop$pieces = pieces;
+      loop$port = port * 10 + 3;
+    } else if (uri_string.startsWith("4")) {
+      let rest = uri_string.slice(1);
+      loop$uri_string = rest;
+      loop$pieces = pieces;
+      loop$port = port * 10 + 4;
+    } else if (uri_string.startsWith("5")) {
+      let rest = uri_string.slice(1);
+      loop$uri_string = rest;
+      loop$pieces = pieces;
+      loop$port = port * 10 + 5;
+    } else if (uri_string.startsWith("6")) {
+      let rest = uri_string.slice(1);
+      loop$uri_string = rest;
+      loop$pieces = pieces;
+      loop$port = port * 10 + 6;
+    } else if (uri_string.startsWith("7")) {
+      let rest = uri_string.slice(1);
+      loop$uri_string = rest;
+      loop$pieces = pieces;
+      loop$port = port * 10 + 7;
+    } else if (uri_string.startsWith("8")) {
+      let rest = uri_string.slice(1);
+      loop$uri_string = rest;
+      loop$pieces = pieces;
+      loop$port = port * 10 + 8;
+    } else if (uri_string.startsWith("9")) {
+      let rest = uri_string.slice(1);
+      loop$uri_string = rest;
+      loop$pieces = pieces;
+      loop$port = port * 10 + 9;
+    } else if (uri_string.startsWith("?")) {
+      let rest = uri_string.slice(1);
+      let pieces$1 = pieces.withFields({ port: new Some(port) });
+      return parse_query_with_question_mark(rest, pieces$1);
+    } else if (uri_string.startsWith("#")) {
+      let rest = uri_string.slice(1);
+      let pieces$1 = pieces.withFields({ port: new Some(port) });
+      return parse_fragment(rest, pieces$1);
+    } else if (uri_string.startsWith("/")) {
+      let pieces$1 = pieces.withFields({ port: new Some(port) });
+      return parse_path(uri_string, pieces$1);
+    } else if (uri_string === "") {
+      return new Ok(pieces.withFields({ port: new Some(port) }));
+    } else {
+      return new Error(void 0);
+    }
+  }
+}
+function parse_port(uri_string, pieces) {
+  if (uri_string.startsWith(":0")) {
+    let rest = uri_string.slice(2);
+    return parse_port_loop(rest, pieces, 0);
+  } else if (uri_string.startsWith(":1")) {
+    let rest = uri_string.slice(2);
+    return parse_port_loop(rest, pieces, 1);
+  } else if (uri_string.startsWith(":2")) {
+    let rest = uri_string.slice(2);
+    return parse_port_loop(rest, pieces, 2);
+  } else if (uri_string.startsWith(":3")) {
+    let rest = uri_string.slice(2);
+    return parse_port_loop(rest, pieces, 3);
+  } else if (uri_string.startsWith(":4")) {
+    let rest = uri_string.slice(2);
+    return parse_port_loop(rest, pieces, 4);
+  } else if (uri_string.startsWith(":5")) {
+    let rest = uri_string.slice(2);
+    return parse_port_loop(rest, pieces, 5);
+  } else if (uri_string.startsWith(":6")) {
+    let rest = uri_string.slice(2);
+    return parse_port_loop(rest, pieces, 6);
+  } else if (uri_string.startsWith(":7")) {
+    let rest = uri_string.slice(2);
+    return parse_port_loop(rest, pieces, 7);
+  } else if (uri_string.startsWith(":8")) {
+    let rest = uri_string.slice(2);
+    return parse_port_loop(rest, pieces, 8);
+  } else if (uri_string.startsWith(":9")) {
+    let rest = uri_string.slice(2);
+    return parse_port_loop(rest, pieces, 9);
+  } else if (uri_string.startsWith(":")) {
+    return new Error(void 0);
+  } else if (uri_string.startsWith("?")) {
+    let rest = uri_string.slice(1);
+    return parse_query_with_question_mark(rest, pieces);
+  } else if (uri_string.startsWith("#")) {
+    let rest = uri_string.slice(1);
+    return parse_fragment(rest, pieces);
+  } else if (uri_string.startsWith("/")) {
+    return parse_path(uri_string, pieces);
+  } else if (uri_string === "") {
+    return new Ok(pieces);
+  } else {
+    return new Error(void 0);
+  }
+}
+function parse_host_outside_of_brackets_loop(loop$original, loop$uri_string, loop$pieces, loop$size) {
+  while (true) {
+    let original = loop$original;
+    let uri_string = loop$uri_string;
+    let pieces = loop$pieces;
+    let size = loop$size;
+    if (uri_string === "") {
+      return new Ok(pieces.withFields({ host: new Some(original) }));
+    } else if (uri_string.startsWith(":")) {
+      let host = string_codeunit_slice(original, 0, size);
+      let pieces$1 = pieces.withFields({ host: new Some(host) });
+      return parse_port(uri_string, pieces$1);
+    } else if (uri_string.startsWith("/")) {
+      let host = string_codeunit_slice(original, 0, size);
+      let pieces$1 = pieces.withFields({ host: new Some(host) });
+      return parse_path(uri_string, pieces$1);
+    } else if (uri_string.startsWith("?")) {
+      let rest = uri_string.slice(1);
+      let host = string_codeunit_slice(original, 0, size);
+      let pieces$1 = pieces.withFields({ host: new Some(host) });
+      return parse_query_with_question_mark(rest, pieces$1);
+    } else if (uri_string.startsWith("#")) {
+      let rest = uri_string.slice(1);
+      let host = string_codeunit_slice(original, 0, size);
+      let pieces$1 = pieces.withFields({ host: new Some(host) });
+      return parse_fragment(rest, pieces$1);
+    } else {
+      let $ = pop_codeunit(uri_string);
+      let rest = $[1];
+      loop$original = original;
+      loop$uri_string = rest;
+      loop$pieces = pieces;
+      loop$size = size + 1;
+    }
+  }
+}
+function parse_host_within_brackets_loop(loop$original, loop$uri_string, loop$pieces, loop$size) {
+  while (true) {
+    let original = loop$original;
+    let uri_string = loop$uri_string;
+    let pieces = loop$pieces;
+    let size = loop$size;
+    if (uri_string === "") {
+      return new Ok(pieces.withFields({ host: new Some(uri_string) }));
+    } else if (uri_string.startsWith("]") && size === 0) {
+      let rest = uri_string.slice(1);
+      return parse_port(rest, pieces);
+    } else if (uri_string.startsWith("]")) {
+      let rest = uri_string.slice(1);
+      let host = string_codeunit_slice(original, 0, size + 1);
+      let pieces$1 = pieces.withFields({ host: new Some(host) });
+      return parse_port(rest, pieces$1);
+    } else if (uri_string.startsWith("/") && size === 0) {
+      return parse_path(uri_string, pieces);
+    } else if (uri_string.startsWith("/")) {
+      let host = string_codeunit_slice(original, 0, size);
+      let pieces$1 = pieces.withFields({ host: new Some(host) });
+      return parse_path(uri_string, pieces$1);
+    } else if (uri_string.startsWith("?") && size === 0) {
+      let rest = uri_string.slice(1);
+      return parse_query_with_question_mark(rest, pieces);
+    } else if (uri_string.startsWith("?")) {
+      let rest = uri_string.slice(1);
+      let host = string_codeunit_slice(original, 0, size);
+      let pieces$1 = pieces.withFields({ host: new Some(host) });
+      return parse_query_with_question_mark(rest, pieces$1);
+    } else if (uri_string.startsWith("#") && size === 0) {
+      let rest = uri_string.slice(1);
+      return parse_fragment(rest, pieces);
+    } else if (uri_string.startsWith("#")) {
+      let rest = uri_string.slice(1);
+      let host = string_codeunit_slice(original, 0, size);
+      let pieces$1 = pieces.withFields({ host: new Some(host) });
+      return parse_fragment(rest, pieces$1);
+    } else {
+      let $ = pop_codeunit(uri_string);
+      let char = $[0];
+      let rest = $[1];
+      let $1 = is_valid_host_withing_brackets_char(char);
+      if ($1) {
+        loop$original = original;
+        loop$uri_string = rest;
+        loop$pieces = pieces;
+        loop$size = size + 1;
+      } else {
+        return parse_host_outside_of_brackets_loop(
+          original,
+          original,
+          pieces,
+          0
+        );
+      }
+    }
+  }
+}
+function parse_host_within_brackets(uri_string, pieces) {
+  return parse_host_within_brackets_loop(uri_string, uri_string, pieces, 0);
+}
+function parse_host_outside_of_brackets(uri_string, pieces) {
+  return parse_host_outside_of_brackets_loop(uri_string, uri_string, pieces, 0);
+}
+function parse_host(uri_string, pieces) {
+  if (uri_string.startsWith("[")) {
+    return parse_host_within_brackets(uri_string, pieces);
+  } else if (uri_string.startsWith(":")) {
+    let pieces$1 = pieces.withFields({ host: new Some("") });
+    return parse_port(uri_string, pieces$1);
+  } else if (uri_string === "") {
+    return new Ok(pieces.withFields({ host: new Some("") }));
+  } else {
+    return parse_host_outside_of_brackets(uri_string, pieces);
+  }
+}
+function parse_userinfo_loop(loop$original, loop$uri_string, loop$pieces, loop$size) {
+  while (true) {
+    let original = loop$original;
+    let uri_string = loop$uri_string;
+    let pieces = loop$pieces;
+    let size = loop$size;
+    if (uri_string.startsWith("@") && size === 0) {
+      let rest = uri_string.slice(1);
+      return parse_host(rest, pieces);
+    } else if (uri_string.startsWith("@")) {
+      let rest = uri_string.slice(1);
+      let userinfo = string_codeunit_slice(original, 0, size);
+      let pieces$1 = pieces.withFields({ userinfo: new Some(userinfo) });
+      return parse_host(rest, pieces$1);
+    } else if (uri_string === "") {
+      return parse_host(original, pieces);
+    } else if (uri_string.startsWith("/")) {
+      return parse_host(original, pieces);
+    } else if (uri_string.startsWith("?")) {
+      return parse_host(original, pieces);
+    } else if (uri_string.startsWith("#")) {
+      return parse_host(original, pieces);
+    } else {
+      let $ = pop_codeunit(uri_string);
+      let rest = $[1];
+      loop$original = original;
+      loop$uri_string = rest;
+      loop$pieces = pieces;
+      loop$size = size + 1;
+    }
+  }
+}
+function parse_authority_pieces(string5, pieces) {
+  return parse_userinfo_loop(string5, string5, pieces, 0);
+}
+function parse_authority_with_slashes(uri_string, pieces) {
+  if (uri_string === "//") {
+    return new Ok(pieces.withFields({ host: new Some("") }));
+  } else if (uri_string.startsWith("//")) {
+    let rest = uri_string.slice(2);
+    return parse_authority_pieces(rest, pieces);
+  } else {
+    return parse_path(uri_string, pieces);
+  }
+}
+function parse_scheme_loop(loop$original, loop$uri_string, loop$pieces, loop$size) {
+  while (true) {
+    let original = loop$original;
+    let uri_string = loop$uri_string;
+    let pieces = loop$pieces;
+    let size = loop$size;
+    if (uri_string.startsWith("/") && size === 0) {
+      return parse_authority_with_slashes(uri_string, pieces);
+    } else if (uri_string.startsWith("/")) {
+      let scheme = string_codeunit_slice(original, 0, size);
+      let pieces$1 = pieces.withFields({
+        scheme: new Some(lowercase2(scheme))
+      });
+      return parse_authority_with_slashes(uri_string, pieces$1);
+    } else if (uri_string.startsWith("?") && size === 0) {
+      let rest = uri_string.slice(1);
+      return parse_query_with_question_mark(rest, pieces);
+    } else if (uri_string.startsWith("?")) {
+      let rest = uri_string.slice(1);
+      let scheme = string_codeunit_slice(original, 0, size);
+      let pieces$1 = pieces.withFields({
+        scheme: new Some(lowercase2(scheme))
+      });
+      return parse_query_with_question_mark(rest, pieces$1);
+    } else if (uri_string.startsWith("#") && size === 0) {
+      let rest = uri_string.slice(1);
+      return parse_fragment(rest, pieces);
+    } else if (uri_string.startsWith("#")) {
+      let rest = uri_string.slice(1);
+      let scheme = string_codeunit_slice(original, 0, size);
+      let pieces$1 = pieces.withFields({
+        scheme: new Some(lowercase2(scheme))
+      });
+      return parse_fragment(rest, pieces$1);
+    } else if (uri_string.startsWith(":") && size === 0) {
+      return new Error(void 0);
+    } else if (uri_string.startsWith(":")) {
+      let rest = uri_string.slice(1);
+      let scheme = string_codeunit_slice(original, 0, size);
+      let pieces$1 = pieces.withFields({
+        scheme: new Some(lowercase2(scheme))
+      });
+      return parse_authority_with_slashes(rest, pieces$1);
+    } else if (uri_string === "") {
+      return new Ok(pieces.withFields({ path: original }));
+    } else {
+      let $ = pop_codeunit(uri_string);
+      let rest = $[1];
+      loop$original = original;
+      loop$uri_string = rest;
+      loop$pieces = pieces;
+      loop$size = size + 1;
     }
   }
 }
 function do_parse(uri_string) {
-  let pattern = "^(([a-z][a-z0-9\\+\\-\\.]*):)?(//([^/?#]*))?([^?#]*)(\\?([^#]*))?(#.*)?";
-  let matches = (() => {
-    let _pipe = pattern;
-    let _pipe$1 = regex_submatches(_pipe, uri_string);
-    return pad_list(_pipe$1, 8);
-  })();
-  let $ = (() => {
-    if (matches.hasLength(8)) {
-      let scheme2 = matches.tail.head;
-      let authority_with_slashes = matches.tail.tail.head;
-      let path2 = matches.tail.tail.tail.tail.head;
-      let query_with_question_mark = matches.tail.tail.tail.tail.tail.head;
-      let fragment2 = matches.tail.tail.tail.tail.tail.tail.tail.head;
-      return [
-        scheme2,
-        authority_with_slashes,
-        path2,
-        query_with_question_mark,
-        fragment2
-      ];
-    } else {
-      return [new None(), new None(), new None(), new None(), new None()];
-    }
-  })();
-  let scheme = $[0];
-  let authority = $[1];
-  let path = $[2];
-  let query = $[3];
-  let fragment = $[4];
-  let scheme$1 = noneify_empty_string(scheme);
-  let path$1 = unwrap(path, "");
-  let query$1 = noneify_query(query);
-  let $1 = split_authority(authority);
-  let userinfo = $1[0];
-  let host = $1[1];
-  let port = $1[2];
-  let fragment$1 = (() => {
-    let _pipe = fragment;
-    let _pipe$1 = to_result(_pipe, void 0);
-    let _pipe$2 = try$(_pipe$1, pop_grapheme2);
-    let _pipe$3 = map3(_pipe$2, second);
-    return from_result(_pipe$3);
-  })();
-  let scheme$2 = (() => {
-    let _pipe = scheme$1;
-    let _pipe$1 = noneify_empty_string(_pipe);
-    return map(_pipe$1, lowercase2);
-  })();
-  return new Ok(
-    new Uri(scheme$2, userinfo, host, port, path$1, query$1, fragment$1)
+  let default_pieces = new Uri(
+    new None(),
+    new None(),
+    new None(),
+    new None(),
+    "",
+    new None(),
+    new None()
   );
+  return parse_scheme_loop(uri_string, uri_string, default_pieces, 0);
 }
 function parse2(uri_string) {
   return do_parse(uri_string);
 }
-function to_string7(uri) {
+function to_string6(uri) {
   let parts = (() => {
     let $ = uri.fragment;
     if ($ instanceof Some) {
@@ -3062,7 +3387,7 @@ var Trace = class extends CustomType {
 };
 var Connect = class extends CustomType {
 };
-var Options2 = class extends CustomType {
+var Options = class extends CustomType {
 };
 var Patch = class extends CustomType {
 };
@@ -3079,7 +3404,7 @@ function method_to_string(method) {
     return "get";
   } else if (method instanceof Head) {
     return "head";
-  } else if (method instanceof Options2) {
+  } else if (method instanceof Options) {
     return "options";
   } else if (method instanceof Patch) {
     return "patch";
@@ -3183,33 +3508,6 @@ var Response = class extends CustomType {
   }
 };
 
-// build/dev/javascript/gleam_javascript/gleam_javascript_ffi.mjs
-var PromiseLayer = class _PromiseLayer {
-  constructor(promise) {
-    this.promise = promise;
-  }
-  static wrap(value2) {
-    return value2 instanceof Promise ? new _PromiseLayer(value2) : value2;
-  }
-  static unwrap(value2) {
-    return value2 instanceof _PromiseLayer ? value2.promise : value2;
-  }
-};
-function resolve(value2) {
-  return Promise.resolve(PromiseLayer.wrap(value2));
-}
-function then_await(promise, fn) {
-  return promise.then((value2) => fn(PromiseLayer.unwrap(value2)));
-}
-function map_promise(promise, fn) {
-  return promise.then(
-    (value2) => PromiseLayer.wrap(fn(PromiseLayer.unwrap(value2)))
-  );
-}
-function rescue(promise, fn) {
-  return promise.catch((error) => fn(error));
-}
-
 // build/dev/javascript/gleam_javascript/gleam/javascript/promise.mjs
 function tap(promise, callback) {
   let _pipe = promise;
@@ -3253,7 +3551,7 @@ function from_fetch_response(response) {
   );
 }
 function to_fetch_request(request) {
-  let url = to_string7(to_uri(request));
+  let url = to_string6(to_uri(request));
   let method = method_to_string(request.method).toUpperCase();
   let options = {
     headers: make_headers(request.headers),
@@ -3338,7 +3636,7 @@ var ExpectTextResponse = class extends CustomType {
     this.run = run2;
   }
 };
-function do_send(req, expect, dispatch) {
+function do_send(req, expect, dispatch2) {
   let _pipe = send(req);
   let _pipe$1 = try_await(_pipe, read_text_body);
   let _pipe$2 = map_promise(
@@ -3358,18 +3656,18 @@ function do_send(req, expect, dispatch) {
       return expect.run(new Error(new NetworkError2()));
     }
   );
-  tap(_pipe$3, dispatch);
+  tap(_pipe$3, dispatch2);
   return void 0;
 }
 function get2(url, expect) {
   return from(
-    (dispatch) => {
+    (dispatch2) => {
       let $ = to(url);
       if ($.isOk()) {
         let req = $[0];
-        return do_send(req, expect, dispatch);
+        return do_send(req, expect, dispatch2);
       } else {
-        return dispatch(expect.run(new Error(new BadUrl(url))));
+        return dispatch2(expect.run(new Error(new BadUrl(url))));
       }
     }
   );
@@ -3423,51 +3721,226 @@ function querySelector(query) {
   }
   return new Ok(found);
 }
+function querySelectorAll(query) {
+  return Array.from(document.querySelectorAll(query));
+}
+function addEventListener(type, listener) {
+  return document.addEventListener(type, listener);
+}
 
 // build/dev/javascript/plinth/element_ffi.mjs
+function cast(raw) {
+  if (raw instanceof Element) {
+    return new Ok(raw);
+  } else {
+    return new Error();
+  }
+}
+function getAttribute(element2, name) {
+  let attribute2 = element2.getAttribute(name);
+  if (attribute2) {
+    return new Ok(attribute2);
+  }
+  return new Error();
+}
 function innerText(element2) {
   return element2.innerText;
+}
+function focus(element2) {
+  element2.focus();
+}
+
+// build/dev/javascript/plinth/event_ffi.mjs
+function target(event2) {
+  return event2.target;
+}
+
+// build/dev/javascript/plinth/plinth/browser/element.mjs
+function cast2(raw) {
+  let $ = cast(raw);
+  if ($.isOk()) {
+    let element2 = $[0];
+    return new Ok(element2);
+  } else {
+    return new Error(
+      new DecodeError("Element", classify(raw), toList([]))
+    );
+  }
+}
+
+// build/dev/javascript/plinth/window_ffi.mjs
+function self() {
+  return globalThis;
+}
+function alert(message) {
+  window.alert(message);
+}
+function prompt(message, defaultValue) {
+  let text3 = window.prompt(message, defaultValue);
+  if (text3 !== null) {
+    return new Ok(text3);
+  } else {
+    return new Error();
+  }
+}
+function addEventListener3(type, listener) {
+  return window.addEventListener(type, listener);
+}
+async function requestWakeLock() {
+  try {
+    return new Ok(await window.navigator.wakeLock.request("screen"));
+  } catch (error) {
+    return new Error(error.toString());
+  }
+}
+function location() {
+  return window.location.href;
+}
+function locationOf(w) {
+  try {
+    return new Ok(w.location.href);
+  } catch (error) {
+    return new Error(error.toString());
+  }
+}
+function setLocation(w, url) {
+  w.location.href = url;
+}
+function origin() {
+  return window.location.origin;
+}
+function pathname() {
+  return window.location.pathname;
+}
+function reload() {
+  return window.location.reload();
+}
+function reloadOf(w) {
+  return w.location.reload();
+}
+function focus2(w) {
+  return w.focus();
+}
+function getHash2() {
+  const hash = window.location.hash;
+  if (hash == "") {
+    return new Error();
+  }
+  return new Ok(decodeURIComponent(hash.slice(1)));
+}
+function getSearch() {
+  const search = window.location.search;
+  if (search == "") {
+    return new Error();
+  }
+  return new Ok(decodeURIComponent(search.slice(1)));
+}
+function innerHeight(w) {
+  return w.innerHeight;
+}
+function innerWidth(w) {
+  return w.innerWidth;
+}
+function outerHeight(w) {
+  return w.outerHeight;
+}
+function outerWidth(w) {
+  return w.outerWidth;
+}
+function screenX(w) {
+  return w.screenX;
+}
+function screenY(w) {
+  return w.screenY;
+}
+function screenTop(w) {
+  return w.screenTop;
+}
+function screenLeft(w) {
+  return w.screenLeft;
+}
+function scrollX(w) {
+  return w.scrollX;
+}
+function scrollY(w) {
+  return w.scrollY;
+}
+function open(url, target2, features) {
+  try {
+    return new Ok(window.open(url, target2, features));
+  } catch (error) {
+    return new Error(error.toString());
+  }
+}
+function close(w) {
+  w.close();
+}
+function closed(w) {
+  return w.closed;
+}
+function queueMicrotask(callback) {
+  return window.queueMicrotask(callback);
+}
+function requestAnimationFrame(callback) {
+  return window.requestAnimationFrame(callback);
+}
+function cancelAnimationFrame(callback) {
+  return window.cancelAnimationFrame(callback);
+}
+function eval_(string) {
+  try {
+    return new Ok(eval(string));
+  } catch (error) {
+    return new Error(error.toString());
+  }
+}
+async function import_(string5) {
+  try {
+    return new Ok(await import(string5));
+  } catch (error) {
+    return new Error(error.toString());
+  }
 }
 
 // build/dev/javascript/shared/shared/coin_market_cap_types.mjs
 var CryptoCurrency = class extends CustomType {
-  constructor(id, rank, name, symbol) {
+  constructor(id2, rank, name, symbol) {
     super();
-    this.id = id;
+    this.id = id2;
     this.rank = rank;
     this.name = name;
     this.symbol = symbol;
   }
 };
 var FiatCurrency = class extends CustomType {
-  constructor(id, name, sign, symbol) {
+  constructor(id2, name, sign, symbol) {
     super();
-    this.id = id;
+    this.id = id2;
     this.name = name;
     this.sign = sign;
     this.symbol = symbol;
   }
 };
 function crypto_currency_decoder() {
-  return field(
+  return field2(
     "id",
     int2,
-    (id) => {
+    (id2) => {
       return optional_field(
         "rank",
         new None(),
         optional2(int2),
         (rank) => {
-          return field(
+          return field2(
             "name",
-            string2,
+            string3,
             (name) => {
-              return field(
+              return field2(
                 "symbol",
-                string2,
+                string3,
                 (symbol) => {
                   return success(
-                    new CryptoCurrency(id, rank, name, symbol)
+                    new CryptoCurrency(id2, rank, name, symbol)
                   );
                 }
               );
@@ -3479,23 +3952,23 @@ function crypto_currency_decoder() {
   );
 }
 function fiat_currency_decoder() {
-  return field(
+  return field2(
     "id",
     int2,
-    (id) => {
-      return field(
+    (id2) => {
+      return field2(
         "name",
-        string2,
+        string3,
         (name) => {
-          return field(
+          return field2(
             "sign",
-            string2,
+            string3,
             (sign) => {
-              return field(
+              return field2(
                 "symbol",
-                string2,
+                string3,
                 (symbol) => {
-                  return success(new FiatCurrency(id, name, sign, symbol));
+                  return success(new FiatCurrency(id2, name, sign, symbol));
                 }
               );
             }
@@ -3506,7 +3979,7 @@ function fiat_currency_decoder() {
   );
 }
 
-// build/dev/javascript/client/ffi.mjs
+// build/dev/javascript/client/window_ffi.mjs
 function get_app_url() {
   return window["__ENV__"] ? window.location.origin : "http://localhost:8080";
 }
@@ -3527,14 +4000,25 @@ function get_fiat(on_result_msg) {
   return get2(get_app_url() + "/api/currencies/fiat", expect);
 }
 
+// build/dev/javascript/client/element_ffi.mjs
+function contains(elem1, elem2) {
+  return elem1.contains(elem2);
+}
+function previousElementSibling(elem) {
+  let sibling = elem.previousElementSibling;
+  return sibling ? new Ok(sibling) : new Error();
+}
+
 // build/dev/javascript/client/client/model.mjs
 var Model2 = class extends CustomType {
-  constructor(crypto, fiat, currency_input1, currency_input2) {
+  constructor(crypto, fiat, currency_input1, currency_input2, currency_dropdown1_visible, currency_dropdown2_visible) {
     super();
     this.crypto = crypto;
     this.fiat = fiat;
     this.currency_input1 = currency_input1;
     this.currency_input2 = currency_input2;
+    this.currency_dropdown1_visible = currency_dropdown1_visible;
+    this.currency_dropdown2_visible = currency_dropdown2_visible;
   }
 };
 var Loading = class extends CustomType {
@@ -3546,41 +4030,41 @@ var Loaded = class extends CustomType {
   }
 };
 var CurrencyInput = class extends CustomType {
-  constructor(id, amount) {
+  constructor(id2, amount) {
     super();
-    this.id = id;
+    this.id = id2;
     this.amount = amount;
   }
 };
 function currency_input_decoder() {
-  return field(
+  return field2(
     "id",
     optional2(int2),
-    (id) => {
-      return field(
+    (id2) => {
+      return field2(
         "amount",
         optional2(float2),
         (amount) => {
-          return success(new CurrencyInput(id, amount));
+          return success(new CurrencyInput(id2, amount));
         }
       );
     }
   );
 }
 function decoder() {
-  return field(
+  return field2(
     "crypto",
     list2(crypto_currency_decoder()),
     (crypto) => {
-      return field(
+      return field2(
         "fiat",
         list2(fiat_currency_decoder()),
         (fiat) => {
-          return field(
+          return field2(
             "currency_input1",
             currency_input_decoder(),
             (currency_input1) => {
-              return field(
+              return field2(
                 "currency_input2",
                 currency_input_decoder(),
                 (currency_input2) => {
@@ -3589,7 +4073,9 @@ function decoder() {
                       new Loaded(crypto),
                       new Loaded(fiat),
                       currency_input1,
-                      currency_input2
+                      currency_input2,
+                      false,
+                      false
                     )
                   );
                 }
@@ -3615,6 +4101,29 @@ var ApiReturnedFiat = class extends CustomType {
     this[0] = x0;
   }
 };
+var UserClickedCurrencyInput = class extends CustomType {
+  constructor(x0) {
+    super();
+    this[0] = x0;
+  }
+};
+var UserClickedInDocument = class extends CustomType {
+  constructor(x0) {
+    super();
+    this[0] = x0;
+  }
+};
+var UserTypedInSearchBox = class extends CustomType {
+  constructor(x0, x1) {
+    super();
+    this[0] = x0;
+    this[1] = x1;
+  }
+};
+var CurrencyInputOne = class extends CustomType {
+};
+var CurrencyInputTwo = class extends CustomType {
+};
 function init2(maybe_model) {
   if (maybe_model instanceof Some) {
     let model = maybe_model[0];
@@ -3625,7 +4134,9 @@ function init2(maybe_model) {
         new Loading(),
         new Loading(),
         new CurrencyInput(new None(), new None()),
-        new CurrencyInput(new None(), new None())
+        new CurrencyInput(new None(), new None()),
+        false,
+        false
       ),
       batch(
         toList([
@@ -3640,6 +4151,26 @@ function init2(maybe_model) {
     ];
   }
 }
+function header2() {
+  return header(
+    toList([class$("p-4 bg-red-500 text-white")]),
+    toList([
+      h1(
+        toList([
+          class$("w-full mx-auto max-w-screen-xl text-4xl font-bold")
+        ]),
+        toList([text2("Crypto Rates")])
+      )
+    ])
+  );
+}
+function currency_input_id(currency_input_num) {
+  if (currency_input_num instanceof CurrencyInputOne) {
+    return "currency-input-1";
+  } else {
+    return "currency-input-2";
+  }
+}
 function update(model, msg) {
   if (msg instanceof ApiReturnedCrypto && msg[0].isOk()) {
     let currencies = msg[0][0];
@@ -3652,38 +4183,328 @@ function update(model, msg) {
   } else if (msg instanceof ApiReturnedFiat && msg[0].isOk()) {
     let currencies = msg[0][0];
     return [model.withFields({ fiat: new Loaded(currencies) }), none()];
-  } else {
+  } else if (msg instanceof ApiReturnedFiat && !msg[0].isOk()) {
     return [model, none()];
-  }
-}
-function view(_) {
-  return h1(toList([]), toList([text("Hello, worldz!")]));
-}
-function ssr_model() {
-  return try$(
-    (() => {
-      let _pipe = querySelector("#model");
-      return map3(_pipe, innerText);
-    })(),
-    (json_str) => {
-      return try$(
-        (() => {
-          let _pipe = decode2(
-            json_str,
-            (_capture) => {
-              return run(_capture, decoder());
+  } else if (msg instanceof UserClickedCurrencyInput) {
+    let input_num = msg[0];
+    let model$1 = (() => {
+      if (input_num instanceof CurrencyInputOne) {
+        return model.withFields({
+          currency_dropdown1_visible: !model.currency_dropdown1_visible
+        });
+      } else {
+        return model.withFields({
+          currency_dropdown2_visible: !model.currency_dropdown2_visible
+        });
+      }
+    })();
+    let effect = from(
+      (_) => {
+        requestAnimationFrame(
+          (_2) => {
+            let $ = querySelector(
+              "#" + currency_input_id(input_num) + " input"
+            );
+            if (!$.isOk()) {
+              throw makeError(
+                "let_assert",
+                "client",
+                128,
+                "",
+                "Pattern match failed, no pattern matched the value.",
+                { value: $ }
+              );
             }
-          );
-          return replace_error(_pipe, void 0);
-        })(),
-        (model) => {
-          return new Ok(model);
-        }
+            let search_elem = $[0];
+            return focus(search_elem);
+          }
+        );
+        return void 0;
+      }
+    );
+    return [model$1, effect];
+  } else if (msg instanceof UserClickedInDocument) {
+    let event2 = msg[0];
+    let $ = (() => {
+      let _pipe = event2;
+      let _pipe$1 = target(_pipe);
+      return cast2(_pipe$1);
+    })();
+    if (!$.isOk()) {
+      throw makeError(
+        "let_assert",
+        "client",
+        142,
+        "update",
+        "Pattern match failed, no pattern matched the value.",
+        { value: $ }
       );
     }
+    let target_elem = $[0];
+    let $1 = (() => {
+      let _pipe = querySelectorAll(".currency-dropdown");
+      let _pipe$1 = to_list(_pipe);
+      return map(
+        _pipe$1,
+        (dropdown_elem) => {
+          let $2 = contains(dropdown_elem, target_elem);
+          if ($2) {
+            return false;
+          } else {
+            let target_elem_id = getAttribute(
+              target_elem,
+              "id"
+            );
+            let $3 = previousElementSibling(dropdown_elem);
+            if (!$3.isOk()) {
+              throw makeError(
+                "let_assert",
+                "client",
+                157,
+                "",
+                "Pattern match failed, no pattern matched the value.",
+                { value: $3 }
+              );
+            }
+            let btn_elem = $3[0];
+            let btn_elem_id = getAttribute(btn_elem, "id");
+            return !isEqual(target_elem_id, btn_elem_id);
+          }
+        }
+      );
+    })();
+    if (!$1.hasLength(2)) {
+      throw makeError(
+        "let_assert",
+        "client",
+        147,
+        "update",
+        "Pattern match failed, no pattern matched the value.",
+        { value: $1 }
+      );
+    }
+    let clicked_outside_dropdown1 = $1.head;
+    let clicked_outside_dropdown2 = $1.tail.head;
+    let model$1 = model.withFields({
+      currency_dropdown1_visible: model.currency_dropdown1_visible && !clicked_outside_dropdown1,
+      currency_dropdown2_visible: model.currency_dropdown2_visible && !clicked_outside_dropdown2
+    });
+    return [model$1, none()];
+  } else {
+    let input_num = msg[0];
+    let input_text = msg[1];
+    throw makeError(
+      "todo",
+      "client",
+      180,
+      "update",
+      "`todo` expression evaluated. This code has not yet been implemented.",
+      {}
+    );
+  }
+}
+function currency_input(crypto_options, fiat_options, dropdown_visible, currency_input_num) {
+  let button2 = button(
+    toList([
+      class$(
+        "w-full p-2 border border-gray-300 rounded-lg text-left focus:ring-2 focus:ring-blue-500 focus:outline-none"
+      ),
+      id(currency_input_id(currency_input_num) + "-btn"),
+      on_click(new UserClickedCurrencyInput(currency_input_num))
+    ]),
+    toList([text2("Select one...")])
+  );
+  let search_input = div(
+    toList([class$("sticky top-0 bg-white z-10")]),
+    toList([
+      input(
+        toList([
+          class$(
+            "w-full p-2 border-b border-gray-200 focus:outline-none"
+          ),
+          placeholder("Search..."),
+          type_("text"),
+          on_input(
+            (_capture) => {
+              return new UserTypedInSearchBox(currency_input_num, _capture);
+            }
+          )
+        ])
+      )
+    ])
+  );
+  let dropdown = (() => {
+    let build_options_group = (group_name, options) => {
+      return div(
+        toList([class$("group")]),
+        toList([
+          div(
+            toList([class$("font-bold px-2 py-1 bg-gray-100")]),
+            toList([text2(group_name)])
+          ),
+          div(toList([]), options)
+        ])
+      );
+    };
+    return div(
+      toList([
+        class$(
+          "currency-dropdown absolute z-10 w-full bg-white border border-gray-300 rounded-lg shadow-md max-h-64 overflow-y-auto"
+        ),
+        class$(
+          (() => {
+            if (dropdown_visible) {
+              return "";
+            } else {
+              return "hidden";
+            }
+          })()
+        )
+      ]),
+      toList([
+        search_input,
+        div(
+          toList([class$("suggestions")]),
+          toList([
+            build_options_group("Crypto", crypto_options),
+            build_options_group("Fiat", fiat_options)
+          ])
+        )
+      ])
+    );
+  })();
+  return div(
+    toList([
+      id(currency_input_id(currency_input_num)),
+      class$("relative w-72")
+    ]),
+    toList([button2, dropdown])
   );
 }
-function main() {
+function main_content(model) {
+  let crypto_options = (() => {
+    let $ = model.crypto;
+    if ($ instanceof Loaded) {
+      let crypto = $[0];
+      return map(
+        crypto,
+        (c) => {
+          return div(
+            toList([
+              class$("px-4 py-1 cursor-pointer hover:bg-gray-100"),
+              attribute("data-value", c.name)
+            ]),
+            toList([text2(c.name)])
+          );
+        }
+      );
+    } else if ($ instanceof Loading) {
+      return toList([
+        option(toList([attribute("value", "0")]), "Loading...")
+      ]);
+    } else {
+      return toList([]);
+    }
+  })();
+  let fiat_options = (() => {
+    let $ = model.fiat;
+    if ($ instanceof Loaded) {
+      let fiat = $[0];
+      return map(
+        fiat,
+        (f) => {
+          return div(
+            toList([
+              class$("px-4 py-1 cursor-pointer hover:bg-gray-100"),
+              attribute("data-value", f.name)
+            ]),
+            toList([text2(f.name)])
+          );
+        }
+      );
+    } else if ($ instanceof Loading) {
+      return toList([
+        div(
+          toList([
+            class$("px-4 py-1 cursor-pointer hover:bg-gray-100"),
+            attribute("data-value", "0")
+          ]),
+          toList([text2("Loading...")])
+        )
+      ]);
+    } else {
+      return toList([]);
+    }
+  })();
+  return main(
+    toList([class$("flex items-center")]),
+    toList([
+      div(
+        toList([
+          attribute(
+            "class",
+            "flex flex-col items-center gap-8 w-full max-w-screen-lg mx-auto"
+          )
+        ]),
+        toList([
+          div(
+            toList([
+              attribute("class", "flex items-center space-x-4")
+            ]),
+            toList([
+              currency_input(
+                crypto_options,
+                fiat_options,
+                model.currency_dropdown1_visible,
+                new CurrencyInputOne()
+              ),
+              p(
+                toList([
+                  attribute(
+                    "class",
+                    "text-xl font-bold text-gray-700"
+                  )
+                ]),
+                toList([text("=")])
+              ),
+              currency_input(
+                crypto_options,
+                fiat_options,
+                model.currency_dropdown2_visible,
+                new CurrencyInputTwo()
+              )
+            ])
+          )
+        ])
+      )
+    ])
+  );
+}
+function view(model) {
+  return div(
+    toList([class$("flex flex-col gap-12")]),
+    toList([header2(), main_content(model)])
+  );
+}
+function main2() {
+  let ssr_model = () => {
+    return try$(
+      (() => {
+        let _pipe = querySelector("#model");
+        return map2(_pipe, innerText);
+      })(),
+      (json_str) => {
+        let _pipe = json_str;
+        let _pipe$1 = decode2(
+          _pipe,
+          (_capture) => {
+            return run(_capture, decoder());
+          }
+        );
+        return replace_error(_pipe$1, void 0);
+      }
+    );
+  };
   let app = application(init2, update, view);
   let model = (() => {
     let _pipe = ssr_model();
@@ -3694,14 +4515,23 @@ function main() {
     throw makeError(
       "let_assert",
       "client",
-      33,
+      62,
       "main",
       "Pattern match failed, no pattern matched the value.",
       { value: $ }
     );
   }
-  return void 0;
+  let to_runtime = $[0];
+  return addEventListener(
+    "click",
+    (event2) => {
+      let _pipe = event2;
+      let _pipe$1 = new UserClickedInDocument(_pipe);
+      let _pipe$2 = dispatch(_pipe$1);
+      return to_runtime(_pipe$2);
+    }
+  );
 }
 
 // build/.lustre/entry.mjs
-main();
+main2();

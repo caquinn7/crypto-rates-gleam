@@ -109,58 +109,53 @@ var BitArray = class _BitArray {
     return new _BitArray(this.buffer.slice(index4));
   }
 };
-var UtfCodepoint = class {
-  constructor(value2) {
-    this.value = value2;
-  }
-};
 function byteArrayToInt(byteArray, start3, end, isBigEndian, isSigned) {
   const byteSize = end - start3;
   if (byteSize <= 6) {
-    let value2 = 0;
+    let value4 = 0;
     if (isBigEndian) {
       for (let i = start3; i < end; i++) {
-        value2 = value2 * 256 + byteArray[i];
+        value4 = value4 * 256 + byteArray[i];
       }
     } else {
       for (let i = end - 1; i >= start3; i--) {
-        value2 = value2 * 256 + byteArray[i];
+        value4 = value4 * 256 + byteArray[i];
       }
     }
     if (isSigned) {
       const highBit = 2 ** (byteSize * 8 - 1);
-      if (value2 >= highBit) {
-        value2 -= highBit * 2;
+      if (value4 >= highBit) {
+        value4 -= highBit * 2;
       }
     }
-    return value2;
+    return value4;
   } else {
-    let value2 = 0n;
+    let value4 = 0n;
     if (isBigEndian) {
       for (let i = start3; i < end; i++) {
-        value2 = (value2 << 8n) + BigInt(byteArray[i]);
+        value4 = (value4 << 8n) + BigInt(byteArray[i]);
       }
     } else {
       for (let i = end - 1; i >= start3; i--) {
-        value2 = (value2 << 8n) + BigInt(byteArray[i]);
+        value4 = (value4 << 8n) + BigInt(byteArray[i]);
       }
     }
     if (isSigned) {
       const highBit = 1n << BigInt(byteSize * 8 - 1);
-      if (value2 >= highBit) {
-        value2 -= highBit * 2n;
+      if (value4 >= highBit) {
+        value4 -= highBit * 2n;
       }
     }
-    return Number(value2);
+    return Number(value4);
   }
 }
 function byteArrayToFloat(byteArray, start3, end, isBigEndian) {
-  const view2 = new DataView(byteArray.buffer);
+  const view3 = new DataView(byteArray.buffer);
   const byteSize = end - start3;
   if (byteSize === 8) {
-    return view2.getFloat64(start3, !isBigEndian);
+    return view3.getFloat64(start3, !isBigEndian);
   } else if (byteSize === 4) {
-    return view2.getFloat32(start3, !isBigEndian);
+    return view3.getFloat32(start3, !isBigEndian);
   } else {
     const msg = `Sized floats must be 32-bit or 64-bit on JavaScript, got size of ${byteSize * 8} bits`;
     throw new globalThis.Error(msg);
@@ -173,9 +168,9 @@ var Result = class _Result extends CustomType {
   }
 };
 var Ok = class extends Result {
-  constructor(value2) {
+  constructor(value4) {
     super();
-    this[0] = value2;
+    this[0] = value4;
   }
   // @internal
   isOk() {
@@ -337,22 +332,37 @@ var Options = class extends CustomType {
 function compile(pattern, options) {
   return compile_regex(pattern, options);
 }
-function scan(regex, string4) {
-  return regex_scan(regex, string4);
+function scan(regex, string5) {
+  return regex_scan(regex, string5);
+}
+
+// build/dev/javascript/gleam_stdlib/gleam/float.mjs
+function to_string(x) {
+  return float_to_string(x);
 }
 
 // build/dev/javascript/gleam_stdlib/gleam/int.mjs
-function parse(string4) {
-  return parse_int(string4);
+function parse(string5) {
+  return parse_int(string5);
 }
-function to_string2(x) {
-  return to_string(x);
+function to_string3(x) {
+  return to_string2(x);
 }
 
 // build/dev/javascript/gleam_stdlib/gleam/pair.mjs
 function second(pair) {
   let a = pair[1];
   return a;
+}
+function map_first(pair, fun) {
+  let a = pair[0];
+  let b = pair[1];
+  return [fun(a), b];
+}
+function map_second(pair, fun) {
+  let a = pair[0];
+  let b = pair[1];
+  return [a, fun(b)];
 }
 
 // build/dev/javascript/gleam_stdlib/gleam/list.mjs
@@ -381,6 +391,33 @@ function first(list3) {
     return new Ok(x);
   }
 }
+function filter_loop(loop$list, loop$fun, loop$acc) {
+  while (true) {
+    let list3 = loop$list;
+    let fun = loop$fun;
+    let acc = loop$acc;
+    if (list3.hasLength(0)) {
+      return reverse(acc);
+    } else {
+      let first$1 = list3.head;
+      let rest$1 = list3.tail;
+      let new_acc = (() => {
+        let $ = fun(first$1);
+        if ($) {
+          return prepend(first$1, acc);
+        } else {
+          return acc;
+        }
+      })();
+      loop$list = rest$1;
+      loop$fun = fun;
+      loop$acc = new_acc;
+    }
+  }
+}
+function filter(list3, predicate) {
+  return filter_loop(list3, predicate, toList([]));
+}
 function map_loop(loop$list, loop$fun, loop$acc) {
   while (true) {
     let list3 = loop$list;
@@ -399,30 +436,6 @@ function map_loop(loop$list, loop$fun, loop$acc) {
 }
 function map2(list3, fun) {
   return map_loop(list3, fun, toList([]));
-}
-function take_loop(loop$list, loop$n, loop$acc) {
-  while (true) {
-    let list3 = loop$list;
-    let n = loop$n;
-    let acc = loop$acc;
-    let $ = n <= 0;
-    if ($) {
-      return reverse(acc);
-    } else {
-      if (list3.hasLength(0)) {
-        return reverse(acc);
-      } else {
-        let first$1 = list3.head;
-        let rest$1 = list3.tail;
-        loop$list = rest$1;
-        loop$n = n - 1;
-        loop$acc = prepend(first$1, acc);
-      }
-    }
-  }
-}
-function take(list3, n) {
-  return take_loop(list3, n, toList([]));
 }
 function append_loop(loop$first, loop$second) {
   while (true) {
@@ -478,6 +491,26 @@ function index_fold_loop(loop$over, loop$acc, loop$with, loop$index) {
 function index_fold(list3, initial, fun) {
   return index_fold_loop(list3, initial, fun, 0);
 }
+function find_map(loop$list, loop$fun) {
+  while (true) {
+    let list3 = loop$list;
+    let fun = loop$fun;
+    if (list3.hasLength(0)) {
+      return new Error(void 0);
+    } else {
+      let x = list3.head;
+      let rest$1 = list3.tail;
+      let $ = fun(x);
+      if ($.isOk()) {
+        let x$1 = $[0];
+        return new Ok(x$1);
+      } else {
+        loop$list = rest$1;
+        loop$fun = fun;
+      }
+    }
+  }
+}
 function repeat_loop(loop$item, loop$times, loop$acc) {
   while (true) {
     let item = loop$item;
@@ -501,61 +534,57 @@ function repeat(a, times) {
 function from_strings(strings) {
   return concat(strings);
 }
-function to_string3(tree) {
+function to_string4(tree) {
   return identity(tree);
 }
 
 // build/dev/javascript/gleam_stdlib/gleam/string.mjs
-function length2(string4) {
-  return string_length(string4);
+function length2(string5) {
+  return string_length(string5);
 }
-function lowercase2(string4) {
-  return lowercase(string4);
+function lowercase2(string5) {
+  return lowercase(string5);
 }
-function slice(string4, idx, len) {
+function slice(string5, idx, len) {
   let $ = len < 0;
   if ($) {
     return "";
   } else {
     let $1 = idx < 0;
     if ($1) {
-      let translated_idx = length2(string4) + idx;
+      let translated_idx = length2(string5) + idx;
       let $2 = translated_idx < 0;
       if ($2) {
         return "";
       } else {
-        return string_slice(string4, translated_idx, len);
+        return string_slice(string5, translated_idx, len);
       }
     } else {
-      return string_slice(string4, idx, len);
+      return string_slice(string5, idx, len);
     }
   }
 }
-function drop_start(string4, num_graphemes) {
+function drop_start(string5, num_graphemes) {
   let $ = num_graphemes < 0;
   if ($) {
-    return string4;
+    return string5;
   } else {
-    return slice(string4, num_graphemes, length2(string4) - num_graphemes);
+    return slice(string5, num_graphemes, length2(string5) - num_graphemes);
   }
 }
-function drop_left(string4, num_graphemes) {
-  return drop_start(string4, num_graphemes);
+function drop_left(string5, num_graphemes) {
+  return drop_start(string5, num_graphemes);
 }
-function starts_with2(string4, prefix) {
-  return starts_with(string4, prefix);
+function starts_with2(string5, prefix) {
+  return starts_with(string5, prefix);
 }
 function concat2(strings) {
   let _pipe = strings;
   let _pipe$1 = from_strings(_pipe);
-  return to_string3(_pipe$1);
+  return to_string4(_pipe$1);
 }
-function pop_grapheme2(string4) {
-  return pop_grapheme(string4);
-}
-function inspect2(term) {
-  let _pipe = inspect(term);
-  return to_string3(_pipe);
+function pop_grapheme2(string5) {
+  return pop_grapheme(string5);
 }
 
 // build/dev/javascript/gleam_stdlib/gleam/result.mjs
@@ -597,6 +626,13 @@ function unwrap2(result, default$) {
     return default$;
   }
 }
+function lazy_or(first3, second2) {
+  if (first3.isOk()) {
+    return first3;
+  } else {
+    return second2();
+  }
+}
 function replace_error(result, error) {
   if (result.isOk()) {
     let x = result[0];
@@ -622,8 +658,8 @@ function int(data) {
   return decode_int(data);
 }
 function optional(decode3) {
-  return (value2) => {
-    return decode_option(value2, decode3);
+  return (value4) => {
+    return decode_option(value4, decode3);
   };
 }
 function any(decoders) {
@@ -633,9 +669,9 @@ function any(decoders) {
         toList([new DecodeError("another type", classify(data), toList([]))])
       );
     } else {
-      let decoder2 = decoders.head;
+      let decoder = decoders.head;
       let decoders$1 = decoders.tail;
-      let $ = decoder2(data);
+      let $ = decoder(data);
       if ($.isOk()) {
         let decoded = $[0];
         return new Ok(decoded);
@@ -645,8 +681,55 @@ function any(decoders) {
     }
   };
 }
-function string(data) {
+function push_path(error, name) {
+  let name$1 = identity(name);
+  let decoder = any(
+    toList([string2, (x) => {
+      return map3(int(x), to_string3);
+    }])
+  );
+  let name$2 = (() => {
+    let $ = decoder(name$1);
+    if ($.isOk()) {
+      let name$22 = $[0];
+      return name$22;
+    } else {
+      let _pipe = toList(["<", classify(name$1), ">"]);
+      let _pipe$1 = from_strings(_pipe);
+      return to_string4(_pipe$1);
+    }
+  })();
+  return error.withFields({ path: prepend(name$2, error.path) });
+}
+function map_errors(result, f) {
+  return map_error(
+    result,
+    (_capture) => {
+      return map2(_capture, f);
+    }
+  );
+}
+function string2(data) {
   return decode_string(data);
+}
+function field(name, inner_type) {
+  return (value4) => {
+    let missing_field_error = new DecodeError("field", "nothing", toList([]));
+    return try$(
+      decode_field(value4, name),
+      (maybe_inner) => {
+        let _pipe = maybe_inner;
+        let _pipe$1 = to_result(_pipe, toList([missing_field_error]));
+        let _pipe$2 = try$(_pipe$1, inner_type);
+        return map_errors(
+          _pipe$2,
+          (_capture) => {
+            return push_path(_capture, name);
+          }
+        );
+      }
+    );
+  };
 }
 
 // build/dev/javascript/gleam_stdlib/dict.mjs
@@ -1348,37 +1431,38 @@ var Dict = class _Dict {
 
 // build/dev/javascript/gleam_stdlib/gleam_stdlib.mjs
 var Nil = void 0;
+var NOT_FOUND = {};
 function identity(x) {
   return x;
 }
-function parse_int(value2) {
-  if (/^[-+]?(\d+)$/.test(value2)) {
-    return new Ok(parseInt(value2));
+function parse_int(value4) {
+  if (/^[-+]?(\d+)$/.test(value4)) {
+    return new Ok(parseInt(value4));
   } else {
     return new Error(Nil);
   }
 }
-function to_string(term) {
+function to_string2(term) {
   return term.toString();
 }
 function float_to_string(float3) {
-  const string4 = float3.toString().replace("+", "");
-  if (string4.indexOf(".") >= 0) {
-    return string4;
+  const string5 = float3.toString().replace("+", "");
+  if (string5.indexOf(".") >= 0) {
+    return string5;
   } else {
-    const index4 = string4.indexOf("e");
+    const index4 = string5.indexOf("e");
     if (index4 >= 0) {
-      return string4.slice(0, index4) + ".0" + string4.slice(index4);
+      return string5.slice(0, index4) + ".0" + string5.slice(index4);
     } else {
-      return string4 + ".0";
+      return string5 + ".0";
     }
   }
 }
-function string_length(string4) {
-  if (string4 === "") {
+function string_length(string5) {
+  if (string5 === "") {
     return 0;
   }
-  const iterator = graphemes_iterator(string4);
+  const iterator = graphemes_iterator(string5);
   if (iterator) {
     let i = 0;
     for (const _ of iterator) {
@@ -1386,32 +1470,32 @@ function string_length(string4) {
     }
     return i;
   } else {
-    return string4.match(/./gsu).length;
+    return string5.match(/./gsu).length;
   }
 }
 var segmenter = void 0;
-function graphemes_iterator(string4) {
+function graphemes_iterator(string5) {
   if (globalThis.Intl && Intl.Segmenter) {
     segmenter ||= new Intl.Segmenter();
-    return segmenter.segment(string4)[Symbol.iterator]();
+    return segmenter.segment(string5)[Symbol.iterator]();
   }
 }
-function pop_grapheme(string4) {
+function pop_grapheme(string5) {
   let first3;
-  const iterator = graphemes_iterator(string4);
+  const iterator = graphemes_iterator(string5);
   if (iterator) {
     first3 = iterator.next().value?.segment;
   } else {
-    first3 = string4.match(/./su)?.[0];
+    first3 = string5.match(/./su)?.[0];
   }
   if (first3) {
-    return new Ok([first3, string4.slice(first3.length)]);
+    return new Ok([first3, string5.slice(first3.length)]);
   } else {
     return new Error(Nil);
   }
 }
-function lowercase(string4) {
-  return string4.toLowerCase();
+function lowercase(string5) {
+  return string5.toLowerCase();
 }
 function concat(xs) {
   let result = "";
@@ -1420,11 +1504,11 @@ function concat(xs) {
   }
   return result;
 }
-function string_slice(string4, idx, len) {
-  if (len <= 0 || idx >= string4.length) {
+function string_slice(string5, idx, len) {
+  if (len <= 0 || idx >= string5.length) {
     return "";
   }
-  const iterator = graphemes_iterator(string4);
+  const iterator = graphemes_iterator(string5);
   if (iterator) {
     while (idx-- > 0) {
       iterator.next();
@@ -1439,8 +1523,11 @@ function string_slice(string4, idx, len) {
     }
     return result;
   } else {
-    return string4.match(/./gsu).slice(idx, idx + len).join("");
+    return string5.match(/./gsu).slice(idx, idx + len).join("");
   }
+}
+function contains_string(haystack, needle) {
+  return haystack.indexOf(needle) >= 0;
 }
 function starts_with(haystack, needle) {
   return haystack.startsWith(needle);
@@ -1467,18 +1554,6 @@ var unicode_whitespaces = [
 ].join("");
 var left_trim_regex = new RegExp(`^([${unicode_whitespaces}]*)`, "g");
 var right_trim_regex = new RegExp(`([${unicode_whitespaces}]*)$`, "g");
-function console_error(term) {
-  console.error(term);
-}
-function print_debug(string4) {
-  if (typeof process === "object" && process.stderr?.write) {
-    process.stderr.write(string4 + "\n");
-  } else if (typeof Deno === "object") {
-    Deno.stderr.writeSync(new TextEncoder().encode(string4 + "\n"));
-  } else {
-    console.log(string4);
-  }
-}
 function compile_regex(pattern, options) {
   try {
     let flags = "gu";
@@ -1492,8 +1567,8 @@ function compile_regex(pattern, options) {
     return new Error(new CompileError(error.message, number));
   }
 }
-function regex_scan(regex, string4) {
-  const matches = Array.from(string4.matchAll(regex)).map((match) => {
+function regex_scan(regex, string5) {
+  const matches = Array.from(string5.matchAll(regex)).map((match) => {
     const content = match[0];
     const submatches = [];
     for (let n = match.length - 1; n > 0; n--) {
@@ -1515,8 +1590,15 @@ function new_map() {
 function map_to_list(map6) {
   return List.fromArray(map6.entries());
 }
-function map_insert(key2, value2, map6) {
-  return map6.set(key2, value2);
+function map_get(map6, key2) {
+  const value4 = map6.get(key2, NOT_FOUND);
+  if (value4 === NOT_FOUND) {
+    return new Error(Nil);
+  }
+  return new Ok(value4);
+}
+function map_insert(key2, value4, map6) {
+  return map6.set(key2, value4);
 }
 function classify_dynamic(data) {
   if (typeof data === "string") {
@@ -1560,138 +1642,62 @@ function decode_string(data) {
 function decode_int(data) {
   return Number.isInteger(data) ? new Ok(data) : decoder_error("Int", data);
 }
-function decode_option(data, decoder2) {
+function decode_option(data, decoder) {
   if (data === null || data === void 0 || data instanceof None)
     return new Ok(new None());
   if (data instanceof Some)
     data = data[0];
-  const result = decoder2(data);
+  const result = decoder(data);
   if (result.isOk()) {
     return new Ok(new Some(result[0]));
   } else {
     return result;
   }
 }
-function inspect(v) {
-  const t = typeof v;
-  if (v === true)
-    return "True";
-  if (v === false)
-    return "False";
-  if (v === null)
-    return "//js(null)";
-  if (v === void 0)
-    return "Nil";
-  if (t === "string")
-    return inspectString(v);
-  if (t === "bigint" || Number.isInteger(v))
-    return v.toString();
-  if (t === "number")
-    return float_to_string(v);
-  if (Array.isArray(v))
-    return `#(${v.map(inspect).join(", ")})`;
-  if (v instanceof List)
-    return inspectList(v);
-  if (v instanceof UtfCodepoint)
-    return inspectUtfCodepoint(v);
-  if (v instanceof BitArray)
-    return inspectBitArray(v);
-  if (v instanceof CustomType)
-    return inspectCustomType(v);
-  if (v instanceof Dict)
-    return inspectDict(v);
-  if (v instanceof Set)
-    return `//js(Set(${[...v].map(inspect).join(", ")}))`;
-  if (v instanceof RegExp)
-    return `//js(${v})`;
-  if (v instanceof Date)
-    return `//js(Date("${v.toISOString()}"))`;
-  if (v instanceof Function) {
-    const args = [];
-    for (const i of Array(v.length).keys())
-      args.push(String.fromCharCode(i + 97));
-    return `//fn(${args.join(", ")}) { ... }`;
+function decode_field(value4, name) {
+  const not_a_map_error = () => decoder_error("Dict", value4);
+  if (value4 instanceof Dict || value4 instanceof WeakMap || value4 instanceof Map) {
+    const entry = map_get(value4, name);
+    return new Ok(entry.isOk() ? new Some(entry[0]) : new None());
+  } else if (value4 === null) {
+    return not_a_map_error();
+  } else if (Object.getPrototypeOf(value4) == Object.prototype) {
+    return try_get_field(value4, name, () => new Ok(new None()));
+  } else {
+    return try_get_field(value4, name, not_a_map_error);
   }
-  return inspectObject(v);
 }
-function inspectString(str) {
-  let new_str = '"';
-  for (let i = 0; i < str.length; i++) {
-    let char = str[i];
-    switch (char) {
-      case "\n":
-        new_str += "\\n";
-        break;
-      case "\r":
-        new_str += "\\r";
-        break;
-      case "	":
-        new_str += "\\t";
-        break;
-      case "\f":
-        new_str += "\\f";
-        break;
-      case "\\":
-        new_str += "\\\\";
-        break;
-      case '"':
-        new_str += '\\"';
-        break;
-      default:
-        if (char < " " || char > "~" && char < "\xA0") {
-          new_str += "\\u{" + char.charCodeAt(0).toString(16).toUpperCase().padStart(4, "0") + "}";
-        } else {
-          new_str += char;
-        }
-    }
+function try_get_field(value4, field3, or_else) {
+  try {
+    return field3 in value4 ? new Ok(new Some(value4[field3])) : or_else();
+  } catch {
+    return or_else();
   }
-  new_str += '"';
-  return new_str;
-}
-function inspectDict(map6) {
-  let body2 = "dict.from_list([";
-  let first3 = true;
-  map6.forEach((value2, key2) => {
-    if (!first3)
-      body2 = body2 + ", ";
-    body2 = body2 + "#(" + inspect(key2) + ", " + inspect(value2) + ")";
-    first3 = false;
-  });
-  return body2 + "])";
-}
-function inspectObject(v) {
-  const name = Object.getPrototypeOf(v)?.constructor?.name || "Object";
-  const props = [];
-  for (const k of Object.keys(v)) {
-    props.push(`${inspect(k)}: ${inspect(v[k])}`);
-  }
-  const body2 = props.length ? " " + props.join(", ") + " " : "";
-  const head = name === "Object" ? "" : name + " ";
-  return `//js(${head}{${body2}})`;
-}
-function inspectCustomType(record) {
-  const props = Object.keys(record).map((label) => {
-    const value2 = inspect(record[label]);
-    return isNaN(parseInt(label)) ? `${label}: ${value2}` : value2;
-  }).join(", ");
-  return props ? `${record.constructor.name}(${props})` : record.constructor.name;
-}
-function inspectList(list3) {
-  return `[${list3.toArray().map(inspect).join(", ")}]`;
-}
-function inspectBitArray(bits) {
-  return `<<${Array.from(bits.buffer).join(", ")}>>`;
-}
-function inspectUtfCodepoint(codepoint2) {
-  return `//utfcodepoint(${String.fromCodePoint(codepoint2.value)})`;
 }
 
 // build/dev/javascript/gleam_stdlib/gleam/dict.mjs
 function new$() {
   return new_map();
 }
-function insert(dict2, key2, value2) {
-  return map_insert(key2, value2, dict2);
+function insert(dict2, key2, value4) {
+  return map_insert(key2, value4, dict2);
+}
+function from_list_loop(loop$list, loop$initial) {
+  while (true) {
+    let list3 = loop$list;
+    let initial = loop$initial;
+    if (list3.hasLength(0)) {
+      return initial;
+    } else {
+      let x = list3.head;
+      let rest = list3.tail;
+      loop$list = rest;
+      loop$initial = insert(initial, x[0], x[1]);
+    }
+  }
+}
+function from_list(list3) {
+  return from_list_loop(list3, new$());
 }
 function reverse_and_concat(loop$remaining, loop$accumulator) {
   while (true) {
@@ -1729,261 +1735,22 @@ function keys(dict2) {
   return do_keys(dict2);
 }
 
-// build/dev/javascript/decode/decode_ffi.mjs
-function strict_index(data, key2) {
-  const int4 = Number.isInteger(key2);
-  if (data instanceof Dict || data instanceof WeakMap || data instanceof Map) {
-    const token = {};
-    const entry = data.get(key2, token);
-    if (entry === token)
-      return new Ok(new None());
-    return new Ok(new Some(entry));
-  }
-  if ((key2 === 0 || key2 === 1 || key2 === 2) && data instanceof List) {
-    let i = 0;
-    for (const value2 of data) {
-      if (i === key2)
-        return new Ok(new Some(value2));
-      i++;
-    }
-    return new Error("Indexable");
-  }
-  if (int4 && Array.isArray(data) || data && typeof data === "object" || data && Object.getPrototypeOf(data) === Object.prototype) {
-    if (key2 in data)
-      return new Ok(new Some(data[key2]));
-    return new Ok(new None());
-  }
-  return new Error(int4 ? "Indexable" : "Dict");
-}
-function list(data, decode3, pushPath, index4, emptyList) {
-  if (!(data instanceof List || Array.isArray(data))) {
-    let error = new DecodeError("List", classify(data), emptyList);
-    return [emptyList, List.fromArray([error])];
-  }
-  const decoded = [];
-  for (const element2 of data) {
-    const layer = decode3(element2);
-    const [out, errors] = layer;
-    if (errors instanceof NonEmpty) {
-      const [_, errors2] = pushPath(layer, index4.toString());
-      return [emptyList, errors2];
-    }
-    decoded.push(out);
-    index4++;
-  }
-  return [List.fromArray(decoded), emptyList];
-}
-
-// build/dev/javascript/decode/decode/zero.mjs
-var Decoder = class extends CustomType {
-  constructor(function$) {
-    super();
-    this.function = function$;
-  }
-};
-function run(data, decoder2) {
-  let $ = decoder2.function(data);
-  let maybe_invalid_data = $[0];
-  let errors = $[1];
-  if (errors.hasLength(0)) {
-    return new Ok(maybe_invalid_data);
+// build/dev/javascript/gleam_stdlib/gleam/bool.mjs
+function guard(requirement, consequence, alternative) {
+  if (requirement) {
+    return consequence;
   } else {
-    return new Error(errors);
+    return alternative();
   }
-}
-function success(data) {
-  return new Decoder((_) => {
-    return [data, toList([])];
-  });
-}
-function run_dynamic_function(data, zero, f) {
-  let $ = f(data);
-  if ($.isOk()) {
-    let data$1 = $[0];
-    return [data$1, toList([])];
-  } else {
-    let errors = $[0];
-    return [zero, errors];
-  }
-}
-function decode_string2(data) {
-  return run_dynamic_function(data, "", string);
-}
-function decode_int2(data) {
-  return run_dynamic_function(data, 0, int);
-}
-function optional2(inner) {
-  return new Decoder(
-    (data) => {
-      let $ = optional((var0) => {
-        return new Ok(var0);
-      })(data);
-      if ($.isOk() && $[0] instanceof None) {
-        return [new None(), toList([])];
-      } else if ($.isOk() && $[0] instanceof Some) {
-        let data$1 = $[0][0];
-        let $1 = inner.function(data$1);
-        let data$2 = $1[0];
-        let errors = $1[1];
-        return [new Some(data$2), errors];
-      } else {
-        let $1 = inner.function(data);
-        let data$1 = $1[0];
-        let errors = $1[1];
-        return [new Some(data$1), errors];
-      }
-    }
-  );
-}
-var string2 = /* @__PURE__ */ new Decoder(decode_string2);
-var int2 = /* @__PURE__ */ new Decoder(decode_int2);
-function list2(inner) {
-  return new Decoder(
-    (data) => {
-      return list(
-        data,
-        inner.function,
-        (p, k) => {
-          return push_path(p, toList([k]));
-        },
-        0,
-        toList([])
-      );
-    }
-  );
-}
-function push_path(layer, path) {
-  let decoder2 = any(
-    toList([
-      string,
-      (x) => {
-        return map3(int(x), to_string2);
-      }
-    ])
-  );
-  let path$1 = map2(
-    path,
-    (key2) => {
-      let key$1 = identity(key2);
-      let $ = decoder2(key$1);
-      if ($.isOk()) {
-        let key$2 = $[0];
-        return key$2;
-      } else {
-        return "<" + classify(key$1) + ">";
-      }
-    }
-  );
-  let errors = map2(
-    layer[1],
-    (error) => {
-      return error.withFields({ path: append(path$1, error.path) });
-    }
-  );
-  return [layer[0], errors];
-}
-function index2(loop$path, loop$position, loop$inner, loop$data, loop$handle_miss) {
-  while (true) {
-    let path = loop$path;
-    let position = loop$position;
-    let inner = loop$inner;
-    let data = loop$data;
-    let handle_miss = loop$handle_miss;
-    if (path.hasLength(0)) {
-      let _pipe = inner(data);
-      return push_path(_pipe, reverse(position));
-    } else {
-      let key2 = path.head;
-      let path$1 = path.tail;
-      let $ = strict_index(data, key2);
-      if ($.isOk() && $[0] instanceof Some) {
-        let data$1 = $[0][0];
-        loop$path = path$1;
-        loop$position = prepend(key2, position);
-        loop$inner = inner;
-        loop$data = data$1;
-        loop$handle_miss = handle_miss;
-      } else if ($.isOk() && $[0] instanceof None) {
-        return handle_miss(data, prepend(key2, position));
-      } else {
-        let kind = $[0];
-        let $1 = inner(data);
-        let default$ = $1[0];
-        let _pipe = [
-          default$,
-          toList([new DecodeError(kind, classify(data), toList([]))])
-        ];
-        return push_path(_pipe, reverse(position));
-      }
-    }
-  }
-}
-function subfield(field_path, field_decoder, next) {
-  return new Decoder(
-    (data) => {
-      let $ = index2(
-        field_path,
-        toList([]),
-        field_decoder.function,
-        data,
-        (data2, position) => {
-          let $12 = field_decoder.function(data2);
-          let default$ = $12[0];
-          let _pipe = [
-            default$,
-            toList([new DecodeError("Field", "Nothing", toList([]))])
-          ];
-          return push_path(_pipe, reverse(position));
-        }
-      );
-      let out = $[0];
-      let errors1 = $[1];
-      let $1 = next(out).function(data);
-      let out$1 = $1[0];
-      let errors2 = $1[1];
-      return [out$1, append(errors1, errors2)];
-    }
-  );
-}
-function field(field_name, field_decoder, next) {
-  return subfield(toList([field_name]), field_decoder, next);
-}
-function optional_field(key2, default$, field_decoder, next) {
-  return new Decoder(
-    (data) => {
-      let $ = (() => {
-        let $12 = strict_index(data, key2);
-        if ($12.isOk() && $12[0] instanceof Some) {
-          let data$1 = $12[0][0];
-          return field_decoder.function(data$1);
-        } else if ($12.isOk() && $12[0] instanceof None) {
-          return [default$, toList([])];
-        } else {
-          let kind = $12[0];
-          let _pipe = [
-            default$,
-            toList([new DecodeError(kind, classify(data), toList([]))])
-          ];
-          return push_path(_pipe, toList([key2]));
-        }
-      })();
-      let out = $[0];
-      let errors1 = $[1];
-      let $1 = next(out).function(data);
-      let out$1 = $1[0];
-      let errors2 = $1[1];
-      return [out$1, append(errors1, errors2)];
-    }
-  );
 }
 
 // build/dev/javascript/gleam_json/gleam_json_ffi.mjs
-function decode(string4) {
+function decode(string5) {
   try {
-    const result = JSON.parse(string4);
+    const result = JSON.parse(string5);
     return new Ok(result);
   } catch (err) {
-    return new Error(getJsonDecodeError(err, string4));
+    return new Error(getJsonDecodeError(err, string5));
   }
 }
 function getJsonDecodeError(stdErr, json) {
@@ -2048,12 +1815,12 @@ function jsCoreUnexpectedByteError(err) {
 function toHex(char) {
   return "0x" + char.charCodeAt(0).toString(16).toUpperCase();
 }
-function getPositionFromMultiline(line, column, string4) {
+function getPositionFromMultiline(line, column, string5) {
   if (line === 1)
     return column - 1;
   let currentLn = 1;
   let position = 0;
-  string4.split("").find((char, idx) => {
+  string5.split("").find((char, idx) => {
     if (char === "\n")
       currentLn += 1;
     if (currentLn === line) {
@@ -2081,11 +1848,11 @@ var UnexpectedFormat = class extends CustomType {
     this[0] = x0;
   }
 };
-function do_decode(json, decoder2) {
+function do_decode(json, decoder) {
   return then$(
     decode(json),
     (dynamic_value) => {
-      let _pipe = decoder2(dynamic_value);
+      let _pipe = decoder(dynamic_value);
       return map_error(
         _pipe,
         (var0) => {
@@ -2095,28 +1862,8 @@ function do_decode(json, decoder2) {
     }
   );
 }
-function decode2(json, decoder2) {
-  return do_decode(json, decoder2);
-}
-
-// build/dev/javascript/gleam_stdlib/gleam/io.mjs
-function println_error(string4) {
-  return console_error(string4);
-}
-function debug(term) {
-  let _pipe = term;
-  let _pipe$1 = inspect2(_pipe);
-  print_debug(_pipe$1);
-  return term;
-}
-
-// build/dev/javascript/gleam_stdlib/gleam/bool.mjs
-function guard(requirement, consequence, alternative) {
-  if (requirement) {
-    return consequence;
-  } else {
-    return alternative();
-  }
+function decode2(json, decoder) {
+  return do_decode(json, decoder);
 }
 
 // build/dev/javascript/lustre/lustre/effect.mjs
@@ -2136,8 +1883,8 @@ function custom(run2) {
   );
 }
 function from(effect) {
-  return custom((dispatch, _, _1, _2) => {
-    return effect(dispatch);
+  return custom((dispatch2, _, _1, _2) => {
+    return effect(dispatch2);
   });
 }
 function none() {
@@ -2189,6 +1936,13 @@ var Attribute = class extends CustomType {
     this.as_property = as_property;
   }
 };
+var Event2 = class extends CustomType {
+  constructor(x0, x1) {
+    super();
+    this[0] = x0;
+    this[1] = x1;
+  }
+};
 function attribute_to_event_handler(attribute2) {
   if (attribute2 instanceof Attribute) {
     return new Error(void 0);
@@ -2204,7 +1958,7 @@ function do_element_list_handlers(elements2, handlers2, key2) {
     elements2,
     handlers2,
     (handlers3, element2, index4) => {
-      let key$1 = key2 + "-" + to_string2(index4);
+      let key$1 = key2 + "-" + to_string3(index4);
       return do_handlers(element2, handlers3, key$1);
     }
   );
@@ -2246,6 +2000,32 @@ function handlers(element2) {
   return do_handlers(element2, new$(), "0");
 }
 
+// build/dev/javascript/lustre/lustre/attribute.mjs
+function attribute(name, value4) {
+  return new Attribute(name, identity(value4), false);
+}
+function on(name, handler) {
+  return new Event2("on" + name, handler);
+}
+function class$(name) {
+  return attribute("class", name);
+}
+function none2() {
+  return class$("");
+}
+function id(name) {
+  return attribute("id", name);
+}
+function type_(name) {
+  return attribute("type", name);
+}
+function value(val) {
+  return attribute("value", val);
+}
+function placeholder(text3) {
+  return attribute("placeholder", text3);
+}
+
 // build/dev/javascript/lustre/lustre/element.mjs
 function element(tag, attrs, children2) {
   if (tag === "area") {
@@ -2279,6 +2059,44 @@ function element(tag, attrs, children2) {
   } else {
     return new Element2("", "", tag, attrs, children2, false, false);
   }
+}
+function do_keyed(el, key2) {
+  if (el instanceof Element2) {
+    let namespace = el.namespace;
+    let tag = el.tag;
+    let attrs = el.attrs;
+    let children2 = el.children;
+    let self_closing = el.self_closing;
+    let void$ = el.void;
+    return new Element2(
+      key2,
+      namespace,
+      tag,
+      attrs,
+      children2,
+      self_closing,
+      void$
+    );
+  } else if (el instanceof Map2) {
+    let subtree = el.subtree;
+    return new Map2(() => {
+      return do_keyed(subtree(), key2);
+    });
+  } else {
+    return el;
+  }
+}
+function keyed(el, children2) {
+  return el(
+    map2(
+      children2,
+      (_use0) => {
+        let key2 = _use0[0];
+        let child = _use0[1];
+        return do_keyed(child, key2);
+      }
+    )
+  );
 }
 function text(content) {
   return new Text(content);
@@ -2396,7 +2214,7 @@ if (window && window.customElements) {
     }
   );
 }
-function morph(prev, next, dispatch) {
+function morph(prev, next, dispatch2) {
   let out;
   let stack = [{ prev, next, parent: prev.parentNode }];
   while (stack.length) {
@@ -2421,7 +2239,7 @@ function morph(prev, next, dispatch) {
       const created = createElementNode({
         prev: prev2,
         next: next2,
-        dispatch,
+        dispatch: dispatch2,
         stack
       });
       if (!prev2) {
@@ -2434,7 +2252,7 @@ function morph(prev, next, dispatch) {
   }
   return out;
 }
-function createElementNode({ prev, next, dispatch, stack }) {
+function createElementNode({ prev, next, dispatch: dispatch2, stack }) {
   const namespace = next.namespace || "http://www.w3.org/1999/xhtml";
   const canMorph = prev && prev.nodeType === Node.ELEMENT_NODE && prev.localName === next.tag && prev.namespaceURI === (next.namespace || "http://www.w3.org/1999/xhtml");
   const el = canMorph ? prev : namespace ? document.createElementNS(namespace, next.tag) : document.createElement(next.tag);
@@ -2459,15 +2277,15 @@ function createElementNode({ prev, next, dispatch, stack }) {
   const delegated = [];
   for (const attr of next.attrs) {
     const name = attr[0];
-    const value2 = attr[1];
+    const value4 = attr[1];
     if (attr.as_property) {
-      if (el[name] !== value2)
-        el[name] = value2;
+      if (el[name] !== value4)
+        el[name] = value4;
       if (canMorph)
         prevAttributes.delete(name);
     } else if (name.startsWith("on")) {
       const eventName = name.slice(2);
-      const callback = dispatch(value2, eventName === "input");
+      const callback = dispatch2(value4, eventName === "input");
       if (!handlersForEl.has(eventName)) {
         el.addEventListener(eventName, lustreGenericEventHandler);
       }
@@ -2476,26 +2294,26 @@ function createElementNode({ prev, next, dispatch, stack }) {
         prevHandlers.delete(eventName);
     } else if (name.startsWith("data-lustre-on-")) {
       const eventName = name.slice(15);
-      const callback = dispatch(lustreServerEventHandler);
+      const callback = dispatch2(lustreServerEventHandler);
       if (!handlersForEl.has(eventName)) {
         el.addEventListener(eventName, lustreGenericEventHandler);
       }
       handlersForEl.set(eventName, callback);
-      el.setAttribute(name, value2);
+      el.setAttribute(name, value4);
     } else if (name.startsWith("delegate:data-") || name.startsWith("delegate:aria-")) {
-      el.setAttribute(name, value2);
-      delegated.push([name.slice(10), value2]);
+      el.setAttribute(name, value4);
+      delegated.push([name.slice(10), value4]);
     } else if (name === "class") {
-      className = className === null ? value2 : className + " " + value2;
+      className = className === null ? value4 : className + " " + value4;
     } else if (name === "style") {
-      style2 = style2 === null ? value2 : style2 + value2;
+      style2 = style2 === null ? value4 : style2 + value4;
     } else if (name === "dangerous-unescaped-html") {
-      innerHTML = value2;
+      innerHTML = value4;
     } else {
-      if (el.getAttribute(name) !== value2)
-        el.setAttribute(name, value2);
+      if (el.getAttribute(name) !== value4)
+        el.setAttribute(name, value4);
       if (name === "value" || name === "selected")
-        el[name] = value2;
+        el[name] = value4;
       if (canMorph)
         prevAttributes.delete(name);
     }
@@ -2522,9 +2340,9 @@ function createElementNode({ prev, next, dispatch, stack }) {
   if (next.tag === "slot") {
     window.queueMicrotask(() => {
       for (const child of el.assignedElements()) {
-        for (const [name, value2] of delegated) {
+        for (const [name, value4] of delegated) {
           if (!child.hasAttribute(name)) {
-            child.setAttribute(name, value2);
+            child.setAttribute(name, value4);
           }
         }
       }
@@ -2572,25 +2390,25 @@ function createElementNode({ prev, next, dispatch, stack }) {
   return el;
 }
 var registeredHandlers = /* @__PURE__ */ new WeakMap();
-function lustreGenericEventHandler(event) {
-  const target2 = event.currentTarget;
+function lustreGenericEventHandler(event2) {
+  const target2 = event2.currentTarget;
   if (!registeredHandlers.has(target2)) {
-    target2.removeEventListener(event.type, lustreGenericEventHandler);
+    target2.removeEventListener(event2.type, lustreGenericEventHandler);
     return;
   }
   const handlersForEventTarget = registeredHandlers.get(target2);
-  if (!handlersForEventTarget.has(event.type)) {
-    target2.removeEventListener(event.type, lustreGenericEventHandler);
+  if (!handlersForEventTarget.has(event2.type)) {
+    target2.removeEventListener(event2.type, lustreGenericEventHandler);
     return;
   }
-  handlersForEventTarget.get(event.type)(event);
+  handlersForEventTarget.get(event2.type)(event2);
 }
-function lustreServerEventHandler(event) {
-  const el = event.currentTarget;
-  const tag = el.getAttribute(`data-lustre-on-${event.type}`);
+function lustreServerEventHandler(event2) {
+  const el = event2.currentTarget;
+  const tag = el.getAttribute(`data-lustre-on-${event2.type}`);
   const data = JSON.parse(el.getAttribute("data-lustre-data") || "{}");
   const include = JSON.parse(el.getAttribute("data-lustre-include") || "[]");
-  switch (event.type) {
+  switch (event2.type) {
     case "input":
     case "change":
       include.push("target.value");
@@ -2601,7 +2419,7 @@ function lustreServerEventHandler(event) {
     data: include.reduce(
       (data2, property) => {
         const path = property.split(".");
-        for (let i = 0, o = data2, e = event; i < path.length; i++) {
+        for (let i = 0, o = data2, e = event2; i < path.length; i++) {
           if (i === path.length - 1) {
             o[path[i]] = e[path[i]];
           } else {
@@ -2650,9 +2468,9 @@ function diffKeyedChild(prevChild, child, el, stack, incomingKeyedChildren, keye
     return prevChild;
   }
   if (!keyedChild && prevChild !== null) {
-    const placeholder = document.createTextNode("");
-    el.insertBefore(placeholder, prevChild);
-    stack.unshift({ prev: placeholder, next: child, parent: el });
+    const placeholder2 = document.createTextNode("");
+    el.insertBefore(placeholder2, prevChild);
+    stack.unshift({ prev: placeholder2, next: child, parent: el });
     return prevChild;
   }
   if (!keyedChild || keyedChild === prevChild) {
@@ -2691,13 +2509,13 @@ var LustreClientApplication = class _LustreClientApplication {
    *
    * @returns {Gleam.Ok<(action: Lustre.Action<Lustre.Client, Msg>>) => void>}
    */
-  static start({ init: init3, update: update2, view: view2 }, selector, flags) {
+  static start({ init: init3, update: update2, view: view3 }, selector, flags) {
     if (!is_browser())
       return new Error(new NotABrowser());
     const root = selector instanceof HTMLElement ? selector : document.querySelector(selector);
     if (!root)
       return new Error(new ElementNotFound(selector));
-    const app = new _LustreClientApplication(root, init3(flags), update2, view2);
+    const app = new _LustreClientApplication(root, init3(flags), update2, view3);
     return new Ok((action) => app.send(action));
   }
   /**
@@ -2708,11 +2526,11 @@ var LustreClientApplication = class _LustreClientApplication {
    *
    * @returns {LustreClientApplication}
    */
-  constructor(root, [init3, effects], update2, view2) {
+  constructor(root, [init3, effects], update2, view3) {
     this.root = root;
     this.#model = init3;
     this.#update = update2;
-    this.#view = view2;
+    this.#view = view3;
     this.#tickScheduled = window.requestAnimationFrame(
       () => this.#tick(effects.all.toArray(), true)
     );
@@ -2731,14 +2549,14 @@ var LustreClientApplication = class _LustreClientApplication {
         this.#queue = [];
         this.#model = action[0][0];
         const vdom = this.#view(this.#model);
-        const dispatch = (handler, immediate = false) => (event) => {
-          const result = handler(event);
+        const dispatch2 = (handler, immediate = false) => (event2) => {
+          const result = handler(event2);
           if (result instanceof Ok) {
             this.send(new Dispatch(result[0], immediate));
           }
         };
         const prev = this.root.firstChild ?? this.root.appendChild(document.createTextNode(""));
-        morph(prev, vdom, dispatch);
+        morph(prev, vdom, dispatch2);
       }
     } else if (action instanceof Dispatch) {
       const msg = action[0];
@@ -2751,10 +2569,10 @@ var LustreClientApplication = class _LustreClientApplication {
         this.#tickScheduled = window.requestAnimationFrame(() => this.#tick());
       }
     } else if (action instanceof Emit2) {
-      const event = action[0];
+      const event2 = action[0];
       const data = action[1];
       this.root.dispatchEvent(
-        new CustomEvent(event, {
+        new CustomEvent(event2, {
           detail: data,
           bubbles: true,
           composed: true
@@ -2790,14 +2608,14 @@ var LustreClientApplication = class _LustreClientApplication {
     if (!this.#flush(effects, isFirstRender))
       return;
     const vdom = this.#view(this.#model);
-    const dispatch = (handler, immediate = false) => (event) => {
-      const result = handler(event);
+    const dispatch2 = (handler, immediate = false) => (event2) => {
+      const result = handler(event2);
       if (result instanceof Ok) {
         this.send(new Dispatch(result[0], immediate));
       }
     };
     const prev = this.root.firstChild ?? this.root.appendChild(document.createTextNode(""));
-    morph(prev, vdom, dispatch);
+    morph(prev, vdom, dispatch2);
   }
   #flush(effects = [], didUpdate = false) {
     while (this.#queue.length > 0) {
@@ -2809,9 +2627,9 @@ var LustreClientApplication = class _LustreClientApplication {
     }
     while (effects.length > 0) {
       const effect = effects.shift();
-      const dispatch = (msg) => this.send(new Dispatch(msg));
-      const emit2 = (event, data) => this.root.dispatchEvent(
-        new CustomEvent(event, {
+      const dispatch2 = (msg) => this.send(new Dispatch(msg));
+      const emit2 = (event2, data) => this.root.dispatchEvent(
+        new CustomEvent(event2, {
           detail: data,
           bubbles: true,
           composed: true
@@ -2820,7 +2638,7 @@ var LustreClientApplication = class _LustreClientApplication {
       const select = () => {
       };
       const root = this.root;
-      effect({ dispatch, emit: emit2, select, root });
+      effect({ dispatch: dispatch2, emit: emit2, select, root });
     }
     if (this.#queue.length > 0) {
       return this.#flush(effects, didUpdate);
@@ -2831,20 +2649,20 @@ var LustreClientApplication = class _LustreClientApplication {
 };
 var start = LustreClientApplication.start;
 var LustreServerApplication = class _LustreServerApplication {
-  static start({ init: init3, update: update2, view: view2, on_attribute_change }, flags) {
+  static start({ init: init3, update: update2, view: view3, on_attribute_change }, flags) {
     const app = new _LustreServerApplication(
       init3(flags),
       update2,
-      view2,
+      view3,
       on_attribute_change
     );
     return new Ok((action) => app.send(action));
   }
-  constructor([model, effects], update2, view2, on_attribute_change) {
+  constructor([model, effects], update2, view3, on_attribute_change) {
     this.#model = model;
     this.#update = update2;
-    this.#view = view2;
-    this.#html = view2(model);
+    this.#view = view3;
+    this.#html = view3(model);
     this.#onAttributeChange = on_attribute_change;
     this.#renderers = /* @__PURE__ */ new Map();
     this.#handlers = handlers(this.#html);
@@ -2853,10 +2671,10 @@ var LustreServerApplication = class _LustreServerApplication {
   send(action) {
     if (action instanceof Attrs) {
       for (const attr of action[0]) {
-        const decoder2 = this.#onAttributeChange.get(attr[0]);
-        if (!decoder2)
+        const decoder = this.#onAttributeChange.get(attr[0]);
+        if (!decoder)
           continue;
-        const msg = decoder2(attr[1]);
+        const msg = decoder(attr[1]);
         if (msg instanceof Error)
           continue;
         this.#queue.push(msg);
@@ -2870,9 +2688,9 @@ var LustreServerApplication = class _LustreServerApplication {
       this.#queue.push(action[0]);
       this.#tick();
     } else if (action instanceof Emit2) {
-      const event = new Emit(action[0], action[1]);
+      const event2 = new Emit(action[0], action[1]);
       for (const [_, renderer] of this.#renderers) {
-        renderer(event);
+        renderer(event2);
       }
     } else if (action instanceof Event3) {
       const handler = this.#handlers.get(action[0]);
@@ -2924,9 +2742,9 @@ var LustreServerApplication = class _LustreServerApplication {
     }
     while (effects.length > 0) {
       const effect = effects.shift();
-      const dispatch = (msg) => this.send(new Dispatch(msg));
-      const emit2 = (event, data) => this.root.dispatchEvent(
-        new CustomEvent(event, {
+      const dispatch2 = (msg) => this.send(new Dispatch(msg));
+      const emit2 = (event2, data) => this.root.dispatchEvent(
+        new CustomEvent(event2, {
           detail: data,
           bubbles: true,
           composed: true
@@ -2935,7 +2753,7 @@ var LustreServerApplication = class _LustreServerApplication {
       const select = () => {
       };
       const root = null;
-      effect({ dispatch, emit: emit2, select, root });
+      effect({ dispatch: dispatch2, emit: emit2, select, root });
     }
     if (this.#queue.length > 0) {
       return this.#flush(didUpdate, effects);
@@ -2949,11 +2767,11 @@ var is_browser = () => globalThis.window && window.document;
 
 // build/dev/javascript/lustre/lustre.mjs
 var App = class extends CustomType {
-  constructor(init3, update2, view2, on_attribute_change) {
+  constructor(init3, update2, view3, on_attribute_change) {
     super();
     this.init = init3;
     this.update = update2;
-    this.view = view2;
+    this.view = view3;
     this.on_attribute_change = on_attribute_change;
   }
 };
@@ -2965,8 +2783,11 @@ var ElementNotFound = class extends CustomType {
 };
 var NotABrowser = class extends CustomType {
 };
-function application(init3, update2, view2) {
-  return new App(init3, update2, view2, new None());
+function application(init3, update2, view3) {
+  return new App(init3, update2, view3, new None());
+}
+function dispatch(msg) {
+  return new Dispatch(msg);
 }
 function start2(app, selector, flags) {
   return guard(
@@ -2979,8 +2800,29 @@ function start2(app, selector, flags) {
 }
 
 // build/dev/javascript/lustre/lustre/element/html.mjs
+function text2(content) {
+  return text(content);
+}
+function header(attrs, children2) {
+  return element("header", attrs, children2);
+}
 function h1(attrs, children2) {
   return element("h1", attrs, children2);
+}
+function main(attrs, children2) {
+  return element("main", attrs, children2);
+}
+function div(attrs, children2) {
+  return element("div", attrs, children2);
+}
+function p(attrs, children2) {
+  return element("p", attrs, children2);
+}
+function button(attrs, children2) {
+  return element("button", attrs, children2);
+}
+function input(attrs) {
+  return element("input", attrs, toList([]));
 }
 
 // build/dev/javascript/gleam_stdlib/gleam/uri.mjs
@@ -2996,14 +2838,14 @@ var Uri = class extends CustomType {
     this.fragment = fragment;
   }
 };
-function regex_submatches(pattern, string4) {
+function regex_submatches(pattern, string5) {
   let _pipe = pattern;
   let _pipe$1 = compile(_pipe, new Options(true, false));
   let _pipe$2 = replace_error(_pipe$1, void 0);
   let _pipe$3 = map3(
     _pipe$2,
     (_capture) => {
-      return scan(_capture, string4);
+      return scan(_capture, string5);
     }
   );
   let _pipe$4 = try$(_pipe$3, first);
@@ -3179,7 +3021,7 @@ function to_string7(uri) {
     let $1 = uri.port;
     if ($ instanceof Some && $1 instanceof Some) {
       let port = $1[0];
-      return prepend(":", prepend(to_string2(port), parts$3));
+      return prepend(":", prepend(to_string3(port), parts$3));
     } else {
       return parts$3;
     }
@@ -3360,22 +3202,22 @@ var PromiseLayer = class _PromiseLayer {
   constructor(promise) {
     this.promise = promise;
   }
-  static wrap(value2) {
-    return value2 instanceof Promise ? new _PromiseLayer(value2) : value2;
+  static wrap(value4) {
+    return value4 instanceof Promise ? new _PromiseLayer(value4) : value4;
   }
-  static unwrap(value2) {
-    return value2 instanceof _PromiseLayer ? value2.promise : value2;
+  static unwrap(value4) {
+    return value4 instanceof _PromiseLayer ? value4.promise : value4;
   }
 };
-function resolve(value2) {
-  return Promise.resolve(PromiseLayer.wrap(value2));
+function resolve(value4) {
+  return Promise.resolve(PromiseLayer.wrap(value4));
 }
 function then_await(promise, fn) {
-  return promise.then((value2) => fn(PromiseLayer.unwrap(value2)));
+  return promise.then((value4) => fn(PromiseLayer.unwrap(value4)));
 }
 function map_promise(promise, fn) {
   return promise.then(
-    (value2) => PromiseLayer.wrap(fn(PromiseLayer.unwrap(value2)))
+    (value4) => PromiseLayer.wrap(fn(PromiseLayer.unwrap(value4)))
   );
 }
 function rescue(promise, fn) {
@@ -3510,7 +3352,7 @@ var ExpectTextResponse = class extends CustomType {
     this.run = run2;
   }
 };
-function do_send(req, expect, dispatch) {
+function do_send(req, expect, dispatch2) {
   let _pipe = send(req);
   let _pipe$1 = try_await(_pipe, read_text_body);
   let _pipe$2 = map_promise(
@@ -3530,18 +3372,18 @@ function do_send(req, expect, dispatch) {
       return expect.run(new Error(new NetworkError2()));
     }
   );
-  tap(_pipe$3, dispatch);
+  tap(_pipe$3, dispatch2);
   return void 0;
 }
 function get2(url, expect) {
   return from(
-    (dispatch) => {
+    (dispatch2) => {
       let $ = to(url);
       if ($.isOk()) {
         let req = $[0];
-        return do_send(req, expect, dispatch);
+        return do_send(req, expect, dispatch2);
       } else {
-        return dispatch(expect.run(new Error(new BadUrl(url))));
+        return dispatch2(expect.run(new Error(new BadUrl(url))));
       }
     }
   );
@@ -3564,7 +3406,7 @@ function response_to_result(response) {
     return new Error(new OtherError(code2, body2));
   }
 }
-function expect_json(decoder2, to_msg) {
+function expect_json(decoder, to_msg) {
   return new ExpectTextResponse(
     (response) => {
       let _pipe = response;
@@ -3572,7 +3414,7 @@ function expect_json(decoder2, to_msg) {
       let _pipe$2 = then$(
         _pipe$1,
         (body2) => {
-          let $ = decode2(body2, decoder2);
+          let $ = decode2(body2, decoder);
           if ($.isOk()) {
             let json = $[0];
             return new Ok(json);
@@ -3588,8 +3430,11 @@ function expect_json(decoder2, to_msg) {
 }
 
 // build/dev/javascript/plinth/document_ffi.mjs
-function querySelector(query) {
-  let found = document.querySelector(query);
+function addEventListener(type, listener) {
+  return document.addEventListener(type, listener);
+}
+function getElementById(id2) {
+  let found = document.getElementById(id2);
   if (!found) {
     return new Error();
   }
@@ -3597,49 +3442,456 @@ function querySelector(query) {
 }
 
 // build/dev/javascript/plinth/element_ffi.mjs
-function innerText(element2) {
-  return element2.innerText;
+function cast(raw) {
+  if (raw instanceof Element) {
+    return new Ok(raw);
+  } else {
+    return new Error();
+  }
+}
+function focus(element2) {
+  element2.focus();
+}
+
+// build/dev/javascript/plinth/event_ffi.mjs
+function target(event2) {
+  return event2.target;
+}
+
+// build/dev/javascript/plinth/plinth/browser/element.mjs
+function cast2(raw) {
+  let $ = cast(raw);
+  if ($.isOk()) {
+    let element2 = $[0];
+    return new Ok(element2);
+  } else {
+    return new Error(
+      new DecodeError("Element", classify(raw), toList([]))
+    );
+  }
+}
+
+// build/dev/javascript/plinth/window_ffi.mjs
+function self() {
+  return globalThis;
+}
+function alert(message) {
+  window.alert(message);
+}
+function prompt(message, defaultValue) {
+  let text3 = window.prompt(message, defaultValue);
+  if (text3 !== null) {
+    return new Ok(text3);
+  } else {
+    return new Error();
+  }
+}
+function addEventListener3(type, listener) {
+  return window.addEventListener(type, listener);
+}
+async function requestWakeLock() {
+  try {
+    return new Ok(await window.navigator.wakeLock.request("screen"));
+  } catch (error) {
+    return new Error(error.toString());
+  }
+}
+function location() {
+  return window.location.href;
+}
+function locationOf(w) {
+  try {
+    return new Ok(w.location.href);
+  } catch (error) {
+    return new Error(error.toString());
+  }
+}
+function setLocation(w, url) {
+  w.location.href = url;
+}
+function origin() {
+  return window.location.origin;
+}
+function pathname() {
+  return window.location.pathname;
+}
+function reload() {
+  return window.location.reload();
+}
+function reloadOf(w) {
+  return w.location.reload();
+}
+function focus2(w) {
+  return w.focus();
+}
+function getHash2() {
+  const hash = window.location.hash;
+  if (hash == "") {
+    return new Error();
+  }
+  return new Ok(decodeURIComponent(hash.slice(1)));
+}
+function getSearch() {
+  const search = window.location.search;
+  if (search == "") {
+    return new Error();
+  }
+  return new Ok(decodeURIComponent(search.slice(1)));
+}
+function innerHeight(w) {
+  return w.innerHeight;
+}
+function innerWidth(w) {
+  return w.innerWidth;
+}
+function outerHeight(w) {
+  return w.outerHeight;
+}
+function outerWidth(w) {
+  return w.outerWidth;
+}
+function screenX(w) {
+  return w.screenX;
+}
+function screenY(w) {
+  return w.screenY;
+}
+function screenTop(w) {
+  return w.screenTop;
+}
+function screenLeft(w) {
+  return w.screenLeft;
+}
+function scrollX(w) {
+  return w.scrollX;
+}
+function scrollY(w) {
+  return w.scrollY;
+}
+function open(url, target2, features) {
+  try {
+    return new Ok(window.open(url, target2, features));
+  } catch (error) {
+    return new Error(error.toString());
+  }
+}
+function close(w) {
+  w.close();
+}
+function closed(w) {
+  return w.closed;
+}
+function queueMicrotask(callback) {
+  return window.queueMicrotask(callback);
+}
+function requestAnimationFrame(callback) {
+  return window.requestAnimationFrame(callback);
+}
+function cancelAnimationFrame(callback) {
+  return window.cancelAnimationFrame(callback);
+}
+function eval_(string) {
+  try {
+    return new Ok(eval(string));
+  } catch (error) {
+    return new Error(error.toString());
+  }
+}
+async function import_(string5) {
+  try {
+    return new Ok(await import(string5));
+  } catch (error) {
+    return new Error(error.toString());
+  }
+}
+
+// build/dev/javascript/decode/decode_ffi.mjs
+function strict_index(data, key2) {
+  const int4 = Number.isInteger(key2);
+  if (data instanceof Dict || data instanceof WeakMap || data instanceof Map) {
+    const token = {};
+    const entry = data.get(key2, token);
+    if (entry === token)
+      return new Ok(new None());
+    return new Ok(new Some(entry));
+  }
+  if ((key2 === 0 || key2 === 1 || key2 === 2) && data instanceof List) {
+    let i = 0;
+    for (const value4 of data) {
+      if (i === key2)
+        return new Ok(new Some(value4));
+      i++;
+    }
+    return new Error("Indexable");
+  }
+  if (int4 && Array.isArray(data) || data && typeof data === "object" || data && Object.getPrototypeOf(data) === Object.prototype) {
+    if (key2 in data)
+      return new Ok(new Some(data[key2]));
+    return new Ok(new None());
+  }
+  return new Error(int4 ? "Indexable" : "Dict");
+}
+function list(data, decode3, pushPath, index4, emptyList) {
+  if (!(data instanceof List || Array.isArray(data))) {
+    let error = new DecodeError("List", classify(data), emptyList);
+    return [emptyList, List.fromArray([error])];
+  }
+  const decoded = [];
+  for (const element2 of data) {
+    const layer = decode3(element2);
+    const [out, errors] = layer;
+    if (errors instanceof NonEmpty) {
+      const [_, errors2] = pushPath(layer, index4.toString());
+      return [emptyList, errors2];
+    }
+    decoded.push(out);
+    index4++;
+  }
+  return [List.fromArray(decoded), emptyList];
+}
+
+// build/dev/javascript/decode/decode/zero.mjs
+var Decoder = class extends CustomType {
+  constructor(function$) {
+    super();
+    this.function = function$;
+  }
+};
+function run(data, decoder) {
+  let $ = decoder.function(data);
+  let maybe_invalid_data = $[0];
+  let errors = $[1];
+  if (errors.hasLength(0)) {
+    return new Ok(maybe_invalid_data);
+  } else {
+    return new Error(errors);
+  }
+}
+function success(data) {
+  return new Decoder((_) => {
+    return [data, toList([])];
+  });
+}
+function run_dynamic_function(data, zero, f) {
+  let $ = f(data);
+  if ($.isOk()) {
+    let data$1 = $[0];
+    return [data$1, toList([])];
+  } else {
+    let errors = $[0];
+    return [zero, errors];
+  }
+}
+function decode_string2(data) {
+  return run_dynamic_function(data, "", string2);
+}
+function decode_int2(data) {
+  return run_dynamic_function(data, 0, int);
+}
+function optional2(inner) {
+  return new Decoder(
+    (data) => {
+      let $ = optional((var0) => {
+        return new Ok(var0);
+      })(data);
+      if ($.isOk() && $[0] instanceof None) {
+        return [new None(), toList([])];
+      } else if ($.isOk() && $[0] instanceof Some) {
+        let data$1 = $[0][0];
+        let $1 = inner.function(data$1);
+        let data$2 = $1[0];
+        let errors = $1[1];
+        return [new Some(data$2), errors];
+      } else {
+        let $1 = inner.function(data);
+        let data$1 = $1[0];
+        let errors = $1[1];
+        return [new Some(data$1), errors];
+      }
+    }
+  );
+}
+var string4 = /* @__PURE__ */ new Decoder(decode_string2);
+var int3 = /* @__PURE__ */ new Decoder(decode_int2);
+function list2(inner) {
+  return new Decoder(
+    (data) => {
+      return list(
+        data,
+        inner.function,
+        (p2, k) => {
+          return push_path2(p2, toList([k]));
+        },
+        0,
+        toList([])
+      );
+    }
+  );
+}
+function push_path2(layer, path) {
+  let decoder = any(
+    toList([
+      string2,
+      (x) => {
+        return map3(int(x), to_string3);
+      }
+    ])
+  );
+  let path$1 = map2(
+    path,
+    (key2) => {
+      let key$1 = identity(key2);
+      let $ = decoder(key$1);
+      if ($.isOk()) {
+        let key$2 = $[0];
+        return key$2;
+      } else {
+        return "<" + classify(key$1) + ">";
+      }
+    }
+  );
+  let errors = map2(
+    layer[1],
+    (error) => {
+      return error.withFields({ path: append(path$1, error.path) });
+    }
+  );
+  return [layer[0], errors];
+}
+function index3(loop$path, loop$position, loop$inner, loop$data, loop$handle_miss) {
+  while (true) {
+    let path = loop$path;
+    let position = loop$position;
+    let inner = loop$inner;
+    let data = loop$data;
+    let handle_miss = loop$handle_miss;
+    if (path.hasLength(0)) {
+      let _pipe = inner(data);
+      return push_path2(_pipe, reverse(position));
+    } else {
+      let key2 = path.head;
+      let path$1 = path.tail;
+      let $ = strict_index(data, key2);
+      if ($.isOk() && $[0] instanceof Some) {
+        let data$1 = $[0][0];
+        loop$path = path$1;
+        loop$position = prepend(key2, position);
+        loop$inner = inner;
+        loop$data = data$1;
+        loop$handle_miss = handle_miss;
+      } else if ($.isOk() && $[0] instanceof None) {
+        return handle_miss(data, prepend(key2, position));
+      } else {
+        let kind = $[0];
+        let $1 = inner(data);
+        let default$ = $1[0];
+        let _pipe = [
+          default$,
+          toList([new DecodeError(kind, classify(data), toList([]))])
+        ];
+        return push_path2(_pipe, reverse(position));
+      }
+    }
+  }
+}
+function subfield(field_path, field_decoder, next) {
+  return new Decoder(
+    (data) => {
+      let $ = index3(
+        field_path,
+        toList([]),
+        field_decoder.function,
+        data,
+        (data2, position) => {
+          let $12 = field_decoder.function(data2);
+          let default$ = $12[0];
+          let _pipe = [
+            default$,
+            toList([new DecodeError("Field", "Nothing", toList([]))])
+          ];
+          return push_path2(_pipe, reverse(position));
+        }
+      );
+      let out = $[0];
+      let errors1 = $[1];
+      let $1 = next(out).function(data);
+      let out$1 = $1[0];
+      let errors2 = $1[1];
+      return [out$1, append(errors1, errors2)];
+    }
+  );
+}
+function field2(field_name, field_decoder, next) {
+  return subfield(toList([field_name]), field_decoder, next);
+}
+function optional_field(key2, default$, field_decoder, next) {
+  return new Decoder(
+    (data) => {
+      let $ = (() => {
+        let $12 = strict_index(data, key2);
+        if ($12.isOk() && $12[0] instanceof Some) {
+          let data$1 = $12[0][0];
+          return field_decoder.function(data$1);
+        } else if ($12.isOk() && $12[0] instanceof None) {
+          return [default$, toList([])];
+        } else {
+          let kind = $12[0];
+          let _pipe = [
+            default$,
+            toList([new DecodeError(kind, classify(data), toList([]))])
+          ];
+          return push_path2(_pipe, toList([key2]));
+        }
+      })();
+      let out = $[0];
+      let errors1 = $[1];
+      let $1 = next(out).function(data);
+      let out$1 = $1[0];
+      let errors2 = $1[1];
+      return [out$1, append(errors1, errors2)];
+    }
+  );
 }
 
 // build/dev/javascript/shared/shared/coin_market_cap_types.mjs
 var CryptoCurrency = class extends CustomType {
-  constructor(id, rank, name, symbol) {
+  constructor(id2, rank, name, symbol) {
     super();
-    this.id = id;
+    this.id = id2;
     this.rank = rank;
     this.name = name;
     this.symbol = symbol;
   }
 };
 var FiatCurrency = class extends CustomType {
-  constructor(id, name, sign, symbol) {
+  constructor(id2, name, sign, symbol) {
     super();
-    this.id = id;
+    this.id = id2;
     this.name = name;
     this.sign = sign;
     this.symbol = symbol;
   }
 };
 function crypto_currency_decoder() {
-  return field(
+  return field2(
     "id",
-    int2,
-    (id) => {
+    int3,
+    (id2) => {
       return optional_field(
         "rank",
         new None(),
-        optional2(int2),
+        optional2(int3),
         (rank) => {
-          return field(
+          return field2(
             "name",
-            string2,
+            string4,
             (name) => {
-              return field(
+              return field2(
                 "symbol",
-                string2,
+                string4,
                 (symbol) => {
                   return success(
-                    new CryptoCurrency(id, rank, name, symbol)
+                    new CryptoCurrency(id2, rank, name, symbol)
                   );
                 }
               );
@@ -3651,23 +3903,23 @@ function crypto_currency_decoder() {
   );
 }
 function fiat_currency_decoder() {
-  return field(
+  return field2(
     "id",
-    int2,
-    (id) => {
-      return field(
+    int3,
+    (id2) => {
+      return field2(
         "name",
-        string2,
+        string4,
         (name) => {
-          return field(
+          return field2(
             "sign",
-            string2,
+            string4,
             (sign) => {
-              return field(
+              return field2(
                 "symbol",
-                string2,
+                string4,
                 (symbol) => {
-                  return success(new FiatCurrency(id, sign, name, symbol));
+                  return success(new FiatCurrency(id2, name, sign, symbol));
                 }
               );
             }
@@ -3675,52 +3927,439 @@ function fiat_currency_decoder() {
         }
       );
     }
+  );
+}
+
+// build/dev/javascript/client/client/api.mjs
+function get_app_url() {
+  return "https://crypto-rates.fly.dev";
+}
+function get_crypto(on_result_msg) {
+  let decoder = (_capture) => {
+    return run(_capture, list2(crypto_currency_decoder()));
+  };
+  let expect = expect_json(decoder, on_result_msg);
+  return get2(get_app_url() + "/api/currencies/crypto", expect);
+}
+function get_fiat(on_result_msg) {
+  let decoder = (_capture) => {
+    return run(_capture, list2(fiat_currency_decoder()));
+  };
+  let expect = expect_json(decoder, on_result_msg);
+  return get2(get_app_url() + "/api/currencies/fiat", expect);
+}
+
+// build/dev/javascript/client/element_ffi.mjs
+function contains(elem1, elem2) {
+  return elem1.contains(elem2);
+}
+
+// build/dev/javascript/lustre/lustre/event.mjs
+function on2(name, handler) {
+  return on(name, handler);
+}
+function on_click(msg) {
+  return on2("click", (_) => {
+    return new Ok(msg);
+  });
+}
+function value3(event2) {
+  let _pipe = event2;
+  return field("target", field("value", string2))(
+    _pipe
+  );
+}
+function on_input(msg) {
+  return on2(
+    "input",
+    (event2) => {
+      let _pipe = value3(event2);
+      return map3(_pipe, msg);
+    }
+  );
+}
+
+// build/dev/javascript/client/client/button_dropdown.mjs
+var ButtonDropdown = class extends CustomType {
+  constructor(ctx, id2, button_text, dropdown_options, current_value, show_dropdown, filter3, search_input_id, on_button_click, on_search_input, on_select) {
+    super();
+    this.ctx = ctx;
+    this.id = id2;
+    this.button_text = button_text;
+    this.dropdown_options = dropdown_options;
+    this.current_value = current_value;
+    this.show_dropdown = show_dropdown;
+    this.filter = filter3;
+    this.search_input_id = search_input_id;
+    this.on_button_click = on_button_click;
+    this.on_search_input = on_search_input;
+    this.on_select = on_select;
+  }
+};
+var DropdownOption = class extends CustomType {
+  constructor(value4, display) {
+    super();
+    this.value = value4;
+    this.display = display;
+  }
+};
+function button2(text3, on_click2) {
+  return button(
+    toList([
+      class$(
+        "w-full p-2 border border-gray-300 rounded-lg text-left focus:ring-2 focus:ring-blue-500 focus:outline-none"
+      ),
+      on_click(on_click2())
+    ]),
+    toList([text2(text3)])
+  );
+}
+function search_input(id2, value4, on_input2) {
+  return div(
+    toList([class$("sticky top-0 bg-white z-10")]),
+    toList([
+      input(
+        toList([
+          class$(
+            "w-full p-2 border-b border-gray-200 focus:outline-none"
+          ),
+          id(id2),
+          placeholder("Search..."),
+          type_("text"),
+          value(value4),
+          on_input(on_input2)
+        ])
+      )
+    ])
+  );
+}
+function options_container(dd_options, on_select) {
+  let dd_option = (item) => {
+    return div(
+      toList([
+        attribute("data-value", item.value),
+        class$("px-4 py-1 cursor-pointer hover:bg-gray-100"),
+        on_click(on_select(item.value))
+      ]),
+      toList([text2(item.display)])
+    );
+  };
+  return keyed(
+    (_capture) => {
+      return div(
+        toList([class$("options-container")]),
+        _capture
+      );
+    },
+    map2(
+      dd_options,
+      (item) => {
+        let child = dd_option(item);
+        return [item.value, child];
+      }
+    )
+  );
+}
+function option_group(group, on_select) {
+  let group_title_div = div(
+    toList([class$("font-bold px-2 py-1 bg-gray-100")]),
+    toList([text2(group[0])])
+  );
+  return div(
+    toList([class$("group")]),
+    toList([group_title_div, options_container(group[1], on_select)])
+  );
+}
+function dropdown(search_input_id, visible, filter3, dd_options, on_search_input, on_select) {
+  return div(
+    toList([
+      class$(
+        "currency-dropdown absolute z-10 w-full bg-white border border-gray-300 rounded-lg shadow-md max-h-64 overflow-y-auto"
+      ),
+      (() => {
+        if (visible) {
+          return none2();
+        } else {
+          return class$("hidden");
+        }
+      })()
+    ]),
+    toList([
+      search_input(search_input_id, filter3, on_search_input),
+      div(
+        toList([class$("suggestions")]),
+        (() => {
+          let _pipe = dd_options;
+          let _pipe$1 = map_to_list(_pipe);
+          return map2(
+            _pipe$1,
+            (_capture) => {
+              return option_group(_capture, on_select);
+            }
+          );
+        })()
+      )
+    ])
+  );
+}
+function view(button_dropdown) {
+  return div(
+    toList([
+      class$("relative w-72"),
+      id(button_dropdown.id)
+    ]),
+    toList([
+      button2(
+        button_dropdown.button_text,
+        () => {
+          return button_dropdown.on_button_click(button_dropdown.ctx);
+        }
+      ),
+      dropdown(
+        button_dropdown.search_input_id,
+        button_dropdown.show_dropdown,
+        button_dropdown.filter,
+        button_dropdown.dropdown_options,
+        (_capture) => {
+          return button_dropdown.on_search_input(button_dropdown.ctx, _capture);
+        },
+        (_capture) => {
+          return button_dropdown.on_select(button_dropdown.ctx, _capture);
+        }
+      )
+    ])
   );
 }
 
 // build/dev/javascript/client/client/model.mjs
 var Model2 = class extends CustomType {
-  constructor(crypto, fiat, currency1, currency2) {
+  constructor(crypto, fiat, currency_input_groups) {
     super();
     this.crypto = crypto;
     this.fiat = fiat;
-    this.currency1 = currency1;
-    this.currency2 = currency2;
+    this.currency_input_groups = currency_input_groups;
   }
 };
-function decoder() {
-  return field(
-    "crypto",
-    list2(crypto_currency_decoder()),
-    (crypto) => {
-      return field(
-        "fiat",
-        list2(fiat_currency_decoder()),
-        (fiat) => {
-          return field(
-            "currency1",
-            optional2(int2),
-            (currency1) => {
-              return field(
-                "currency1",
-                optional2(int2),
-                (currency2) => {
-                  return success(
-                    new Model2(crypto, fiat, currency1, currency2)
-                  );
-                }
-              );
-            }
-          );
+var CurrencyInputGroup = class extends CustomType {
+  constructor(amount, currency_selector) {
+    super();
+    this.amount = amount;
+    this.currency_selector = currency_selector;
+  }
+};
+var Left = class extends CustomType {
+};
+var Right = class extends CustomType {
+};
+function map_currency_input_groups(currency_input_groups, side, map6) {
+  let map_pair = (() => {
+    if (side instanceof Some && side[0] instanceof Left) {
+      return map_first;
+    } else if (side instanceof Some && side[0] instanceof Right) {
+      return map_second;
+    } else {
+      return (pair, map7) => {
+        let _pipe = pair;
+        let _pipe$1 = map_first(_pipe, map7);
+        return map_second(_pipe$1, map7);
+      };
+    }
+  })();
+  return map_pair(currency_input_groups, map6);
+}
+function toggle_selector_dropdown(model, side) {
+  let currency_input_groups = (() => {
+    let _pipe = model.currency_input_groups;
+    return map_currency_input_groups(
+      _pipe,
+      new Some(side),
+      (currency_input_group2) => {
+        return currency_input_group2.withFields({
+          currency_selector: currency_input_group2.currency_selector.withFields({
+            show_dropdown: !currency_input_group2.currency_selector.show_dropdown
+          })
+        });
+      }
+    );
+  })();
+  return model.withFields({ currency_input_groups });
+}
+function with_amount(model, side, value4) {
+  let currency_input_groups = (() => {
+    let _pipe = model.currency_input_groups;
+    return map_currency_input_groups(
+      _pipe,
+      new Some(side),
+      (currency_input_group2) => {
+        return currency_input_group2.withFields({ amount: new Some(value4) });
+      }
+    );
+  })();
+  return model.withFields({ currency_input_groups });
+}
+function with_selected_currency(model, side, selected_val) {
+  let currency_label_result = (() => {
+    let _pipe = find_map(
+      model.crypto,
+      (currency) => {
+        let $ = to_string3(currency.id) === selected_val;
+        if ($) {
+          return new Ok(currency.name);
+        } else {
+          return new Error(void 0);
         }
+      }
+    );
+    return lazy_or(
+      _pipe,
+      () => {
+        return find_map(
+          model.fiat,
+          (currency) => {
+            let $ = to_string3(currency.id) === selected_val;
+            if ($) {
+              return new Ok(currency.name);
+            } else {
+              return new Error(void 0);
+            }
+          }
+        );
+      }
+    );
+  })();
+  return try$(
+    currency_label_result,
+    (currency_label) => {
+      let currency_input_groups = (() => {
+        let _pipe = model.currency_input_groups;
+        return map_currency_input_groups(
+          _pipe,
+          new Some(side),
+          (currency_input_group2) => {
+            return currency_input_group2.withFields({
+              currency_selector: currency_input_group2.currency_selector.withFields({
+                current_value: new Some(selected_val),
+                button_text: currency_label
+              })
+            });
+          }
+        );
+      })();
+      return new Ok(
+        model.withFields({ currency_input_groups })
       );
     }
   );
 }
-
-// build/dev/javascript/client/ffi.mjs
-function get_app_url() {
-  return window["__ENV__"] ? window.location.origin : "http://localhost:8080";
+function crypto_dropdown_option(currency) {
+  return new DropdownOption(to_string3(currency.id), currency.name);
+}
+function fiat_dropdown_option(currency) {
+  return new DropdownOption(to_string3(currency.id), currency.name);
+}
+var crypto_group_key = "Crypto";
+function with_crypto(model, crypto) {
+  let map_currency_input_group = (currency_input_group2) => {
+    let dropdown_options = insert(
+      currency_input_group2.currency_selector.dropdown_options,
+      crypto_group_key,
+      map2(crypto, crypto_dropdown_option)
+    );
+    return currency_input_group2.withFields({
+      currency_selector: currency_input_group2.currency_selector.withFields({
+        dropdown_options
+      })
+    });
+  };
+  let currency_input_groups = (() => {
+    let _pipe = model.currency_input_groups;
+    return map_currency_input_groups(
+      _pipe,
+      new None(),
+      map_currency_input_group
+    );
+  })();
+  return model.withFields({
+    crypto,
+    currency_input_groups
+  });
+}
+var fiat_group_key = "Fiat";
+function with_fiat(model, fiat) {
+  let map_currency_input_group = (currency_input_group2) => {
+    let dropdown_options = insert(
+      currency_input_group2.currency_selector.dropdown_options,
+      fiat_group_key,
+      map2(fiat, fiat_dropdown_option)
+    );
+    return currency_input_group2.withFields({
+      currency_selector: currency_input_group2.currency_selector.withFields({
+        dropdown_options
+      })
+    });
+  };
+  let currency_input_groups = (() => {
+    let _pipe = model.currency_input_groups;
+    return map_currency_input_groups(
+      _pipe,
+      new None(),
+      map_currency_input_group
+    );
+  })();
+  return model.withFields({
+    fiat,
+    currency_input_groups
+  });
+}
+function filter_currencies(model, side, filter3) {
+  let is_match = (str) => {
+    let _pipe = str;
+    let _pipe$1 = lowercase2(_pipe);
+    return contains_string(_pipe$1, lowercase2(filter3));
+  };
+  let filtered_crypto = (() => {
+    let _pipe = model.crypto;
+    let _pipe$1 = filter(
+      _pipe,
+      (currency) => {
+        let _pipe$12 = currency.name;
+        return is_match(_pipe$12);
+      }
+    );
+    return map2(_pipe$1, crypto_dropdown_option);
+  })();
+  let filtered_fiat = (() => {
+    let _pipe = model.fiat;
+    let _pipe$1 = filter(
+      _pipe,
+      (currency) => {
+        let _pipe$12 = currency.name;
+        return is_match(_pipe$12);
+      }
+    );
+    return map2(_pipe$1, fiat_dropdown_option);
+  })();
+  let currency_input_groups = (() => {
+    let _pipe = model.currency_input_groups;
+    return map_currency_input_groups(
+      _pipe,
+      new Some(side),
+      (currency_input_group2) => {
+        let dropdown_options = (() => {
+          let _pipe$1 = currency_input_group2.currency_selector.dropdown_options;
+          let _pipe$2 = insert(_pipe$1, crypto_group_key, filtered_crypto);
+          return insert(_pipe$2, fiat_group_key, filtered_fiat);
+        })();
+        return currency_input_group2.withFields({
+          currency_selector: currency_input_group2.currency_selector.withFields({
+            filter: filter3,
+            dropdown_options
+          })
+        });
+      }
+    );
+  })();
+  return model.withFields({ currency_input_groups });
 }
 
 // build/dev/javascript/client/client.mjs
@@ -3736,116 +4375,358 @@ var ApiReturnedFiat = class extends CustomType {
     this[0] = x0;
   }
 };
-function ssr_model() {
-  return try$(
-    (() => {
-      let _pipe = querySelector("#model");
-      return map3(_pipe, innerText);
-    })(),
-    (json_str) => {
-      return try$(
-        (() => {
-          let _pipe = decode2(
-            json_str,
-            (_capture) => {
-              return run(_capture, decoder());
-            }
-          );
-          return replace_error(_pipe, void 0);
-        })(),
-        (model) => {
-          return new Ok(model);
-        }
-      );
-    }
-  );
-}
-function update(model, msg) {
-  if (msg instanceof ApiReturnedCrypto && msg[0].isOk()) {
-    let currencies = msg[0][0];
-    let _pipe = currencies;
-    let _pipe$1 = take(_pipe, 3);
-    debug(_pipe$1);
-    return [model.withFields({ crypto: currencies }), none()];
-  } else if (msg instanceof ApiReturnedCrypto && !msg[0].isOk()) {
-    let err = msg[0][0];
-    println_error("failed to get crypto: " + inspect2(err));
-    return [model, none()];
-  } else if (msg instanceof ApiReturnedFiat && msg[0].isOk()) {
-    let currencies = msg[0][0];
-    let _pipe = currencies;
-    let _pipe$1 = take(_pipe, 3);
-    debug(_pipe$1);
-    return [model.withFields({ fiat: currencies }), none()];
-  } else {
-    let err = msg[0][0];
-    println_error("failed to get fiat: " + inspect2(err));
-    return [model, none()];
+var UserClickedInDocument = class extends CustomType {
+  constructor(x0) {
+    super();
+    this[0] = x0;
   }
-}
-function view(_) {
-  return h1(toList([]), toList([text("Hello, worldz!")]));
-}
-function get_crypto() {
-  let decoder2 = (_capture) => {
-    return run(
-      _capture,
-      list2(crypto_currency_decoder())
-    );
-  };
-  let expect = expect_json(
-    decoder2,
-    (var0) => {
-      return new ApiReturnedCrypto(var0);
-    }
-  );
-  return get2(get_app_url() + "/api/currencies/crypto", expect);
-}
-function get_fiat() {
-  let decoder2 = (_capture) => {
-    return run(
-      _capture,
-      list2(fiat_currency_decoder())
-    );
-  };
-  let expect = expect_json(
-    decoder2,
-    (var0) => {
-      return new ApiReturnedFiat(var0);
-    }
-  );
-  return get2(get_app_url() + "/api/currencies/fiat", expect);
-}
-function init2(model) {
-  if (model instanceof Some) {
-    let m = model[0];
-    return [m, none()];
+};
+var UserInputAmount = class extends CustomType {
+  constructor(x0, x1) {
+    super();
+    this[0] = x0;
+    this[1] = x1;
+  }
+};
+var UserClickedCurrencySelector = class extends CustomType {
+  constructor(x0) {
+    super();
+    this[0] = x0;
+  }
+};
+var UserFilteredCurrencies = class extends CustomType {
+  constructor(x0, x1) {
+    super();
+    this[0] = x0;
+    this[1] = x1;
+  }
+};
+var UserSelectedCurrency = class extends CustomType {
+  constructor(x0, x1) {
+    super();
+    this[0] = x0;
+    this[1] = x1;
+  }
+};
+function init2(maybe_model) {
+  if (maybe_model instanceof Some) {
+    let model = maybe_model[0];
+    return [model, none()];
   } else {
+    let btn_dd_1 = new ButtonDropdown(
+      new Left(),
+      "btn-dd-1",
+      "Select one...",
+      from_list(
+        toList([
+          [crypto_group_key, toList([])],
+          [fiat_group_key, toList([])]
+        ])
+      ),
+      new None(),
+      false,
+      "",
+      "btn-dd-1-search",
+      (var0) => {
+        return new UserClickedCurrencySelector(var0);
+      },
+      (var0, var1) => {
+        return new UserFilteredCurrencies(var0, var1);
+      },
+      (var0, var1) => {
+        return new UserSelectedCurrency(var0, var1);
+      }
+    );
+    let currency_input_group_1 = new CurrencyInputGroup(new None(), btn_dd_1);
+    let currency_input_group_2 = new CurrencyInputGroup(
+      new None(),
+      btn_dd_1.withFields({
+        ctx: new Right(),
+        id: "btn-dd-2",
+        search_input_id: "btn-dd-2-search"
+      })
+    );
     return [
-      new Model2(toList([]), toList([]), new None(), new None()),
-      batch(toList([get_crypto(), get_fiat()]))
+      new Model2(
+        toList([]),
+        toList([]),
+        [currency_input_group_1, currency_input_group_2]
+      ),
+      batch(
+        toList([
+          get_crypto((var0) => {
+            return new ApiReturnedCrypto(var0);
+          }),
+          get_fiat((var0) => {
+            return new ApiReturnedFiat(var0);
+          })
+        ])
+      )
     ];
   }
 }
-function main() {
-  let model = (() => {
-    let _pipe = ssr_model();
-    return from_result(_pipe);
-  })();
-  let app = application(init2, update, view);
+function update(model, msg) {
+  if (msg instanceof ApiReturnedCrypto && msg[0].isOk()) {
+    let crypto = msg[0][0];
+    return [with_crypto(model, crypto), none()];
+  } else if (msg instanceof ApiReturnedCrypto && !msg[0].isOk()) {
+    return [model, none()];
+  } else if (msg instanceof ApiReturnedFiat && msg[0].isOk()) {
+    let fiat = msg[0][0];
+    return [with_fiat(model, fiat), none()];
+  } else if (msg instanceof ApiReturnedFiat && !msg[0].isOk()) {
+    return [model, none()];
+  } else if (msg instanceof UserClickedInDocument) {
+    let event2 = msg[0];
+    let $ = (() => {
+      let _pipe = event2;
+      let _pipe$1 = target(_pipe);
+      return cast2(_pipe$1);
+    })();
+    if (!$.isOk()) {
+      throw makeError(
+        "let_assert",
+        "client",
+        125,
+        "update",
+        "Pattern match failed, no pattern matched the value.",
+        { value: $ }
+      );
+    }
+    let clicked_elem = $[0];
+    let update_side = (side, model2) => {
+      let currency_input_group$1 = (() => {
+        if (side instanceof Left) {
+          return model2.currency_input_groups[0];
+        } else {
+          return model2.currency_input_groups[1];
+        }
+      })();
+      let btn_dd = currency_input_group$1.currency_selector;
+      let btn_dd_id = btn_dd.id;
+      let visible = btn_dd.show_dropdown;
+      let $1 = getElementById(btn_dd_id);
+      if (!$1.isOk()) {
+        throw makeError(
+          "let_assert",
+          "client",
+          137,
+          "",
+          "Pattern match failed, no pattern matched the value.",
+          { value: $1 }
+        );
+      }
+      let btn_dd_elem = $1[0];
+      let clicked_outside_dd = !contains(
+        btn_dd_elem,
+        clicked_elem
+      );
+      let should_toggle = visible && clicked_outside_dd;
+      if (should_toggle) {
+        let _pipe = model2;
+        let _pipe$1 = toggle_selector_dropdown(_pipe, side);
+        return filter_currencies(_pipe$1, side, "");
+      } else {
+        return model2;
+      }
+    };
+    let model$1 = (() => {
+      let _pipe = model;
+      let _pipe$1 = ((_capture) => {
+        return update_side(new Left(), _capture);
+      })(
+        _pipe
+      );
+      return ((_capture) => {
+        return update_side(new Right(), _capture);
+      })(
+        _pipe$1
+      );
+    })();
+    return [model$1, none()];
+  } else if (msg instanceof UserInputAmount) {
+    let side = msg[0];
+    let amount = msg[1];
+    return [with_amount(model, side, amount), none()];
+  } else if (msg instanceof UserClickedCurrencySelector) {
+    let side = msg[0];
+    let model$1 = (() => {
+      let _pipe = model;
+      let _pipe$1 = toggle_selector_dropdown(_pipe, side);
+      return filter_currencies(_pipe$1, side, "");
+    })();
+    let target_currency_selector = (() => {
+      let target_group = (() => {
+        if (side instanceof Left) {
+          return model$1.currency_input_groups[0];
+        } else {
+          return model$1.currency_input_groups[1];
+        }
+      })();
+      return target_group.currency_selector;
+    })();
+    let search_focus_effect = from(
+      (_) => {
+        requestAnimationFrame(
+          (_2) => {
+            let $ = getElementById(
+              target_currency_selector.search_input_id
+            );
+            if (!$.isOk()) {
+              throw makeError(
+                "let_assert",
+                "client",
+                182,
+                "",
+                "Pattern match failed, no pattern matched the value.",
+                { value: $ }
+              );
+            }
+            let search_elem = $[0];
+            return focus(search_elem);
+          }
+        );
+        return void 0;
+      }
+    );
+    let effect = (() => {
+      let $ = target_currency_selector.show_dropdown;
+      if ($) {
+        return search_focus_effect;
+      } else {
+        return none();
+      }
+    })();
+    return [model$1, effect];
+  } else if (msg instanceof UserFilteredCurrencies) {
+    let side = msg[0];
+    let filter3 = msg[1];
+    return [filter_currencies(model, side, filter3), none()];
+  } else {
+    let side = msg[0];
+    let selected_val = msg[1];
+    let $ = with_selected_currency(model, side, selected_val);
+    if (!$.isOk()) {
+      throw makeError(
+        "let_assert",
+        "client",
+        205,
+        "update",
+        "Pattern match failed, no pattern matched the value.",
+        { value: $ }
+      );
+    }
+    let model$1 = $[0];
+    let model$2 = (() => {
+      let _pipe = model$1;
+      let _pipe$1 = toggle_selector_dropdown(_pipe, side);
+      return filter_currencies(_pipe$1, side, "");
+    })();
+    return [model$2, none()];
+  }
+}
+function header2() {
+  return header(
+    toList([class$("p-4 bg-red-500 text-white")]),
+    toList([
+      h1(
+        toList([
+          class$("w-full mx-auto max-w-screen-xl text-4xl font-bold")
+        ]),
+        toList([text2("Crypto Rates")])
+      )
+    ])
+  );
+}
+function currency_input_group(currency_input_group2) {
+  return div(
+    toList([class$("flex items-center space-x-4")]),
+    toList([
+      input(
+        toList([
+          type_("number"),
+          class$(
+            "w-24 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+          ),
+          value(
+            (() => {
+              let _pipe = currency_input_group2.amount;
+              let _pipe$1 = map(_pipe, to_string);
+              return unwrap(_pipe$1, "");
+            })()
+          )
+        ])
+      ),
+      view(currency_input_group2.currency_selector)
+    ])
+  );
+}
+function main_content(model) {
+  let $ = model.currency_input_groups;
+  let side1 = $[0];
+  let side2 = $[1];
+  let equal_sign = p(
+    toList([attribute("class", "text-xl font-bold text-gray-700")]),
+    toList([text("=")])
+  );
+  return main(
+    toList([class$("flex items-center")]),
+    toList([
+      div(
+        toList([
+          class$(
+            "flex flex-col items-center gap-8 w-full max-w-screen-lg mx-auto"
+          )
+        ]),
+        toList([
+          div(
+            toList([class$("flex items-center space-x-4")]),
+            toList([
+              currency_input_group(side1),
+              equal_sign,
+              currency_input_group(side2)
+            ])
+          )
+        ])
+      )
+    ])
+  );
+}
+function view2(model) {
+  return div(
+    toList([class$("flex flex-col gap-12")]),
+    toList([header2(), main_content(model)])
+  );
+}
+function main2() {
+  let ssr_model = () => {
+    return new Error(void 0);
+  };
+  let app = application(init2, update, view2);
+  let model = from_result(ssr_model());
   let $ = start2(app, "#app", model);
   if (!$.isOk()) {
     throw makeError(
       "let_assert",
       "client",
-      34,
+      50,
       "main",
       "Pattern match failed, no pattern matched the value.",
       { value: $ }
     );
   }
+  let to_runtime = $[0];
+  addEventListener(
+    "click",
+    (event2) => {
+      let _pipe = event2;
+      let _pipe$1 = new UserClickedInDocument(_pipe);
+      let _pipe$2 = dispatch(_pipe$1);
+      return to_runtime(_pipe$2);
+    }
+  );
   return void 0;
 }
 
 // build/.lustre/entry.mjs
-main();
+main2();
