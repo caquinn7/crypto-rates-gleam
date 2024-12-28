@@ -276,7 +276,7 @@ pub fn with_selected_currency(
 pub fn map_currency_input_groups(
   currency_input_groups: #(CurrencyInputGroup(msg), CurrencyInputGroup(msg)),
   side: Option(Side),
-  map: fn(CurrencyInputGroup(msg)) -> CurrencyInputGroup(msg),
+  fun: fn(CurrencyInputGroup(msg)) -> CurrencyInputGroup(msg),
 ) -> #(CurrencyInputGroup(msg), CurrencyInputGroup(msg)) {
   let map_pair = case side {
     Some(Left) -> pair.map_first
@@ -287,7 +287,7 @@ pub fn map_currency_input_groups(
       |> pair.map_second(map)
     }
   }
-  map_pair(currency_input_groups, map)
+  map_pair(currency_input_groups, fun)
 }
 
 fn crypto_dropdown_option(currency: CryptoCurrency) -> DropdownOption {

@@ -3,7 +3,8 @@ import client.{
 }
 import client/button_dropdown.{ButtonDropdown}
 import client/model.{
-  type CurrencyInputGroup, type Model, CurrencyInputGroup, Left, Model, Right,
+  type CurrencyInputGroup, type Model, type Side, CurrencyInputGroup, Left,
+  Model, Right,
 }
 import gleam/dict
 import gleam/int
@@ -188,8 +189,37 @@ pub fn model_from_ssr_data_right_currency_id_invalid_test() {
   |> should.be_none
 }
 
+pub fn model_toggle_selector_dropdown_test() {
+  let initial_model =
+    model.init(
+      UserClickedCurrencySelector,
+      UserFilteredCurrencies,
+      UserSelectedCurrency,
+    )
+
+  let initial_show_dd =
+    map_currency_input_group(initial_model, Left, fn(group) {
+      group.currency_selector.show_dropdown
+    })
+
+  let result =
+    initial_model
+    |> model.toggle_selector_dropdown(Left)
+
+  let new_show_dd =
+    map_currency_input_group(result, Left, fn(group) {
+      group.currency_selector.show_dropdown
+    })
+
+  new_show_dd
+  |> should.not_equal(initial_show_dd)
+
+  result.currency_input_groups.1
+  |> should.equal(initial_model.currency_input_groups.1)
+}
+
 pub fn model_filter_currencies_test() {
-  let before_filter =
+  let initial_model =
     model.init(
       UserClickedCurrencySelector,
       UserFilteredCurrencies,
@@ -207,7 +237,7 @@ pub fn model_filter_currencies_test() {
     ])
 
   let result =
-    before_filter
+    initial_model
     |> model.filter_currencies(Left, "test")
 
   get_dd_option_values(result, Left, model.crypto_group_key)
@@ -216,16 +246,14 @@ pub fn model_filter_currencies_test() {
   get_dd_option_values(result, Left, model.fiat_group_key)
   |> should.equal(["4", "6"])
 
-  { result.currency_input_groups.1 }.currency_selector.dropdown_options
-  |> should.equal(
-    { before_filter.currency_input_groups.1 }.currency_selector.dropdown_options,
-  )
+  result.currency_input_groups.1
+  |> should.equal(initial_model.currency_input_groups.1)
 
   result.crypto
-  |> should.equal(before_filter.crypto)
+  |> should.equal(initial_model.crypto)
 
   result.fiat
-  |> should.equal(before_filter.fiat)
+  |> should.equal(initial_model.fiat)
 }
 
 pub fn model_filter_currencies_filter_is_empty_string_test() {
@@ -280,14 +308,28 @@ pub fn model_filter_currencies_no_match_test() {
   |> should.equal([])
 }
 
-fn get_dd_option_values(model: Model(msg), side, group_key) {
+fn get_dd_option_values(
+  model: Model(msg),
+  side: Side,
+  group_key: String,
+) -> List(String) {
+  model
+  |> map_currency_input_group(side, fn(group) {
+    group.currency_selector.dropdown_options
+  })
+  |> dict.get(group_key)
+  |> result.unwrap([])
+  |> list.map(fn(dd_option) { dd_option.value })
+}
+
+fn map_currency_input_group(
+  model: Model(msg),
+  side: Side,
+  fun: fn(CurrencyInputGroup(msg)) -> a,
+) -> a {
   let target = case side {
     Left -> model.currency_input_groups.0
     Right -> model.currency_input_groups.1
   }
-
-  target.currency_selector.dropdown_options
-  |> dict.get(group_key)
-  |> result.unwrap([])
-  |> list.map(fn(dd_option) { dd_option.value })
+  fun(target)
 }
