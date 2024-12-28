@@ -1,4 +1,5 @@
 import gleam/http
+import gleam/list
 import gleam/option.{None, Some}
 import gleam/result
 import gleam/string_tree
@@ -23,7 +24,7 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
         request_crypto(100)
         |> result.map(fn(cmc_response) {
           case cmc_response.data {
-            Some(crypto) -> crypto
+            Some(crypto) -> list.unique(crypto)
             _ -> []
           }
         })
@@ -33,7 +34,7 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
         request_fiat(100)
         |> result.map(fn(cmc_response) {
           case cmc_response.data {
-            Some(fiat) -> fiat
+            Some(fiat) -> list.unique(fiat)
             _ -> []
           }
         })
