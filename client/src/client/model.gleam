@@ -15,6 +15,8 @@ pub const crypto_group_key = "Crypto"
 
 pub const fiat_group_key = "Fiat"
 
+const default_button_dropdown_text = "Select one..."
+
 pub type Model(msg) {
   Model(
     crypto: List(CryptoCurrency),
@@ -44,7 +46,7 @@ pub fn init(
     ButtonDropdown(
       ctx: Left,
       id: "btn-dd-1",
-      button_text: "Select one...",
+      button_text: default_button_dropdown_text,
       dropdown_options: dict.from_list([
         #(crypto_group_key, []),
         #(fiat_group_key, []),
@@ -90,13 +92,13 @@ pub fn from_ssr_data(
     |> with_amount(Left, currency_1.amount)
     |> with_amount(Right, currency_2.amount)
 
+  let model =
+    model
+    |> with_selected_currency(Left, option.map(currency_1.id, int.to_string))
+    |> result.unwrap(or: model)
+
   model
-  |> with_selected_currency(Left, option.map(currency_1.id, int.to_string))
-  |> result.try(with_selected_currency(
-    _,
-    Right,
-    option.map(currency_2.id, int.to_string),
-  ))
+  |> with_selected_currency(Right, option.map(currency_2.id, int.to_string))
   |> result.unwrap(or: model)
 }
 
@@ -230,23 +232,27 @@ pub fn with_selected_currency(
   side: Side,
   optional_val: Option(String),
 ) -> Result(Model(msg), Nil) {
-  let selected_val = option.unwrap(optional_val, "0")
-
   let currency_label_result = {
-    list.find_map(model.crypto, fn(currency) {
-      case int.to_string(currency.id) == selected_val {
-        True -> Ok(currency.name)
-        _ -> Error(Nil)
+    case optional_val {
+      None -> Ok(default_button_dropdown_text)
+
+      Some(selected_val) -> {
+        list.find_map(model.crypto, fn(currency) {
+          case int.to_string(currency.id) == selected_val {
+            True -> Ok(currency.name)
+            _ -> Error(Nil)
+          }
+        })
+        |> result.lazy_or(fn() {
+          list.find_map(model.fiat, fn(currency) {
+            case int.to_string(currency.id) == selected_val {
+              True -> Ok(currency.name)
+              _ -> Error(Nil)
+            }
+          })
+        })
       }
-    })
-    |> result.lazy_or(fn() {
-      list.find_map(model.fiat, fn(currency) {
-        case int.to_string(currency.id) == selected_val {
-          True -> Ok(currency.name)
-          _ -> Error(Nil)
-        }
-      })
-    })
+    }
   }
 
   use currency_label <- result.try(currency_label_result)
