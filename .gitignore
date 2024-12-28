@@ -4,3 +4,4 @@
 erl_crash.dump
 .env
 .DS_STORE
+*/priv/static/client*
