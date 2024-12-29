@@ -240,6 +240,59 @@ pub fn model_toggle_selector_dropdown_test() {
   |> should.equal(initial_model.currency_input_groups.1)
 }
 
+pub fn model_filter_currencies_filter_is_empty_string_test() {
+  let initial_model =
+    model.init(
+      UserClickedCurrencySelector,
+      UserFilteredCurrencies,
+      UserSelectedCurrency,
+    )
+    |> model.with_crypto([CryptoCurrency(1, Some(2), "CQ Token", "CQT")])
+    |> model.with_fiat([FiatCurrency(2, "United States Dollar", "$", "USD")])
+
+  let result =
+    initial_model
+    |> model.filter_currencies(Left, "")
+
+  result
+  |> should.equal(initial_model)
+}
+
+pub fn model_filter_currencies_case_insensitive_test() {
+  let result =
+    model.init(
+      UserClickedCurrencySelector,
+      UserFilteredCurrencies,
+      UserSelectedCurrency,
+    )
+    |> model.with_crypto([
+      CryptoCurrency(1, None, "ABC", ""),
+      CryptoCurrency(2, None, "DEF", ""),
+    ])
+    |> model.filter_currencies(Left, "def")
+
+  result
+  |> get_dd_option_values(Left, model.crypto_group_key)
+  |> should.equal(["2"])
+}
+
+pub fn model_filter_currencies_no_match_test() {
+  let result =
+    model.init(
+      UserClickedCurrencySelector,
+      UserFilteredCurrencies,
+      UserSelectedCurrency,
+    )
+    |> model.with_crypto([
+      CryptoCurrency(1, None, "ABC", ""),
+      CryptoCurrency(2, None, "DEF", ""),
+    ])
+    |> model.filter_currencies(Left, "XYZ")
+
+  get_dd_option_values(result, Left, model.crypto_group_key)
+  |> should.equal([])
+}
+
 pub fn model_filter_currencies_test() {
   let initial_model =
     model.init(
@@ -278,56 +331,70 @@ pub fn model_filter_currencies_test() {
   |> should.equal(initial_model.fiat)
 }
 
-pub fn model_filter_currencies_filter_is_empty_string_test() {
-  let before_filter =
+pub fn model_with_selected_currency_none_test() {
+  let initial_model =
     model.init(
       UserClickedCurrencySelector,
       UserFilteredCurrencies,
       UserSelectedCurrency,
     )
-    |> model.with_crypto([CryptoCurrency(1, Some(2), "CQ Token", "CQT")])
-    |> model.with_fiat([FiatCurrency(2, "United States Dollar", "$", "USD")])
 
   let result =
-    before_filter
-    |> model.filter_currencies(Left, "")
+    initial_model
+    |> model.with_selected_currency(Left, None)
 
   result
-  |> should.equal(before_filter)
+  |> should.be_ok
+  |> map_currency_input_group(Left, fn(group) {
+    group.currency_selector.current_value
+  })
+  |> should.be_none
 }
 
-pub fn model_filter_currencies_case_insensitive_test() {
-  let result =
+pub fn model_with_selected_currency_invalid_currency_id_test() {
+  let initial_model =
     model.init(
       UserClickedCurrencySelector,
       UserFilteredCurrencies,
       UserSelectedCurrency,
     )
-    |> model.with_crypto([
-      CryptoCurrency(1, None, "ABC", ""),
-      CryptoCurrency(2, None, "DEF", ""),
-    ])
-    |> model.filter_currencies(Left, "def")
 
-  get_dd_option_values(result, Left, model.crypto_group_key)
-  |> should.equal(["2"])
+  let result =
+    initial_model
+    |> model.with_selected_currency(Left, Some("1"))
+
+  result
+  |> should.be_error
+  |> should.equal(Nil)
 }
 
-pub fn model_filter_currencies_no_match_test() {
-  let result =
+pub fn model_with_selected_currency_test() {
+  let expected_currency_id = 1
+  let initial_model =
     model.init(
       UserClickedCurrencySelector,
       UserFilteredCurrencies,
       UserSelectedCurrency,
     )
-    |> model.with_crypto([
-      CryptoCurrency(1, None, "ABC", ""),
-      CryptoCurrency(2, None, "DEF", ""),
-    ])
-    |> model.filter_currencies(Left, "XYZ")
+    |> model.with_crypto([CryptoCurrency(expected_currency_id, None, "", "")])
 
-  get_dd_option_values(result, Left, model.crypto_group_key)
-  |> should.equal([])
+  let result =
+    initial_model
+    |> model.with_selected_currency(
+      Left,
+      Some(int.to_string(expected_currency_id)),
+    )
+    |> should.be_ok
+
+  result
+  |> map_currency_input_group(Left, fn(group) {
+    group.currency_selector.current_value
+  })
+  |> should.be_some
+  |> should.equal(int.to_string(expected_currency_id))
+
+  result.currency_input_groups.1
+  |> should.equal(initial_model.currency_input_groups.1)
 }
 
 fn get_dd_option_values(
