@@ -397,6 +397,93 @@ pub fn model_with_selected_currency_test() {
   |> should.equal(initial_model.currency_input_groups.1)
 }
 
+pub fn model_map_currency_input_groups_left_test() {
+  let initial_model =
+    model.init(
+      UserClickedCurrencySelector,
+      UserFilteredCurrencies,
+      UserSelectedCurrency,
+    )
+
+  let expected_btn_txt = "click me"
+
+  let result =
+    initial_model.currency_input_groups
+    |> model.map_currency_input_groups(Some(Left), fn(group) {
+      CurrencyInputGroup(
+        ..group,
+        currency_selector: ButtonDropdown(
+          ..group.currency_selector,
+          button_text: expected_btn_txt,
+        ),
+      )
+    })
+
+  { result.0 }.currency_selector.button_text
+  |> should.equal(expected_btn_txt)
+
+  { result.1 }.currency_selector.button_text
+  |> should.equal(model.default_button_dropdown_text)
+}
+
+pub fn model_map_currency_input_groups_right_test() {
+  let initial_model =
+    model.init(
+      UserClickedCurrencySelector,
+      UserFilteredCurrencies,
+      UserSelectedCurrency,
+    )
+
+  let expected_btn_txt = "click me"
+
+  let result =
+    initial_model.currency_input_groups
+    |> model.map_currency_input_groups(Some(Right), fn(group) {
+      CurrencyInputGroup(
+        ..group,
+        currency_selector: ButtonDropdown(
+          ..group.currency_selector,
+          button_text: expected_btn_txt,
+        ),
+      )
+    })
+
+  { result.1 }.currency_selector.button_text
+  |> should.equal(expected_btn_txt)
+
+  { result.0 }.currency_selector.button_text
+  |> should.equal(model.default_button_dropdown_text)
+}
+
+pub fn model_map_currency_input_groups_both_sides_test() {
+  let initial_model =
+    model.init(
+      UserClickedCurrencySelector,
+      UserFilteredCurrencies,
+      UserSelectedCurrency,
+    )
+
+  let expected_btn_txt = "click me"
+
+  let result =
+    initial_model.currency_input_groups
+    |> model.map_currency_input_groups(None, fn(group) {
+      CurrencyInputGroup(
+        ..group,
+        currency_selector: ButtonDropdown(
+          ..group.currency_selector,
+          button_text: expected_btn_txt,
+        ),
+      )
+    })
+
+  { result.0 }.currency_selector.button_text
+  |> should.equal(expected_btn_txt)
+
+  { result.1 }.currency_selector.button_text
+  |> should.equal(expected_btn_txt)
+}
+
 fn get_dd_option_values(
   model: Model(msg),
   side: Side,

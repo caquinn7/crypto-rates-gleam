@@ -15,7 +15,7 @@ pub const crypto_group_key = "Crypto"
 
 pub const fiat_group_key = "Fiat"
 
-const default_button_dropdown_text = "Select one..."
+pub const default_button_dropdown_text = "Select one..."
 
 pub type Model(msg) {
   Model(
