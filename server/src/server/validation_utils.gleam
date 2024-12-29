@@ -8,7 +8,7 @@ pub fn string_is_number(error: e) -> Validator(String, Float, e) {
   fn(value: String) {
     value
     |> float.parse
-    |> result.try_recover(fn(_) {
+    |> result.lazy_or(fn() {
       int.parse(value)
       |> result.map(int.to_float)
     })

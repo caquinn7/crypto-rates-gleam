@@ -21,6 +21,3 @@ pub fn get_fiat(
 
 @external(javascript, "../window_ffi.mjs", "get_app_url")
 fn get_app_url() -> String
-// fn get_app_url() -> String {
-//   "https://crypto-rates.fly.dev"
-// }

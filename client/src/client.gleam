@@ -7,7 +7,6 @@ import client/model.{
   Model, Right,
 }
 import decode/zero
-import gleam/float
 import gleam/json
 import gleam/option.{Some}
 import gleam/result
@@ -16,6 +15,7 @@ import lustre/attribute
 import lustre/effect.{type Effect}
 import lustre/element.{type Element}
 import lustre/element/html
+import lustre/event
 import lustre_http.{type HttpError}
 import plinth/browser/document
 import plinth/browser/element as plinth_element
@@ -30,7 +30,7 @@ pub type Msg {
   UserClickedInDocument(
     plinth_event.Event(plinth_event.UIEvent(browser_event.MouseEvent)),
   )
-  UserInputAmount(Side, Float)
+  UserTypedAmount(Side, String)
   UserClickedCurrencySelector(Side)
   UserFilteredCurrencies(Side, String)
   UserSelectedCurrency(Side, String)
@@ -143,8 +143,8 @@ pub fn update(model: Model(Msg), msg: Msg) -> #(Model(Msg), Effect(Msg)) {
       #(model, effect.none())
     }
 
-    UserInputAmount(side, amount) -> #(
-      model.with_amount(model, side, Some(amount)),
+    UserTypedAmount(side, amount_str) -> #(
+      model.with_amount(model, side, amount_str),
       effect.none(),
     )
 
@@ -234,9 +234,9 @@ fn main_content(model: Model(Msg)) -> Element(Msg) {
       ],
       [
         html.div([attribute.class("flex items-center space-x-4")], [
-          currency_input_group(side1),
+          currency_input_group(side1, UserTypedAmount(Left, _)),
           equal_sign,
-          currency_input_group(side2),
+          currency_input_group(side2, UserTypedAmount(Right, _)),
         ]),
       ],
     ),
@@ -245,18 +245,15 @@ fn main_content(model: Model(Msg)) -> Element(Msg) {
 
 fn currency_input_group(
   currency_input_group: CurrencyInputGroup(Msg),
+  on_amount_input: fn(String) -> Msg,
 ) -> Element(Msg) {
   html.div([attribute.class("flex items-center space-x-4")], [
     html.input([
-      attribute.type_("number"),
       attribute.class(
         "w-24 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none",
       ),
-      attribute.value(
-        currency_input_group.amount
-        |> option.map(float.to_string)
-        |> option.unwrap(""),
-      ),
+      attribute.value(currency_input_group.amount),
+      event.on_input(on_amount_input),
     ]),
     button_dropdown.view(currency_input_group.currency_selector),
   ])

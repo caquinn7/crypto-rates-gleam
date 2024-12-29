@@ -2,10 +2,12 @@ import client/button_dropdown.{
   type ButtonDropdown, type DropdownOption, ButtonDropdown, DropdownOption,
 }
 import gleam/dict
+import gleam/float
 import gleam/int
 import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/pair
+import gleam/regex
 import gleam/result
 import gleam/string
 import shared/coin_market_cap_types.{type CryptoCurrency, type FiatCurrency}
@@ -27,7 +29,7 @@ pub type Model(msg) {
 
 pub type CurrencyInputGroup(msg) {
   CurrencyInputGroup(
-    amount: Option(Float),
+    amount: String,
     currency_selector: ButtonDropdown(msg, Side),
   )
 }
@@ -61,11 +63,11 @@ pub fn init(
     )
 
   let currency_input_group_1 =
-    CurrencyInputGroup(amount: None, currency_selector: btn_dd_1)
+    CurrencyInputGroup(amount: "", currency_selector: btn_dd_1)
 
   let currency_input_group_2 =
     CurrencyInputGroup(
-      amount: None,
+      amount: "",
       currency_selector: ButtonDropdown(
         ..btn_dd_1,
         ctx: Right,
@@ -85,12 +87,18 @@ pub fn from_ssr_data(
 ) -> Model(msg) {
   let SsrData(crypto, fiat, #(currency_1, currency_2)) = ssr_data
 
+  let unwrap_amount = fn(optional_float) {
+    optional_float
+    |> option.map(float.to_string)
+    |> option.unwrap("")
+  }
+
   let model =
     init(on_button_click, on_search_input, on_select)
     |> with_crypto(crypto)
     |> with_fiat(fiat)
-    |> with_amount(Left, currency_1.amount)
-    |> with_amount(Right, currency_2.amount)
+    |> with_amount(Left, unwrap_amount(currency_1.amount))
+    |> with_amount(Right, unwrap_amount(currency_2.amount))
 
   let model =
     model
@@ -159,11 +167,19 @@ pub fn with_fiat(model: Model(msg), fiat: List(FiatCurrency)) -> Model(msg) {
   Model(..model, fiat:, currency_input_groups:)
 }
 
-pub fn with_amount(model: Model(msg), side: Side, optional_val: Option(Float)) {
+pub fn with_amount(model: Model(msg), side: Side, amount: String) -> Model(msg) {
+  let assert Ok(re) = regex.from_string("^[+]?\\d*\\.?\\d*$")
+
+  let amount = case regex.scan(re, amount) {
+    [regex.Match(content, [])] -> content
+    [] -> string.slice(amount, 0, string.length(amount) - 1)
+    _ -> panic as "this regex should have either 0 or 1 matches"
+  }
+
   let currency_input_groups =
     model.currency_input_groups
     |> map_currency_input_groups(Some(side), fn(currency_input_group) {
-      CurrencyInputGroup(..currency_input_group, amount: optional_val)
+      CurrencyInputGroup(..currency_input_group, amount:)
     })
 
   Model(..model, currency_input_groups:)
@@ -230,10 +246,10 @@ pub fn filter_currencies(
 pub fn with_selected_currency(
   model: Model(msg),
   side: Side,
-  optional_val: Option(String),
+  currency_id: Option(String),
 ) -> Result(Model(msg), Nil) {
   let currency_label_result = {
-    case optional_val {
+    case currency_id {
       None -> Ok(default_button_dropdown_text)
 
       Some(selected_val) -> {
@@ -264,7 +280,7 @@ pub fn with_selected_currency(
         ..currency_input_group,
         currency_selector: ButtonDropdown(
           ..currency_input_group.currency_selector,
-          current_value: optional_val,
+          current_value: currency_id,
           button_text: currency_label,
         ),
       )

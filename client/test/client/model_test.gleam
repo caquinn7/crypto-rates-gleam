@@ -34,7 +34,7 @@ pub fn model_init_test() {
   |> should.equal(
     Model([], [], #(
       CurrencyInputGroup(
-        None,
+        "",
         ButtonDropdown(
           Left,
           "btn-dd-1",
@@ -50,7 +50,7 @@ pub fn model_init_test() {
         ),
       ),
       CurrencyInputGroup(
-        None,
+        "",
         ButtonDropdown(
           Right,
           "btn-dd-2",
@@ -97,16 +97,17 @@ pub fn model_from_ssr_data_test() {
   ) = result.currency_input_groups
 
   amount_1
-  |> should.equal({ ssr_data.currencies.0 }.amount)
+  |> should.equal("")
 
   amount_2
-  |> should.equal({ ssr_data.currencies.1 }.amount)
+  |> should.equal("1.1")
 
   currency_selector_1.current_value
-  |> should.equal({ ssr_data.currencies.0 }.id |> option.map(int.to_string))
+  |> should.be_some
+  |> should.equal("1")
 
   currency_selector_2.current_value
-  |> should.equal({ ssr_data.currencies.1 }.id |> option.map(int.to_string))
+  |> should.be_none
 }
 
 pub fn model_from_ssr_data_left_currency_id_invalid_test() {
@@ -137,16 +138,17 @@ pub fn model_from_ssr_data_left_currency_id_invalid_test() {
   ) = result.currency_input_groups
 
   amount_1
-  |> should.equal({ ssr_data.currencies.0 }.amount)
+  |> should.equal("1.0")
 
   amount_2
-  |> should.equal({ ssr_data.currencies.1 }.amount)
+  |> should.equal("1.1")
 
   currency_selector_1.current_value
   |> should.be_none
 
   currency_selector_2.current_value
-  |> should.equal({ ssr_data.currencies.1 }.id |> option.map(int.to_string))
+  |> should.be_some
+  |> should.equal("2")
 }
 
 pub fn model_from_ssr_data_right_currency_id_invalid_test() {
@@ -177,13 +179,14 @@ pub fn model_from_ssr_data_right_currency_id_invalid_test() {
   ) = result.currency_input_groups
 
   amount_1
-  |> should.equal({ ssr_data.currencies.0 }.amount)
+  |> should.equal("1.0")
 
   amount_2
-  |> should.equal({ ssr_data.currencies.1 }.amount)
+  |> should.equal("1.1")
 
   currency_selector_1.current_value
-  |> should.equal({ ssr_data.currencies.0 }.id |> option.map(int.to_string))
+  |> should.be_some
+  |> should.equal("1")
 
   currency_selector_2.current_value
   |> should.be_none
@@ -197,14 +200,13 @@ pub fn model_with_amount_test() {
       UserSelectedCurrency,
     )
 
-  let expected_amt = 1.2
+  let expected_amt = "1.2"
   let result =
     initial_model
-    |> model.with_amount(Left, Some(expected_amt))
+    |> model.with_amount(Left, expected_amt)
 
   result
   |> map_currency_input_group(Left, fn(group) { group.amount })
-  |> should.be_some
   |> should.equal(expected_amt)
 
   result.currency_input_groups.1
