@@ -189,6 +189,28 @@ pub fn model_from_ssr_data_right_currency_id_invalid_test() {
   |> should.be_none
 }
 
+pub fn model_with_amount_test() {
+  let initial_model =
+    model.init(
+      UserClickedCurrencySelector,
+      UserFilteredCurrencies,
+      UserSelectedCurrency,
+    )
+
+  let expected_amt = 1.2
+  let result =
+    initial_model
+    |> model.with_amount(Left, Some(expected_amt))
+
+  result
+  |> map_currency_input_group(Left, fn(group) { group.amount })
+  |> should.be_some
+  |> should.equal(expected_amt)
+
+  result.currency_input_groups.1
+  |> should.equal(initial_model.currency_input_groups.1)
+}
+
 pub fn model_toggle_selector_dropdown_test() {
   let initial_model =
     model.init(

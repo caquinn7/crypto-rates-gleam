@@ -159,6 +159,16 @@ pub fn with_fiat(model: Model(msg), fiat: List(FiatCurrency)) -> Model(msg) {
   Model(..model, fiat:, currency_input_groups:)
 }
 
+pub fn with_amount(model: Model(msg), side: Side, optional_val: Option(Float)) {
+  let currency_input_groups =
+    model.currency_input_groups
+    |> map_currency_input_groups(Some(side), fn(currency_input_group) {
+      CurrencyInputGroup(..currency_input_group, amount: optional_val)
+    })
+
+  Model(..model, currency_input_groups:)
+}
+
 pub fn toggle_selector_dropdown(model: Model(msg), side: Side) -> Model(msg) {
   let currency_input_groups =
     model.currency_input_groups
@@ -212,16 +222,6 @@ pub fn filter_currencies(
           dropdown_options:,
         ),
       )
-    })
-
-  Model(..model, currency_input_groups:)
-}
-
-pub fn with_amount(model: Model(msg), side: Side, optional_val: Option(Float)) {
-  let currency_input_groups =
-    model.currency_input_groups
-    |> map_currency_input_groups(Some(side), fn(currency_input_group) {
-      CurrencyInputGroup(..currency_input_group, amount: optional_val)
     })
 
   Model(..model, currency_input_groups:)
