@@ -168,7 +168,7 @@ pub fn with_fiat(model: Model(msg), fiat: List(FiatCurrency)) -> Model(msg) {
 }
 
 pub fn with_amount(model: Model(msg), side: Side, amount: String) -> Model(msg) {
-  let assert Ok(re) = regex.from_string("^[+]?\\d*\\.?\\d*$")
+  let assert Ok(re) = regex.from_string("^\\d*\\.?\\d*$")
 
   let amount = case regex.scan(re, amount) {
     [regex.Match(content, [])] -> content

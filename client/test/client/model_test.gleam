@@ -11,6 +11,7 @@ import gleam/int
 import gleam/list
 import gleam/option.{None, Some}
 import gleam/result
+import gleam/string
 import gleeunit
 import gleeunit/should
 import shared/coin_market_cap_types.{CryptoCurrency, FiatCurrency}
@@ -193,24 +194,41 @@ pub fn model_from_ssr_data_right_currency_id_invalid_test() {
 }
 
 pub fn model_with_amount_test() {
-  let initial_model =
-    model.init(
-      UserClickedCurrencySelector,
-      UserFilteredCurrencies,
-      UserSelectedCurrency,
-    )
+  let input_outputs = [
+    #("", ""),
+    #("+", ""),
+    #("-", ""),
+    #("a", ""),
+    #(".", "."),
+    #("0.", "0."),
+    #(".0", ".0"),
+    #("1.0", "1.0"),
+    #("+1a2-3.4!.5", "123.45"),
+  ]
 
-  let expected_amt = "1.2"
-  let result =
-    initial_model
-    |> model.with_amount(Left, expected_amt)
+  list.each(input_outputs, fn(input_output) {
+    let #(input, expected_output) = input_output
+    let input_chars = string.to_graphemes(input)
 
-  result
-  |> map_currency_input_group(Left, fn(group) { group.amount })
-  |> should.equal(expected_amt)
+    let initial_model =
+      model.init(
+        UserClickedCurrencySelector,
+        UserFilteredCurrencies,
+        UserSelectedCurrency,
+      )
 
-  result.currency_input_groups.1
-  |> should.equal(initial_model.currency_input_groups.1)
+    let final_model =
+      list.fold(input_chars, initial_model, fn(acc, curr) {
+        let acc_amount =
+          map_currency_input_group(acc, Left, fn(group) { group.amount })
+
+        model.with_amount(acc, Left, acc_amount <> curr)
+      })
+
+    final_model
+    |> map_currency_input_group(Left, fn(group) { group.amount })
+    |> should.equal(expected_output)
+  })
 }
 
 pub fn model_toggle_selector_dropdown_test() {
