@@ -6,10 +6,12 @@ import gleam/option.{None, Some}
 import gleeunit
 import gleeunit/should
 import non_empty_list.{NonEmptyList}
-import server/coin_market_cap.{
-  CmcResponse, Conversion, ConversionParameters, QuoteItem, Status,
+import server/coin_market_cap.{CmcResponse, Conversion, QuoteItem, Status}
+import server/routes/conversions.{CurrencyNotFound}
+import shared/coin_market_cap_types.{ConversionParameters}
+import shared/conversion_response.{
+  type ConversionResponse, type Currency, ConversionResponse, Currency,
 }
-import server/routes/conversions.{ConversionResponse, Currency, CurrencyNotFound}
 import wisp/testing
 
 pub fn main() {

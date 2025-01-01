@@ -10,7 +10,10 @@ import gleam/pair
 import gleam/regex
 import gleam/result
 import gleam/string
-import shared/coin_market_cap_types.{type CryptoCurrency, type FiatCurrency}
+import shared/coin_market_cap_types.{
+  type ConversionParameters, type CryptoCurrency, type FiatCurrency,
+  ConversionParameters,
+}
 import shared/ssr_data.{type SsrData, SsrData}
 
 pub const crypto_group_key = "Crypto"
@@ -289,6 +292,43 @@ pub fn with_selected_currency(
   Ok(Model(..model, currency_input_groups:))
 }
 
+pub fn to_conversion_params(
+  model: Model(msg),
+  side: Side,
+) -> Result(ConversionParameters, Nil) {
+  let amount = get_amount(model, side)
+  let currency_1_result = get_currency_id(model, Left)
+  let currency_2_result = get_currency_id(model, Right)
+
+  case side, amount, currency_1_result, currency_2_result {
+    Left, Ok(a), Ok(c1), Ok(c2) -> Ok(ConversionParameters(a, c1, c2))
+    Right, Ok(a), Ok(c1), Ok(c2) -> Ok(ConversionParameters(a, c2, c1))
+    _, _, _, _ -> Error(Nil)
+  }
+}
+
+pub fn get_amount(model: Model(msg), side: Side) -> Result(Float, Nil) {
+  let to_float = fn(str) {
+    str
+    |> float.parse
+    |> result.lazy_or(fn() {
+      int.parse(str)
+      |> result.map(int.to_float)
+    })
+  }
+  map_currency_input_group(model, side, fn(group) { to_float(group.amount) })
+}
+
+pub fn get_currency_id(model: Model(msg), side: Side) -> Result(Int, Nil) {
+  map_currency_input_group(model, side, fn(group) {
+    let id_str = group.currency_selector.current_value
+    case id_str {
+      Some(str) -> int.parse(str)
+      None -> Error(Nil)
+    }
+  })
+}
+
 pub fn map_currency_input_groups(
   currency_input_groups: #(CurrencyInputGroup(msg), CurrencyInputGroup(msg)),
   side: Option(Side),
@@ -304,6 +344,18 @@ pub fn map_currency_input_groups(
     }
   }
   map_pair(currency_input_groups, fun)
+}
+
+pub fn map_currency_input_group(
+  model: Model(msg),
+  side: Side,
+  fun: fn(CurrencyInputGroup(msg)) -> a,
+) -> a {
+  let target = case side {
+    Left -> model.currency_input_groups.0
+    Right -> model.currency_input_groups.1
+  }
+  fun(target)
 }
 
 fn crypto_dropdown_option(currency: CryptoCurrency) -> DropdownOption {

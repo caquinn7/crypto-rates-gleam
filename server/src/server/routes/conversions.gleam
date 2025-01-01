@@ -2,27 +2,23 @@ import gleam/dict
 import gleam/float
 import gleam/http/request
 import gleam/int
-import gleam/json
 import gleam/list
 import gleam/option.{type Option, Some}
 import gleam/result
 import non_empty_list.{type NonEmptyList}
 import server/coin_market_cap.{
-  type CmcResponse, type Conversion, type ConversionParameters, type Status,
-  CmcResponse, ConversionParameters, QuoteItem, Status,
+  type CmcResponse, type Conversion, type Status, CmcResponse, QuoteItem, Status,
 } as cmc
 import server/response_utils
 import server/validation_utils.{error_msg}
+import shared/coin_market_cap_types.{
+  type ConversionParameters, ConversionParameters,
+}
+import shared/conversion_response.{
+  type ConversionResponse, type Currency, ConversionResponse, Currency,
+}
 import valid
 import wisp.{type Request, type Response}
-
-pub type ConversionResponse {
-  ConversionResponse(from: Currency, to: Currency)
-}
-
-pub type Currency {
-  Currency(id: Int, amount: Float)
-}
 
 pub type ConversionError {
   CurrencyNotFound(Int)
@@ -44,7 +40,7 @@ pub fn get(
     |> map_cmc_response(status, data)
     |> result.map(fn(conversion_response) {
       conversion_response
-      |> encode_conversion_response
+      |> conversion_response.encoder()
       |> response_utils.json_response(200)
     })
     |> result.map_error(fn(conversion_err) {
@@ -149,18 +145,4 @@ fn get_query_params(
     |> list.key_find(name)
     |> option.from_result
   })
-}
-
-fn encode_conversion_response(conversion_response: ConversionResponse) {
-  let encode_currency = fn(currency: Currency) {
-    json.object([
-      #("id", json.int(currency.id)),
-      #("amount", json.float(currency.amount)),
-    ])
-  }
-
-  json.object([
-    #("from", encode_currency(conversion_response.from)),
-    #("to", encode_currency(conversion_response.to)),
-  ])
 }

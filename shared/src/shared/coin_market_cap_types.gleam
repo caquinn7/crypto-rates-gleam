@@ -10,6 +10,10 @@ pub type FiatCurrency {
   FiatCurrency(id: Int, name: String, sign: String, symbol: String)
 }
 
+pub type ConversionParameters {
+  ConversionParameters(amount: Float, id: Int, convert_id: Int)
+}
+
 pub fn crypto_currency_decoder() -> Decoder(CryptoCurrency) {
   use id <- zero.field("id", zero.int)
   use rank <- zero.optional_field("rank", None, zero.optional(zero.int))

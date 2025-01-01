@@ -7,6 +7,7 @@ import client/model.{
   Model, Right,
 }
 import gleam/dict
+import gleam/float
 import gleam/int
 import gleam/list
 import gleam/option.{None, Some}
@@ -220,13 +221,13 @@ pub fn model_with_amount_test() {
     let final_model =
       list.fold(input_chars, initial_model, fn(acc, curr) {
         let acc_amount =
-          map_currency_input_group(acc, Left, fn(group) { group.amount })
+          model.map_currency_input_group(acc, Left, fn(group) { group.amount })
 
         model.with_amount(acc, Left, acc_amount <> curr)
       })
 
     final_model
-    |> map_currency_input_group(Left, fn(group) { group.amount })
+    |> model.map_currency_input_group(Left, fn(group) { group.amount })
     |> should.equal(expected_output)
   })
 }
@@ -240,7 +241,7 @@ pub fn model_toggle_selector_dropdown_test() {
     )
 
   let initial_show_dd =
-    map_currency_input_group(initial_model, Left, fn(group) {
+    model.map_currency_input_group(initial_model, Left, fn(group) {
       group.currency_selector.show_dropdown
     })
 
@@ -249,7 +250,7 @@ pub fn model_toggle_selector_dropdown_test() {
     |> model.toggle_selector_dropdown(Left)
 
   let new_show_dd =
-    map_currency_input_group(result, Left, fn(group) {
+    model.map_currency_input_group(result, Left, fn(group) {
       group.currency_selector.show_dropdown
     })
 
@@ -365,7 +366,7 @@ pub fn model_with_selected_currency_none_test() {
 
   result
   |> should.be_ok
-  |> map_currency_input_group(Left, fn(group) {
+  |> model.map_currency_input_group(Left, fn(group) {
     group.currency_selector.current_value
   })
   |> should.be_none
@@ -407,7 +408,7 @@ pub fn model_with_selected_currency_test() {
     |> should.be_ok
 
   result
-  |> map_currency_input_group(Left, fn(group) {
+  |> model.map_currency_input_group(Left, fn(group) {
     group.currency_selector.current_value
   })
   |> should.be_some
@@ -504,28 +505,145 @@ pub fn model_map_currency_input_groups_both_sides_test() {
   |> should.equal(expected_btn_txt)
 }
 
+pub fn model_to_conversion_params_left_side_happy_test() {
+  let expected_amount = 1.0
+  let expected_currency_id_1 = 1
+  let expected_currency_id_2 = 2
+
+  let assert Ok(model) =
+    model.init(
+      UserClickedCurrencySelector,
+      UserFilteredCurrencies,
+      UserSelectedCurrency,
+    )
+    |> model.with_amount(Left, float.to_string(expected_amount))
+    |> model.with_crypto([
+      CryptoCurrency(expected_currency_id_1, None, "", ""),
+      CryptoCurrency(expected_currency_id_2, None, "", ""),
+    ])
+    |> model.with_selected_currency(
+      Left,
+      Some(int.to_string(expected_currency_id_1)),
+    )
+
+  let assert Ok(model) =
+    model.with_selected_currency(
+      model,
+      Right,
+      Some(int.to_string(expected_currency_id_2)),
+    )
+
+  model
+  |> model.to_conversion_params(Left)
+  |> should.be_ok
+  |> should.equal(coin_market_cap_types.ConversionParameters(
+    expected_amount,
+    expected_currency_id_1,
+    expected_currency_id_2,
+  ))
+}
+
+pub fn model_to_conversion_params_left_side_right_currency_missing_test() {
+  let expected_amount = 1.0
+  let expected_currency_id_1 = 1
+
+  let assert Ok(model) =
+    model.init(
+      UserClickedCurrencySelector,
+      UserFilteredCurrencies,
+      UserSelectedCurrency,
+    )
+    |> model.with_amount(Left, float.to_string(expected_amount))
+    |> model.with_crypto([
+      CryptoCurrency(expected_currency_id_1, None, "", ""),
+      CryptoCurrency(2, None, "", ""),
+    ])
+    |> model.with_selected_currency(
+      Left,
+      Some(int.to_string(expected_currency_id_1)),
+    )
+
+  model
+  |> model.to_conversion_params(Left)
+  |> should.be_error
+  |> should.equal(Nil)
+}
+
+pub fn model_to_conversion_params_right_side_happy_path_test() {
+  let expected_amount = 1.0
+  let expected_currency_id_1 = 1
+  let expected_currency_id_2 = 2
+
+  let assert Ok(model) =
+    model.init(
+      UserClickedCurrencySelector,
+      UserFilteredCurrencies,
+      UserSelectedCurrency,
+    )
+    |> model.with_amount(Right, float.to_string(expected_amount))
+    |> model.with_crypto([
+      CryptoCurrency(expected_currency_id_1, None, "", ""),
+      CryptoCurrency(expected_currency_id_2, None, "", ""),
+    ])
+    |> model.with_selected_currency(
+      Right,
+      Some(int.to_string(expected_currency_id_1)),
+    )
+
+  let assert Ok(model) =
+    model.with_selected_currency(
+      model,
+      Left,
+      Some(int.to_string(expected_currency_id_2)),
+    )
+
+  model
+  |> model.to_conversion_params(Right)
+  |> should.be_ok
+  |> should.equal(coin_market_cap_types.ConversionParameters(
+    expected_amount,
+    expected_currency_id_1,
+    expected_currency_id_2,
+  ))
+}
+
+pub fn model_to_conversion_params_right_side_left_currency_missing_test() {
+  let expected_amount = 1.0
+  let expected_currency_id_1 = 1
+  let expected_currency_id_2 = 2
+
+  let assert Ok(model) =
+    model.init(
+      UserClickedCurrencySelector,
+      UserFilteredCurrencies,
+      UserSelectedCurrency,
+    )
+    |> model.with_amount(Right, float.to_string(expected_amount))
+    |> model.with_crypto([
+      CryptoCurrency(expected_currency_id_1, None, "", ""),
+      CryptoCurrency(expected_currency_id_2, None, "", ""),
+    ])
+    |> model.with_selected_currency(
+      Right,
+      Some(int.to_string(expected_currency_id_1)),
+    )
+
+  model
+  |> model.to_conversion_params(Right)
+  |> should.be_error
+  |> should.equal(Nil)
+}
+
 fn get_dd_option_values(
   model: Model(msg),
   side: Side,
   group_key: String,
 ) -> List(String) {
   model
-  |> map_currency_input_group(side, fn(group) {
+  |> model.map_currency_input_group(side, fn(group) {
     group.currency_selector.dropdown_options
   })
   |> dict.get(group_key)
   |> result.unwrap([])
   |> list.map(fn(dd_option) { dd_option.value })
-}
-
-fn map_currency_input_group(
-  model: Model(msg),
-  side: Side,
-  fun: fn(CurrencyInputGroup(msg)) -> a,
-) -> a {
-  let target = case side {
-    Left -> model.currency_input_groups.0
-    Right -> model.currency_input_groups.1
-  }
-  fun(target)
 }

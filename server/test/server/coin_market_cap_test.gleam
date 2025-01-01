@@ -5,9 +5,8 @@ import gleam/int
 import gleam/list
 import gleeunit
 import gleeunit/should
-import server/coin_market_cap.{
-  CmcListResponse, CmcResponse, Conversion, ConversionParameters, Status,
-} as cmc
+import server/coin_market_cap.{CmcListResponse, CmcResponse, Conversion, Status} as cmc
+import shared/coin_market_cap_types.{ConversionParameters}
 
 pub fn main() {
   gleeunit.main()

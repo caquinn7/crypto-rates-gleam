@@ -7,6 +7,8 @@ import client/model.{
   Model, Right,
 }
 import decode/zero
+import gleam/float
+import gleam/io
 import gleam/json
 import gleam/option.{Some}
 import gleam/result
@@ -22,11 +24,15 @@ import plinth/browser/element as plinth_element
 import plinth/browser/event as plinth_event
 import plinth/browser/window
 import shared/coin_market_cap_types.{type CryptoCurrency, type FiatCurrency}
+import shared/conversion_response.{
+  type ConversionResponse, type Currency, ConversionResponse, Currency,
+}
 import shared/ssr_data
 
 pub type Msg {
   ApiReturnedCrypto(Result(List(CryptoCurrency), HttpError))
   ApiReturnedFiat(Result(List(FiatCurrency), HttpError))
+  ApiReturnedConversion(Result(ConversionResponse, HttpError))
   UserClickedInDocument(
     plinth_event.Event(plinth_event.UIEvent(browser_event.MouseEvent)),
   )
@@ -101,11 +107,32 @@ pub fn update(model: Model(Msg), msg: Msg) -> #(Model(Msg), Effect(Msg)) {
       effect.none(),
     )
 
-    ApiReturnedCrypto(Error(_)) -> #(model, effect.none())
+    ApiReturnedCrypto(Error(_)) -> todo
 
     ApiReturnedFiat(Ok(fiat)) -> #(model.with_fiat(model, fiat), effect.none())
 
-    ApiReturnedFiat(Error(_)) -> #(model, effect.none())
+    ApiReturnedFiat(Error(_)) -> todo
+
+    ApiReturnedConversion(Ok(conversion)) -> {
+      let ConversionResponse(
+        Currency(from_id, _from_amount),
+        Currency(to_id, to_amount),
+      ) = conversion |> io.debug
+
+      let assert Ok(currency_1_id) = model.get_currency_id(model, Left)
+
+      let model = case currency_1_id, from_id, to_id {
+        _, _, _ if currency_1_id == from_id ->
+          model.with_amount(model, Right, float.to_string(to_amount))
+        _, _, _ if currency_1_id == to_id ->
+          model.with_amount(model, Left, float.to_string(to_amount))
+        _, _, _ -> panic
+      }
+
+      #(model, effect.none())
+    }
+
+    ApiReturnedConversion(Error(_)) -> todo
 
     UserClickedInDocument(event) -> {
       let assert Ok(clicked_elem) =
@@ -114,10 +141,9 @@ pub fn update(model: Model(Msg), msg: Msg) -> #(Model(Msg), Effect(Msg)) {
         |> plinth_element.cast
 
       let update_side = fn(side: Side, model: Model(Msg)) {
-        let currency_input_group = case side {
-          Left -> model.currency_input_groups.0
-          Right -> model.currency_input_groups.1
-        }
+        let currency_input_group =
+          model.map_currency_input_group(model, side, fn(group) { group })
+
         let CurrencyInputGroup(_, btn_dd) = currency_input_group
         let ButtonDropdown(_, btn_dd_id, _, _, _, visible, ..) = btn_dd
         let assert Ok(btn_dd_elem) = document.get_element_by_id(btn_dd_id)
@@ -143,10 +169,24 @@ pub fn update(model: Model(Msg), msg: Msg) -> #(Model(Msg), Effect(Msg)) {
       #(model, effect.none())
     }
 
-    UserTypedAmount(side, amount_str) -> #(
-      model.with_amount(model, side, amount_str),
-      effect.none(),
-    )
+    UserTypedAmount(side, amount_str) -> {
+      let model = {
+        let model = model.with_amount(model, side, amount_str)
+        let amount_result = model.get_amount(model, side)
+        case side, amount_result {
+          _, Ok(_) -> model
+          Left, Error(_) -> model.with_amount(model, Right, "")
+          Right, Error(_) -> model.with_amount(model, Left, "")
+        }
+      }
+
+      let effect = case model.to_conversion_params(model, side) {
+        Ok(params) -> api.get_conversion(params, ApiReturnedConversion)
+        Error(_) -> effect.none()
+      }
+
+      #(model, effect)
+    }
 
     UserClickedCurrencySelector(side) -> {
       let model =
@@ -196,7 +236,12 @@ pub fn update(model: Model(Msg), msg: Msg) -> #(Model(Msg), Effect(Msg)) {
         |> model.toggle_selector_dropdown(side)
         |> model.filter_currencies(side, "")
 
-      #(model, effect.none())
+      let effect = case model.to_conversion_params(model, side) {
+        Ok(params) -> api.get_conversion(params, ApiReturnedConversion)
+        Error(_) -> effect.none()
+      }
+
+      #(model, effect)
     }
   }
 }
@@ -218,7 +263,7 @@ fn header() -> Element(Msg) {
 }
 
 fn main_content(model: Model(Msg)) -> Element(Msg) {
-  let #(side1, side2) = model.currency_input_groups
+  let #(left_group, right_group) = model.currency_input_groups
 
   let equal_sign =
     html.p([attribute.attribute("class", "text-xl font-bold text-gray-700")], [
@@ -234,9 +279,9 @@ fn main_content(model: Model(Msg)) -> Element(Msg) {
       ],
       [
         html.div([attribute.class("flex items-center space-x-4")], [
-          currency_input_group(side1, UserTypedAmount(Left, _)),
+          currency_input_group(left_group, UserTypedAmount(Left, _)),
           equal_sign,
-          currency_input_group(side2, UserTypedAmount(Right, _)),
+          currency_input_group(right_group, UserTypedAmount(Right, _)),
         ]),
       ],
     ),

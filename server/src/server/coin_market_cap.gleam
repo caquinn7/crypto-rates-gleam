@@ -9,7 +9,8 @@ import gleam/json
 import gleam/option.{type Option, None}
 import gleam/result
 import shared/coin_market_cap_types.{
-  type CryptoCurrency, type FiatCurrency, CryptoCurrency, FiatCurrency,
+  type ConversionParameters, type CryptoCurrency, type FiatCurrency,
+  ConversionParameters, CryptoCurrency, FiatCurrency,
 } as cmc_types
 
 pub type RequestError {
@@ -27,10 +28,6 @@ pub type CmcListResponse(a) {
 
 pub type Status {
   Status(error_code: Int, error_message: Option(String))
-}
-
-pub type ConversionParameters {
-  ConversionParameters(amount: Float, id: Int, convert_id: Int)
 }
 
 pub type Conversion {
