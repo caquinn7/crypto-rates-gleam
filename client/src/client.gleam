@@ -140,7 +140,7 @@ pub fn update(model: Model(Msg), msg: Msg) -> #(Model(Msg), Effect(Msg)) {
         |> plinth_event.target
         |> plinth_element.cast
 
-      let update_side = fn(side: Side, model: Model(Msg)) {
+      let update_side = fn(side, model) {
         let currency_input_group =
           model.map_currency_input_group(model, side, fn(group) { group })
 
@@ -194,27 +194,27 @@ pub fn update(model: Model(Msg), msg: Msg) -> #(Model(Msg), Effect(Msg)) {
         |> model.toggle_selector_dropdown(side)
         |> model.filter_currencies(side, "")
 
-      let target_currency_selector = {
-        let target_group = case side {
-          Left -> model.currency_input_groups.0
-          Right -> model.currency_input_groups.1
-        }
-        target_group.currency_selector
-      }
-
       let search_focus_effect =
         effect.from(fn(_) {
           window.request_animation_frame(fn(_) {
+            let search_input_id =
+              model.map_currency_input_group(model, side, fn(group) {
+                group.currency_selector.search_input_id
+              })
+
             let assert Ok(search_elem) =
-              document.get_element_by_id(
-                target_currency_selector.search_input_id,
-              )
+              document.get_element_by_id(search_input_id)
             plinth_element.focus(search_elem)
           })
+
           Nil
         })
 
-      let effect = case target_currency_selector.show_dropdown {
+      let dd_visible =
+        model.map_currency_input_group(model, side, fn(group) {
+          group.currency_selector.show_dropdown
+        })
+      let effect = case dd_visible {
         True -> search_focus_effect
         _ -> effect.none()
       }
