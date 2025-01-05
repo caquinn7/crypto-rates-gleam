@@ -141,17 +141,20 @@ pub fn update(model: Model(Msg), msg: Msg) -> #(Model(Msg), Effect(Msg)) {
         |> plinth_element.cast
 
       let update_side = fn(side, model) {
-        let currency_input_group =
-          model.map_currency_input_group(model, side, fn(group) { group })
+        let #(btn_dd_id, dd_visible) =
+          model.map_currency_input_group(model, side, fn(group) {
+            let ButtonDropdown(_, id, _, _, _, show_dropdown, ..) =
+              group.currency_selector
 
-        let CurrencyInputGroup(_, btn_dd) = currency_input_group
-        let ButtonDropdown(_, btn_dd_id, _, _, _, visible, ..) = btn_dd
+            #(id, show_dropdown)
+          })
+
         let assert Ok(btn_dd_elem) = document.get_element_by_id(btn_dd_id)
 
         let clicked_outside_dd =
           !browser_element.contains(btn_dd_elem, clicked_elem)
 
-        let should_toggle = visible && clicked_outside_dd
+        let should_toggle = dd_visible && clicked_outside_dd
         case should_toggle {
           True ->
             model
