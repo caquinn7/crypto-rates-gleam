@@ -298,7 +298,7 @@ fn currency_input_group(
   html.div([attribute.class("flex items-center space-x-4")], [
     html.input([
       attribute.class(
-        "w-24 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none",
+        "w-48 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none",
       ),
       attribute.value(currency_input_group.amount),
       event.on_input(on_amount_input),
