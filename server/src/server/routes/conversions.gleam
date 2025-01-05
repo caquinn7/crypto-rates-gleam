@@ -7,8 +7,9 @@ import gleam/option.{type Option, Some}
 import gleam/result
 import non_empty_list.{type NonEmptyList}
 import server/coin_market_cap.{
-  type CmcResponse, type Conversion, type Status, CmcResponse, QuoteItem, Status,
-} as cmc
+  type CmcResponse, type Conversion, type RequestError, type Status, CmcResponse,
+  QuoteItem, Status,
+}
 import server/response_utils
 import server/validation_utils.{error_msg}
 import shared/coin_market_cap_types.{
@@ -20,24 +21,22 @@ import shared/conversion_response.{
 import valid
 import wisp.{type Request, type Response}
 
+pub type RequestConversion =
+  fn(ConversionParameters) -> Result(CmcResponse(Conversion), RequestError)
+
 pub type ConversionError {
   CurrencyNotFound(Int)
 }
 
-pub fn get(
-  req: Request,
-  request_conversion: fn(ConversionParameters) ->
-    Result(CmcResponse(Conversion), cmc.RequestError),
-) -> Response {
+pub fn get(req: Request, request_conversion: RequestConversion) -> Response {
   req
   |> validate_request
   |> result.map_error(response_utils.bad_request_response(req, _))
   |> result.map(fn(conversion_params) {
-    let assert Ok(CmcResponse(status, data)) =
-      request_conversion(conversion_params)
+    let assert Ok(cmc_response) = request_conversion(conversion_params)
 
     conversion_params
-    |> map_cmc_response(status, data)
+    |> map_cmc_response(cmc_response)
     |> result.map(fn(conversion_response) {
       conversion_response
       |> conversion_response.encoder()
@@ -104,17 +103,17 @@ pub fn validate_request(
 
 pub fn map_cmc_response(
   conversion_params: ConversionParameters,
-  cmc_status: Status,
-  cmc_conversion: Option(Conversion),
+  cmc_response: CmcResponse(Conversion),
 ) -> Result(ConversionResponse, ConversionError) {
-  let ConversionParameters(_amount, from, to) = conversion_params
+  let ConversionParameters(_amount, from_id, to_id) = conversion_params
+  let CmcResponse(cmc_status, cmc_conversion) = cmc_response
 
   case cmc_status {
     Status(400, Some("Invalid value for \"id\":" <> _)) ->
-      CurrencyNotFound(from) |> Error
+      CurrencyNotFound(from_id) |> Error
 
     Status(400, Some("Invalid value for \"convert_id\":" <> _)) ->
-      CurrencyNotFound(to) |> Error
+      CurrencyNotFound(to_id) |> Error
 
     Status(0, _) -> {
       let assert Some(conversion) = cmc_conversion
@@ -122,9 +121,9 @@ pub fn map_cmc_response(
       let from_currency = Currency(conversion.id, conversion.amount)
 
       let assert Ok(QuoteItem(price)) =
-        dict.get(conversion.quote, int.to_string(to))
+        dict.get(conversion.quote, int.to_string(to_id))
 
-      let to_currency = Currency(to, price)
+      let to_currency = Currency(to_id, price)
 
       ConversionResponse(from_currency, to_currency) |> Ok
     }

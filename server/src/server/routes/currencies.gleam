@@ -11,11 +11,13 @@ import shared/coin_market_cap_types.{type CryptoCurrency, type FiatCurrency} as 
 import valid
 import wisp.{type Request, type Response}
 
-pub fn get_crypto(
-  req: Request,
-  request_crypto: fn(Int) ->
-    Result(CmcListResponse(CryptoCurrency), cmc.RequestError),
-) -> Response {
+pub type RequestCrypto =
+  fn(Int) -> Result(CmcListResponse(CryptoCurrency), cmc.RequestError)
+
+pub type RequestFiat =
+  fn(Int) -> Result(CmcListResponse(FiatCurrency), cmc.RequestError)
+
+pub fn get_crypto(req: Request, request_crypto: RequestCrypto) -> Response {
   req
   |> validate_request
   |> result.map_error(response_utils.bad_request_response(req, _))
@@ -31,11 +33,7 @@ pub fn get_crypto(
   |> result.unwrap_both
 }
 
-pub fn get_fiat(
-  req: Request,
-  request_fiat: fn(Int) ->
-    Result(CmcListResponse(FiatCurrency), cmc.RequestError),
-) -> Response {
+pub fn get_fiat(req: Request, request_fiat: RequestFiat) -> Response {
   req
   |> validate_request
   |> result.map_error(response_utils.bad_request_response(req, _))

@@ -92,14 +92,17 @@ pub fn conversions_validate_request_amount_is_float_test() {
 pub fn conversions_map_cmc_response_invalid_id_test() {
   let id = 1
 
+  let cmc_response =
+    CmcResponse(
+      Status(
+        400,
+        Some("Invalid value for \"id\": \"" <> int.to_string(id) <> "\""),
+      ),
+      None,
+    )
+
   ConversionParameters(1.0, id, 2)
-  |> conversions.map_cmc_response(
-    Status(
-      400,
-      Some("Invalid value for \"id\": \"" <> int.to_string(id) <> "\""),
-    ),
-    None,
-  )
+  |> conversions.map_cmc_response(cmc_response)
   |> should.be_error
   |> should.equal(CurrencyNotFound(id))
 }
@@ -107,18 +110,21 @@ pub fn conversions_map_cmc_response_invalid_id_test() {
 pub fn conversions_map_cmc_response_invalid_convert_id_test() {
   let convert_id = 2
 
-  ConversionParameters(1.0, 1, convert_id)
-  |> conversions.map_cmc_response(
-    Status(
-      400,
-      Some(
-        "Invalid value for \"convert_id\": \""
-        <> int.to_string(convert_id)
-        <> "\"",
+  let cmc_response =
+    CmcResponse(
+      Status(
+        400,
+        Some(
+          "Invalid value for \"convert_id\": \""
+          <> int.to_string(convert_id)
+          <> "\"",
+        ),
       ),
-    ),
-    None,
-  )
+      None,
+    )
+
+  ConversionParameters(1.0, 1, convert_id)
+  |> conversions.map_cmc_response(cmc_response)
   |> should.be_error
   |> should.equal(CurrencyNotFound(convert_id))
 }
@@ -133,9 +139,10 @@ pub fn conversions_map_cmc_response_status_is_zero_test() {
     |> dict.insert(int.to_string(convert_id), QuoteItem(price))
 
   let conversion = Conversion(id, "BTC", "Bitcoin", amount, quote)
+  let cmc_response = CmcResponse(Status(0, None), Some(conversion))
 
   conversion_params
-  |> conversions.map_cmc_response(Status(0, None), Some(conversion))
+  |> conversions.map_cmc_response(cmc_response)
   |> should.be_ok
   |> should.equal(ConversionResponse(
     Currency(id, amount),

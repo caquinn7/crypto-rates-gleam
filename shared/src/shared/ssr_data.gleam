@@ -1,6 +1,6 @@
 import decode/zero.{type Decoder}
 import gleam/json.{type Json}
-import gleam/option.{type Option}
+import gleam/option.{type Option, None}
 import shared/coin_market_cap_types.{type CryptoCurrency, type FiatCurrency} as cmc_types
 
 pub type SsrData {
@@ -13,6 +13,11 @@ pub type SsrData {
 
 pub type Currency {
   Currency(amount: Option(Float), id: Option(Int))
+}
+
+pub fn empty() -> SsrData {
+  let empty_currency = Currency(None, None)
+  SsrData([], [], #(empty_currency, empty_currency))
 }
 
 pub fn encoder() -> fn(SsrData) -> Json {

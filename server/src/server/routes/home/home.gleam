@@ -3,14 +3,28 @@ import client.{
 }
 import client/model
 import gleam/json
+import gleam/result
 import lustre/attribute
 import lustre/element.{type Element}
 import lustre/element/html
+import server/routes/conversions.{type RequestConversion}
+import server/routes/currencies.{type RequestCrypto, type RequestFiat}
+import server/routes/home/ssr_data as server_ssr_data
 import server/web.{type Context}
-import shared/ssr_data.{type SsrData, SsrData}
-import wisp.{type Response}
+import shared/ssr_data
+import wisp.{type Request, type Response}
 
-pub fn home(ssr_data: SsrData, ctx: Context) -> Response {
+pub fn get(
+  _req: Request,
+  get_crypto: RequestCrypto,
+  get_fiat: RequestFiat,
+  get_conversion: RequestConversion,
+  ctx: Context,
+) -> Response {
+  let ssr_data =
+    server_ssr_data.get(get_crypto, get_fiat, get_conversion, "BTC", "USD")
+    |> result.unwrap(or: ssr_data.empty())
+
   let ssr_json =
     ssr_data
     |> ssr_data.encoder()
