@@ -140,18 +140,18 @@ pub fn conversion_decoder() -> Decoder(Conversion) {
   //         }
   //     }
   // }
+  let int_or_float_decoder =
+    zero.one_of(zero.float, [zero.int |> zero.map(int.to_float)])
+
   let quote_decoder = {
-    use price <- zero.field("price", zero.float)
+    use price <- zero.field("price", int_or_float_decoder)
     zero.success(QuoteItem(price))
   }
 
   use id <- zero.field("id", zero.int)
   use symbol <- zero.field("symbol", zero.string)
   use name <- zero.field("name", zero.string)
-  use amount <- zero.field(
-    "amount",
-    zero.one_of(zero.float, [zero.int |> zero.map(int.to_float)]),
-  )
+  use amount <- zero.field("amount", int_or_float_decoder)
   use quote <- zero.field("quote", zero.dict(zero.string, quote_decoder))
   zero.success(Conversion(id, symbol, name, amount, quote))
 }
