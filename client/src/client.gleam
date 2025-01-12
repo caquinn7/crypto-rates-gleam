@@ -2,13 +2,9 @@ import client/api
 import client/browser/element as browser_element
 import client/browser/event as browser_event
 import client/button_dropdown.{type ButtonDropdown, ButtonDropdown}
-import client/model.{
-  type CurrencyInputGroup, type Model, type Side, CurrencyInputGroup, Left,
-  Model, Right,
-}
+import client/model.{type Model, type Side, Left, Model, Right}
 import decode/zero
 import gleam/float
-import gleam/io
 import gleam/json
 import gleam/option.{Some}
 import gleam/result
@@ -116,17 +112,14 @@ pub fn update(model: Model(Msg), msg: Msg) -> #(Model(Msg), Effect(Msg)) {
     ApiReturnedConversion(Ok(conversion)) -> {
       let ConversionResponse(
         Currency(from_id, _from_amount),
-        Currency(to_id, to_amount),
-      ) = conversion |> io.debug
+        Currency(_to_id, to_amount),
+      ) = conversion
 
       let assert Ok(currency_1_id) = model.get_currency_id(model, Left)
 
-      let model = case currency_1_id, from_id, to_id {
-        _, _, _ if currency_1_id == from_id ->
-          model.with_amount(model, Right, float.to_string(to_amount))
-        _, _, _ if currency_1_id == to_id ->
-          model.with_amount(model, Left, float.to_string(to_amount))
-        _, _, _ -> panic
+      let model = case currency_1_id == from_id {
+        True -> model.with_amount(model, Right, float.to_string(to_amount))
+        _ -> panic
       }
 
       #(model, effect.none())
@@ -172,24 +165,25 @@ pub fn update(model: Model(Msg), msg: Msg) -> #(Model(Msg), Effect(Msg)) {
       #(model, effect.none())
     }
 
-    UserTypedAmount(side, amount_str) -> {
+    UserTypedAmount(Left, amount_str) -> {
       let model = {
-        let model = model.with_amount(model, side, amount_str)
-        let amount_result = model.get_amount(model, side)
-        case side, amount_result {
-          _, Ok(_) -> model
-          Left, Error(_) -> model.with_amount(model, Right, "")
-          Right, Error(_) -> model.with_amount(model, Left, "")
+        let model = model.with_amount(model, Left, amount_str)
+        let amount_result = model.get_amount(model, Left)
+        case amount_result {
+          Ok(_) -> model
+          Error(_) -> model.with_amount(model, Right, "")
         }
       }
 
-      let effect = case model.to_conversion_params(model, side) {
+      let effect = case model.to_conversion_params(model) {
         Ok(params) -> api.get_conversion(params, ApiReturnedConversion)
         Error(_) -> effect.none()
       }
 
       #(model, effect)
     }
+
+    UserTypedAmount(Right, _) -> panic
 
     UserClickedCurrencySelector(side) -> {
       let model =
@@ -239,7 +233,7 @@ pub fn update(model: Model(Msg), msg: Msg) -> #(Model(Msg), Effect(Msg)) {
         |> model.toggle_selector_dropdown(side)
         |> model.filter_currencies(side, "")
 
-      let effect = case model.to_conversion_params(model, side) {
+      let effect = case model.to_conversion_params(model) {
         Ok(params) -> api.get_conversion(params, ApiReturnedConversion)
         Error(_) -> effect.none()
       }
@@ -282,27 +276,40 @@ fn main_content(model: Model(Msg)) -> Element(Msg) {
       ],
       [
         html.div([attribute.class("flex items-center space-x-4")], [
-          currency_input_group(left_group, UserTypedAmount(Left, _)),
+          currency_input_group(
+            amount_input(left_group.amount, False, UserTypedAmount(Left, _)),
+            left_group.currency_selector,
+          ),
           equal_sign,
-          currency_input_group(right_group, UserTypedAmount(Right, _)),
+          currency_input_group(
+            amount_input(right_group.amount, True, UserTypedAmount(Right, _)),
+            right_group.currency_selector,
+          ),
         ]),
       ],
     ),
   ])
 }
 
-fn currency_input_group(
-  currency_input_group: CurrencyInputGroup(Msg),
-  on_amount_input: fn(String) -> Msg,
-) -> Element(Msg) {
+fn amount_input(value, readonly, on_input) {
+  html.input([
+    attribute.class("w-48 p-2 border border-gray-300 rounded-lg"),
+    attribute.value(value),
+    case readonly {
+      True -> attribute.attribute("readonly", "")
+      False -> attribute.none()
+    },
+    attribute.class(case readonly {
+      False -> "focus:ring-2 focus:ring-blue-500 focus:outline-none"
+      True -> "bg-gray-300 text-gray-600"
+    }),
+    event.on_input(on_input),
+  ])
+}
+
+fn currency_input_group(amount_input, currency_selector) {
   html.div([attribute.class("flex items-center space-x-4")], [
-    html.input([
-      attribute.class(
-        "w-48 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none",
-      ),
-      attribute.value(currency_input_group.amount),
-      event.on_input(on_amount_input),
-    ]),
-    button_dropdown.view(currency_input_group.currency_selector),
+    amount_input,
+    button_dropdown.view(currency_selector),
   ])
 }

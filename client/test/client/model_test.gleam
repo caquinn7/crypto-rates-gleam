@@ -488,14 +488,13 @@ pub fn model_map_currency_input_groups_both_sides_test() {
   |> should.equal(expected_btn_txt)
 }
 
-pub fn model_to_conversion_params_left_side_happy_test() {
-  let expected_amount = 1.0
+pub fn model_to_conversion_params_invalid_amount_test() {
   let expected_currency_id_1 = 1
   let expected_currency_id_2 = 2
 
   let assert Ok(model) =
     model.init(on_button_click, on_search_input, on_select)
-    |> model.with_amount(Left, float.to_string(expected_amount))
+    |> model.with_amount(Left, ".")
     |> model.with_crypto([
       CryptoCurrency(expected_currency_id_1, None, "", ""),
       CryptoCurrency(expected_currency_id_2, None, "", ""),
@@ -513,22 +512,38 @@ pub fn model_to_conversion_params_left_side_happy_test() {
     )
 
   model
-  |> model.to_conversion_params(Left)
-  |> should.be_ok
-  |> should.equal(coin_market_cap_types.ConversionParameters(
-    expected_amount,
-    expected_currency_id_1,
-    expected_currency_id_2,
-  ))
+  |> model.to_conversion_params
+  |> should.be_error
+  |> should.equal(Nil)
 }
 
-pub fn model_to_conversion_params_left_side_right_currency_missing_test() {
-  let expected_amount = 1.0
+pub fn model_to_conversion_params_invalid_left_currency_test() {
+  let expected_currency_id_2 = 2
+
+  let assert Ok(model) =
+    model.init(on_button_click, on_search_input, on_select)
+    |> model.with_amount(Left, float.to_string(1.0))
+    |> model.with_crypto([
+      CryptoCurrency(1, None, "", ""),
+      CryptoCurrency(expected_currency_id_2, None, "", ""),
+    ])
+    |> model.with_selected_currency(
+      Right,
+      Some(int.to_string(expected_currency_id_2)),
+    )
+
+  model
+  |> model.to_conversion_params
+  |> should.be_error
+  |> should.equal(Nil)
+}
+
+pub fn model_to_conversion_params_invalid_right_currency_test() {
   let expected_currency_id_1 = 1
 
   let assert Ok(model) =
     model.init(on_button_click, on_search_input, on_select)
-    |> model.with_amount(Left, float.to_string(expected_amount))
+    |> model.with_amount(Left, float.to_string(1.0))
     |> model.with_crypto([
       CryptoCurrency(expected_currency_id_1, None, "", ""),
       CryptoCurrency(2, None, "", ""),
@@ -539,66 +554,43 @@ pub fn model_to_conversion_params_left_side_right_currency_missing_test() {
     )
 
   model
-  |> model.to_conversion_params(Left)
+  |> model.to_conversion_params
   |> should.be_error
   |> should.equal(Nil)
 }
 
-pub fn model_to_conversion_params_right_side_happy_path_test() {
+pub fn model_to_conversion_params_happy_path_test() {
   let expected_amount = 1.0
   let expected_currency_id_1 = 1
   let expected_currency_id_2 = 2
 
   let assert Ok(model) =
     model.init(on_button_click, on_search_input, on_select)
-    |> model.with_amount(Right, float.to_string(expected_amount))
+    |> model.with_amount(Left, float.to_string(expected_amount))
     |> model.with_crypto([
       CryptoCurrency(expected_currency_id_1, None, "", ""),
       CryptoCurrency(expected_currency_id_2, None, "", ""),
     ])
     |> model.with_selected_currency(
-      Right,
+      Left,
       Some(int.to_string(expected_currency_id_1)),
     )
 
   let assert Ok(model) =
     model.with_selected_currency(
       model,
-      Left,
+      Right,
       Some(int.to_string(expected_currency_id_2)),
     )
 
   model
-  |> model.to_conversion_params(Right)
+  |> model.to_conversion_params
   |> should.be_ok
   |> should.equal(coin_market_cap_types.ConversionParameters(
     expected_amount,
     expected_currency_id_1,
     expected_currency_id_2,
   ))
-}
-
-pub fn model_to_conversion_params_right_side_left_currency_missing_test() {
-  let expected_amount = 1.0
-  let expected_currency_id_1 = 1
-  let expected_currency_id_2 = 2
-
-  let assert Ok(model) =
-    model.init(on_button_click, on_search_input, on_select)
-    |> model.with_amount(Right, float.to_string(expected_amount))
-    |> model.with_crypto([
-      CryptoCurrency(expected_currency_id_1, None, "", ""),
-      CryptoCurrency(expected_currency_id_2, None, "", ""),
-    ])
-    |> model.with_selected_currency(
-      Right,
-      Some(int.to_string(expected_currency_id_1)),
-    )
-
-  model
-  |> model.to_conversion_params(Right)
-  |> should.be_error
-  |> should.equal(Nil)
 }
 
 fn get_dd_option_values(
