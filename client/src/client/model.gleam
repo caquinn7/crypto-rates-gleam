@@ -31,10 +31,7 @@ pub type Model(msg) {
 }
 
 pub type CurrencyInputGroup(msg) {
-  CurrencyInputGroup(
-    amount: String,
-    currency_selector: ButtonDropdown(msg, Side),
-  )
+  CurrencyInputGroup(amount: String, currency_selector: ButtonDropdown(msg))
 }
 
 pub type Side {
@@ -49,7 +46,6 @@ pub fn init(
 ) -> Model(msg) {
   let btn_dd_1 =
     ButtonDropdown(
-      ctx: Left,
       id: "btn-dd-1",
       button_text: default_button_dropdown_text,
       dropdown_options: dict.from_list([
@@ -60,9 +56,9 @@ pub fn init(
       show_dropdown: False,
       filter: "",
       search_input_id: "btn-dd-1-search",
-      on_button_click:,
-      on_search_input:,
-      on_select:,
+      on_button_click: on_button_click(Left),
+      on_search_input: on_search_input(Left, _),
+      on_select: on_select(Left, _),
     )
 
   let currency_input_group_1 =
@@ -73,9 +69,11 @@ pub fn init(
       amount: "",
       currency_selector: ButtonDropdown(
         ..btn_dd_1,
-        ctx: Right,
         id: "btn-dd-2",
         search_input_id: "btn-dd-2-search",
+        on_button_click: on_button_click(Right),
+        on_search_input: on_search_input(Right, _),
+        on_select: on_select(Right, _),
       ),
     )
 

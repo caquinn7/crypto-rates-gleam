@@ -6,9 +6,8 @@ import lustre/element.{type Element}
 import lustre/element/html
 import lustre/event
 
-pub type ButtonDropdown(msg, ctx) {
+pub type ButtonDropdown(msg) {
   ButtonDropdown(
-    ctx: ctx,
     id: String,
     button_text: String,
     dropdown_options: Dict(String, List(DropdownOption)),
@@ -16,9 +15,9 @@ pub type ButtonDropdown(msg, ctx) {
     show_dropdown: Bool,
     filter: String,
     search_input_id: String,
-    on_button_click: fn(ctx) -> msg,
-    on_search_input: fn(ctx, String) -> msg,
-    on_select: fn(ctx, String) -> msg,
+    on_button_click: msg,
+    on_search_input: fn(String) -> msg,
+    on_select: fn(String) -> msg,
   )
 }
 
@@ -26,32 +25,30 @@ pub type DropdownOption {
   DropdownOption(value: String, display: String)
 }
 
-pub fn view(button_dropdown: ButtonDropdown(msg, ctx)) {
+pub fn view(button_dropdown: ButtonDropdown(msg)) -> Element(msg) {
   html.div(
     [attribute.class("relative w-72"), attribute.id(button_dropdown.id)],
     [
-      button(button_dropdown.button_text, fn() {
-        button_dropdown.on_button_click(button_dropdown.ctx)
-      }),
+      button(button_dropdown.button_text, button_dropdown.on_button_click),
       dropdown(
         button_dropdown.search_input_id,
         button_dropdown.show_dropdown,
         button_dropdown.filter,
         button_dropdown.dropdown_options,
-        button_dropdown.on_search_input(button_dropdown.ctx, _),
-        button_dropdown.on_select(button_dropdown.ctx, _),
+        button_dropdown.on_search_input,
+        button_dropdown.on_select,
       ),
     ],
   )
 }
 
-fn button(text: String, on_click: fn() -> msg) -> Element(msg) {
+fn button(text: String, on_click: msg) -> Element(msg) {
   html.button(
     [
       attribute.class(
         "w-full p-2 border border-gray-300 rounded-lg text-left focus:ring-2 focus:ring-blue-500 focus:outline-none",
       ),
-      event.on_click(on_click()),
+      event.on_click(on_click),
     ],
     [html.text(text)],
   )

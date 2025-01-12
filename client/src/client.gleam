@@ -143,7 +143,7 @@ pub fn update(model: Model(Msg), msg: Msg) -> #(Model(Msg), Effect(Msg)) {
       let update_side = fn(side, model) {
         let #(btn_dd_id, dd_visible) =
           model.map_currency_input_group(model, side, fn(group) {
-            let ButtonDropdown(_, id, _, _, _, show_dropdown, ..) =
+            let ButtonDropdown(id, _, _, _, show_dropdown, ..) =
               group.currency_selector
 
             #(id, show_dropdown)
