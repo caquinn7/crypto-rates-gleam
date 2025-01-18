@@ -57,7 +57,7 @@ fn page_scaffold(
         attribute.attribute("content", "width=device-width, initial-scale=1.0"),
         attribute.name("viewport"),
       ]),
-      html.title([], "🚧 client"),
+      html.title([], "RateRadar 💹 📡"),
       html.link([
         attribute.rel("stylesheet"),
         attribute.type_("text/css"),

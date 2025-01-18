@@ -251,10 +251,10 @@ pub fn view(model: Model(Msg)) -> Element(Msg) {
 }
 
 fn header() -> Element(Msg) {
-  html.header([attribute.class("p-4 bg-red-500 text-white")], [
+  html.header([attribute.class("p-4 bg-indigo-900 text-white")], [
     html.h1(
       [attribute.class("w-full mx-auto max-w-screen-xl text-4xl font-bold")],
-      [html.text("Crypto Rates")],
+      [html.text("RateRadar")],
     ),
   ])
 }
