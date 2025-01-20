@@ -2,10 +2,17 @@ ARG GLEAM_VERSION=v1.6.1
 
 FROM ghcr.io/gleam-lang/gleam:${GLEAM_VERSION}-erlang-alpine AS builder
 
+# Install Node.js and npm
+RUN apk add --no-cache nodejs npm
+
 # Add project code
 COPY ./shared /build/shared
 COPY ./client /build/client
 COPY ./server /build/server
+
+# Install Node.js dependencies for the client
+RUN cd /build/client \
+  && npm install
 
 # Compile the client code
 RUN cd /build/client \
