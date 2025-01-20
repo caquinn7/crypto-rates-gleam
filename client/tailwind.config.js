@@ -1,4 +1,4 @@
-// import daisyui from "daisyui"
+import daisyui from "daisyui"
 module.exports = {
   content: ["./index.html", "./src/**/*.{gleam,mjs}"],
   theme: {
@@ -9,8 +9,8 @@ module.exports = {
       // },
     },
   },
-  // plugins: [daisyui],
-  // daisyui: {
-  //   themes: ["business"],
-  // },
+  plugins: [daisyui],
+  daisyui: {
+    themes: ["business"],
+  },
 };

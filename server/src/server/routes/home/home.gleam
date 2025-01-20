@@ -50,32 +50,41 @@ fn page_scaffold(
   init_json: String,
   ctx: Context,
 ) -> Element(a) {
-  html.html([attribute.attribute("lang", "en")], [
-    html.head([], [
-      html.meta([attribute.attribute("charset", "UTF-8")]),
-      html.meta([
-        attribute.attribute("content", "width=device-width, initial-scale=1.0"),
-        attribute.name("viewport"),
+  html.html(
+    [
+      attribute.attribute("lang", "en"),
+      attribute.attribute("data-theme", "business"),
+    ],
+    [
+      html.head([], [
+        html.meta([attribute.attribute("charset", "UTF-8")]),
+        html.meta([
+          attribute.attribute(
+            "content",
+            "width=device-width, initial-scale=1.0",
+          ),
+          attribute.name("viewport"),
+        ]),
+        html.title([], "RateRadar 💹 📡"),
+        html.link([
+          attribute.rel("stylesheet"),
+          attribute.type_("text/css"),
+          attribute.href("/static/client.css"),
+        ]),
+        html.script(
+          [attribute.src("/static/client.mjs"), attribute.type_("module")],
+          "",
+        ),
+        html.script(
+          [attribute.type_("application/json"), attribute.id("model")],
+          init_json,
+        ),
+        html.script(
+          [attribute.type_("text/javascript")],
+          "window.__ENV__ = " <> "\"" <> ctx.env <> "\"",
+        ),
       ]),
-      html.title([], "RateRadar 💹 📡"),
-      html.link([
-        attribute.rel("stylesheet"),
-        attribute.type_("text/css"),
-        attribute.href("/static/client.css"),
-      ]),
-      html.script(
-        [attribute.src("/static/client.mjs"), attribute.type_("module")],
-        "",
-      ),
-      html.script(
-        [attribute.type_("application/json"), attribute.id("model")],
-        init_json,
-      ),
-      html.script(
-        [attribute.type_("text/javascript")],
-        "window.__ENV__ = " <> "\"" <> ctx.env <> "\"",
-      ),
-    ]),
-    html.body([], [html.div([attribute.id("app")], [content])]),
-  ])
+      html.body([], [html.div([attribute.id("app")], [content])]),
+    ],
+  )
 }
