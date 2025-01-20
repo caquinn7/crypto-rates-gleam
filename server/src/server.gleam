@@ -12,9 +12,18 @@ pub fn main() {
 
   load_env()
 
-  let assert Ok(env_setting) = env.get_string("ENV")
+  let assert Ok(env) = env.get_string("ENV")
+  let assert Ok(css_file) = env.get_string("CSS_FILE")
+  let assert Ok(js_file) = env.get_string("JS_FILE")
   let assert Ok(cmc_api_key) = env.get_string("COIN_MARKET_CAP_API_KEY")
-  let ctx = Context(env_setting, static_directory(), cmc_api_key)
+  let ctx =
+    Context(
+      env:,
+      static_directory: static_directory(),
+      css_file:,
+      js_file:,
+      cmc_api_key:,
+    )
 
   let assert Ok(secret_key_base) = env.get_string("SECRET_KEY_BASE")
   let assert Ok(_) =

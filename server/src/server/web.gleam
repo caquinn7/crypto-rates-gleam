@@ -8,7 +8,13 @@ import server/response_utils
 import wisp.{type Request, type Response}
 
 pub type Context {
-  Context(env: String, static_directory: String, cmc_api_key: String)
+  Context(
+    env: String,
+    static_directory: String,
+    css_file: String,
+    js_file: String,
+    cmc_api_key: String,
+  )
 }
 
 pub fn middleware(

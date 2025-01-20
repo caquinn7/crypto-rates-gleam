@@ -50,11 +50,6 @@ fn page_scaffold(
   init_json: String,
   ctx: Context,
 ) -> Element(a) {
-  let #(css_file, js_file) = case ctx.env {
-    "PROD" -> #("client.min.css", "client.min.mjs")
-    _ -> #("client.css", "client.mjs")
-  }
-
   html.html(
     [
       attribute.attribute("lang", "en"),
@@ -74,10 +69,10 @@ fn page_scaffold(
         html.link([
           attribute.rel("stylesheet"),
           attribute.type_("text/css"),
-          attribute.href("/static/" <> css_file),
+          attribute.href("/static/" <> ctx.css_file),
         ]),
         html.script(
-          [attribute.src("/static/" <> js_file), attribute.type_("module")],
+          [attribute.src("/static/" <> ctx.js_file), attribute.type_("module")],
           "",
         ),
         html.script(
