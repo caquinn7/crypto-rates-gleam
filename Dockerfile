@@ -16,7 +16,7 @@ RUN cd /build/client \
 
 # Compile the client code
 RUN cd /build/client \
-  && gleam run -m lustre/dev build app --outdir=/build/server/priv/static
+  && gleam run -m lustre/dev build app --minify --outdir=/build/server/priv/static
 
 # Compile the server code
 RUN cd /build/server \
