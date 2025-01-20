@@ -63,7 +63,7 @@ pub fn model_init_left_currency_selector_test() {
   |> should.equal("btn-dd-1")
 
   selector_1.button_text
-  |> should.equal("Select one...")
+  |> should.equal("Select")
 
   selector_1.dropdown_options
   |> should.equal(
@@ -98,7 +98,7 @@ pub fn model_init_right_currency_selector_test() {
   |> should.equal("btn-dd-2")
 
   selector_2.button_text
-  |> should.equal("Select one...")
+  |> should.equal("Select")
 
   selector_2.dropdown_options
   |> should.equal(

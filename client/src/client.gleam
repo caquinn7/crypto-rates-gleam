@@ -251,9 +251,13 @@ pub fn view(model: Model(Msg)) -> Element(Msg) {
 }
 
 fn header() -> Element(Msg) {
-  html.header([attribute.class("p-4 bg-indigo-900 text-white")], [
+  html.header([attribute.class("p-4 border-b border-base-content")], [
     html.h1(
-      [attribute.class("w-full mx-auto max-w-screen-xl text-4xl font-bold")],
+      [
+        attribute.class(
+          "w-full mx-auto max-w-screen-xl text-4xl text-base-content font-bold",
+        ),
+      ],
       [html.text("RateRadar")],
     ),
   ])
@@ -263,9 +267,10 @@ fn main_content(model: Model(Msg)) -> Element(Msg) {
   let #(left_group, right_group) = model.currency_input_groups
 
   let equal_sign =
-    html.p([attribute.attribute("class", "text-xl font-bold text-gray-700")], [
-      element.text("="),
-    ])
+    html.p(
+      [attribute.attribute("class", "text-xl text-base-content font-bold")],
+      [element.text("=")],
+    )
 
   html.main([attribute.class("flex items-center")], [
     html.div(
@@ -291,18 +296,16 @@ fn main_content(model: Model(Msg)) -> Element(Msg) {
   ])
 }
 
-fn amount_input(value, readonly, on_input) {
+fn amount_input(value, disabled, on_input) {
   html.input([
-    attribute.class("w-48 p-2 border border-gray-300 rounded-lg"),
+    attribute.class(
+      "w-48 p-2 border rounded-lg  focus:outline-none bg-neutral text-neutral-content",
+    ),
     attribute.value(value),
-    case readonly {
-      True -> attribute.attribute("readonly", "")
+    case disabled {
+      True -> attribute.attribute("disabled", "")
       False -> attribute.none()
     },
-    attribute.class(case readonly {
-      False -> "focus:ring-2 focus:ring-blue-500 focus:outline-none"
-      True -> "bg-gray-300 text-gray-600"
-    }),
     event.on_input(on_input),
   ])
 }

@@ -4,6 +4,7 @@ import gleam/option.{type Option}
 import lustre/attribute
 import lustre/element.{type Element}
 import lustre/element/html
+import lustre/element/svg
 import lustre/event
 
 pub type ButtonDropdown(msg) {
@@ -27,7 +28,7 @@ pub type DropdownOption {
 
 pub fn view(button_dropdown: ButtonDropdown(msg)) -> Element(msg) {
   html.div(
-    [attribute.class("relative w-72"), attribute.id(button_dropdown.id)],
+    [attribute.class("relative w-64"), attribute.id(button_dropdown.id)],
     [
       button(button_dropdown.button_text, button_dropdown.on_button_click),
       dropdown(
@@ -45,12 +46,30 @@ pub fn view(button_dropdown: ButtonDropdown(msg)) -> Element(msg) {
 fn button(text: String, on_click: msg) -> Element(msg) {
   html.button(
     [
+      attribute.class("inline-flex items-center px-4 py-2 rounded"),
       attribute.class(
-        "w-full p-2 border border-gray-300 rounded-lg text-left focus:ring-2 focus:ring-blue-500 focus:outline-none",
+        "w-full rounded-lg border bg-neutral text-neutral-content text-left",
       ),
       event.on_click(on_click),
     ],
-    [html.text(text)],
+    [
+      html.text(text),
+      svg.svg(
+        [
+          attribute.attribute("viewBox", "0 0 20 20"),
+          attribute.attribute("xmlns", "http://www.w3.org/2000/svg"),
+          attribute.class("ml-2 h-4 w-4 fill-current"),
+        ],
+        [
+          svg.path([
+            attribute.attribute(
+              "d",
+              "M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z",
+            ),
+          ]),
+        ],
+      ),
+    ],
   )
 }
 
@@ -65,7 +84,7 @@ fn dropdown(
   html.div(
     [
       attribute.class(
-        "currency-dropdown absolute z-10 w-full bg-white border border-gray-300 rounded-lg shadow-md max-h-64 overflow-y-auto",
+        "currency-dropdown absolute z-10 w-full border rounded-lg shadow-md max-h-64 overflow-y-auto",
       ),
       case visible {
         True -> attribute.none()
@@ -85,11 +104,13 @@ fn dropdown(
 }
 
 fn search_input(id: String, value: String, on_input: fn(String) -> msg) {
-  html.div([attribute.class("sticky top-0 bg-white z-10")], [
+  html.div([attribute.class("sticky top-0 z-10")], [
     html.input([
-      attribute.class("w-full p-2 border-b border-gray-200 focus:outline-none"),
+      attribute.class(
+        "w-full p-2 border-b focus:outline-none bg-neutral text-neutral-content",
+      ),
       attribute.id(id),
-      attribute.placeholder("Search..."),
+      attribute.placeholder("Search"),
       attribute.type_("text"),
       attribute.value(value),
       event.on_input(on_input),
@@ -102,9 +123,10 @@ fn option_group(
   on_select: fn(String) -> msg,
 ) -> element.Element(msg) {
   let group_title_div =
-    html.div([attribute.class("font-bold px-2 py-1 bg-gray-100")], [
-      html.text(group.0),
-    ])
+    html.div(
+      [attribute.class("px-2 py-1 font-bold text-lg text-neutral-content")],
+      [html.text(group.0)],
+    )
 
   html.div([attribute.class("group")], [
     group_title_div,
@@ -120,7 +142,9 @@ fn options_container(
     html.div(
       [
         attribute.attribute("data-value", item.value),
-        attribute.class("px-4 py-1 cursor-pointer hover:bg-gray-100"),
+        attribute.class(
+          "px-6 py-1 cursor-pointer hover:bg-neutral-content text-neutral-content hover:text-base-100",
+        ),
         event.on_click(on_select(item.value)),
       ],
       [html.text(item.display)],

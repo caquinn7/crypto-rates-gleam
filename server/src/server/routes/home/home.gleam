@@ -58,6 +58,30 @@ fn page_scaffold(
         attribute.name("viewport"),
       ]),
       html.title([], "RateRadar 💹 📡"),
+      html.style(
+        [],
+        "
+    @font-face {
+      font-family: 'Roboto';
+      src: url('/static/fonts/roboto/Roboto-VariableFont_wdth,wght.ttf') format('truetype');
+      font-weight: 100 900;
+      /* Supports weights from 100 to 900 */
+      font-stretch: 75% 125%;
+      /* Supports widths (stretch) from 75% to 125% */
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'Roboto';
+      src: url('/static/fonts/roboto/Roboto-Italic-VariableFont_wdth,wght.ttf') format('truetype');
+      font-weight: 100 900;
+      font-stretch: 75% 125%;
+      font-style: italic;
+    }
+    body {
+      font-family: 'Roboto', sans-serif;
+    }
+  ",
+      ),
       html.link([
         attribute.rel("stylesheet"),
         attribute.type_("text/css"),

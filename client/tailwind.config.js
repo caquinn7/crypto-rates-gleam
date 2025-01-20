@@ -1,7 +1,16 @@
+import daisyui from "daisyui"
 module.exports = {
   content: ["./index.html", "./src/**/*.{gleam,mjs}"],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        sans: ['Roboto', 'sans-serif'],
+        // display: ['Playfair Display', 'serif'],
+      },
+    },
   },
-  plugins: [],
+  plugins: [daisyui],
+  daisyui: {
+    themes: ["business"],
+  },
 };
