@@ -15,7 +15,9 @@ import gleam/result
 import gleam/string
 import gleeunit
 import gleeunit/should
-import shared/coin_market_cap_types.{CryptoCurrency, FiatCurrency}
+import shared/coin_market_cap_types.{
+  ConversionParameters, CryptoCurrency, FiatCurrency,
+}
 import shared/ssr_data.{Currency, SsrData}
 
 pub fn main() {
@@ -512,7 +514,7 @@ pub fn model_to_conversion_params_invalid_amount_test() {
     )
 
   model
-  |> model.to_conversion_params
+  |> model.to_conversion_params(Left, _)
   |> should.be_error
   |> should.equal(Nil)
 }
@@ -533,7 +535,7 @@ pub fn model_to_conversion_params_invalid_left_currency_test() {
     )
 
   model
-  |> model.to_conversion_params
+  |> model.to_conversion_params(Left, _)
   |> should.be_error
   |> should.equal(Nil)
 }
@@ -554,12 +556,12 @@ pub fn model_to_conversion_params_invalid_right_currency_test() {
     )
 
   model
-  |> model.to_conversion_params
+  |> model.to_conversion_params(Left, _)
   |> should.be_error
   |> should.equal(Nil)
 }
 
-pub fn model_to_conversion_params_happy_path_test() {
+pub fn model_to_conversion_params_from_left_happy_path_test() {
   let expected_amount = 1.0
   let expected_currency_id_1 = 1
   let expected_currency_id_2 = 2
@@ -584,12 +586,47 @@ pub fn model_to_conversion_params_happy_path_test() {
     )
 
   model
-  |> model.to_conversion_params
+  |> model.to_conversion_params(Left, _)
   |> should.be_ok
-  |> should.equal(coin_market_cap_types.ConversionParameters(
+  |> should.equal(ConversionParameters(
     expected_amount,
     expected_currency_id_1,
     expected_currency_id_2,
+  ))
+}
+
+pub fn model_to_conversion_params_from_right_happy_path_test() {
+  let expected_amount = 1.0
+  let expected_currency_id_1 = 1
+  let expected_currency_id_2 = 2
+
+  let assert Ok(model) =
+    model.init(on_button_click, on_search_input, on_select)
+    |> model.with_amount(Left, float.to_string(2.0))
+    |> model.with_amount(Right, float.to_string(expected_amount))
+    |> model.with_crypto([
+      CryptoCurrency(expected_currency_id_1, None, "", ""),
+      CryptoCurrency(expected_currency_id_2, None, "", ""),
+    ])
+    |> model.with_selected_currency(
+      Left,
+      Some(int.to_string(expected_currency_id_1)),
+    )
+
+  let assert Ok(model) =
+    model.with_selected_currency(
+      model,
+      Right,
+      Some(int.to_string(expected_currency_id_2)),
+    )
+
+  model
+  |> model.to_conversion_params(Right, _)
+  |> should.be_ok
+  |> should.equal(ConversionParameters(
+    expected_amount,
+    expected_currency_id_2,
+    expected_currency_id_1,
   ))
 }
 

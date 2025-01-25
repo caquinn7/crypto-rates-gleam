@@ -80,7 +80,7 @@ pub fn client_update_api_returned_fiat_ok_test() {
 //   todo
 // }
 
-pub fn client_update_api_returned_conversion_ok_test() {
+pub fn client_update_api_returned_conversion_ok_left_to_right_test() {
   let expected_from_currency = Currency(1, 1.0)
   let expected_to_currency = Currency(2, 2.0)
 
@@ -98,6 +98,7 @@ pub fn client_update_api_returned_conversion_ok_test() {
       Left,
       Some(int.to_string(expected_from_currency.id)),
     )
+
   let assert Ok(model) =
     model.with_selected_currency(
       model,
@@ -120,7 +121,43 @@ pub fn client_update_api_returned_conversion_ok_test() {
   ))
 }
 
-pub fn client_update_user_typed_amount_invalid_amount_test() {
+pub fn client_update_api_returned_conversion_ok_right_to_left_test() {
+  let expected_from_currency = Currency(1, 1.0)
+  let expected_to_currency = Currency(2, 2.0)
+  let model =
+    model.init(on_button_click, on_search_input, on_select)
+    |> model.with_crypto([
+      CryptoCurrency(expected_from_currency.id, None, "", ""),
+      CryptoCurrency(expected_to_currency.id, None, "", ""),
+    ])
+    |> model.with_amount(Right, float.to_string(expected_from_currency.amount))
+
+  let assert Ok(model) =
+    model.with_selected_currency(
+      model,
+      Left,
+      Some(int.to_string(expected_to_currency.id)),
+    )
+
+  let assert Ok(model) =
+    model.with_selected_currency(
+      model,
+      Right,
+      Some(int.to_string(expected_from_currency.id)),
+    )
+
+  let conversion_response =
+    ConversionResponse(expected_from_currency, expected_to_currency)
+
+  model
+  |> client.update(ApiReturnedConversion(Ok(conversion_response)))
+  |> should.equal(#(
+    model.with_amount(model, Left, float.to_string(expected_to_currency.amount)),
+    effect.none(),
+  ))
+}
+
+pub fn client_update_user_typed_amount_left_invalid_amount_test() {
   let model =
     model.init(on_button_click, on_search_input, on_select)
     |> model.with_amount(Left, "1.0")
@@ -136,6 +173,40 @@ pub fn client_update_user_typed_amount_invalid_amount_test() {
   |> client.update(UserTypedAmount(Left, typed_input))
   |> should.equal(#(expected_model, effect.none()))
 }
+
+pub fn client_update_user_typed_amount_right_invalid_amount_test() {
+  let model =
+    model.init(on_button_click, on_search_input, on_select)
+    |> model.with_amount(Left, "1.0")
+    |> model.with_amount(Right, "2.0")
+
+  let typed_input = "."
+  let expected_model =
+    model
+    |> model.with_amount(Left, "")
+    |> model.with_amount(Right, typed_input)
+
+  model
+  |> client.update(UserTypedAmount(Right, typed_input))
+  |> should.equal(#(expected_model, effect.none()))
+}
+
+pub fn client_update_user_typed_amount_error_getting_conversion_params_test() {
+  let model = model.init(on_button_click, on_search_input, on_select)
+
+  let typed_input = "1"
+  let expected_model =
+    model
+    |> model.with_amount(Left, typed_input)
+
+  model
+  |> client.update(UserTypedAmount(Left, typed_input))
+  |> should.equal(#(expected_model, effect.none()))
+}
+
+// pub fn client_update_user_typed_amount_gets_conversion_params_test() {
+//   todo
+// }
 
 pub fn client_update_user_clicked_currency_selector_not_currently_visible_test() {
   let model = model.init(on_button_click, on_search_input, on_select)

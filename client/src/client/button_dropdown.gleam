@@ -107,7 +107,7 @@ fn search_input(id: String, value: String, on_input: fn(String) -> msg) {
   html.div([attribute.class("sticky top-0 z-10")], [
     html.input([
       attribute.class(
-        "w-full p-2 border-b focus:outline-none bg-neutral text-neutral-content",
+        "w-full p-2 border-b focus:outline-none bg-neutral text-neutral-content caret-info",
       ),
       attribute.id(id),
       attribute.placeholder("Search"),

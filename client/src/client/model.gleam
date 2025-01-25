@@ -291,12 +291,18 @@ pub fn with_selected_currency(
 }
 
 pub fn to_conversion_params(
+  from_side: Side,
   model: Model(msg),
 ) -> Result(ConversionParameters, Nil) {
-  use amount <- result.try(get_amount(model, Left))
+  use amount <- result.try(get_amount(model, from_side))
   use currency_1 <- result.try(get_currency_id(model, Left))
   use currency_2 <- result.try(get_currency_id(model, Right))
-  Ok(ConversionParameters(amount:, id: currency_1, convert_id: currency_2))
+
+  let params = case from_side {
+    Left -> ConversionParameters(amount, currency_1, currency_2)
+    _ -> ConversionParameters(amount, currency_2, currency_1)
+  }
+  Ok(params)
 }
 
 pub fn get_amount(model: Model(msg), side: Side) -> Result(Float, Nil) {

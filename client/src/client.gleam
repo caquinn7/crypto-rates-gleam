@@ -110,16 +110,26 @@ pub fn update(model: Model(Msg), msg: Msg) -> #(Model(Msg), Effect(Msg)) {
     ApiReturnedFiat(Error(_)) -> todo
 
     ApiReturnedConversion(Ok(conversion)) -> {
+      // user changes left amount -> from: left, to: right
+      // user changes left currency -> from: left, to: right
+      // user changes right amount -> from: right, to: left
+      // user changes right currency -> from: left, to: right
       let ConversionResponse(
         Currency(from_id, _from_amount),
-        Currency(_to_id, to_amount),
+        Currency(to_id, to_amount),
       ) = conversion
 
       let assert Ok(currency_1_id) = model.get_currency_id(model, Left)
+      let to_amount = float.to_string(to_amount)
 
-      let model = case currency_1_id == from_id {
-        True -> model.with_amount(model, Right, float.to_string(to_amount))
-        _ -> panic
+      let model = case currency_1_id, from_id, to_id {
+        _, _, _ if currency_1_id == from_id ->
+          model.with_amount(model, Right, to_amount)
+
+        _, _, _ if currency_1_id == to_id ->
+          model.with_amount(model, Left, to_amount)
+
+        _, _, _ -> panic
       }
 
       #(model, effect.none())
@@ -165,25 +175,24 @@ pub fn update(model: Model(Msg), msg: Msg) -> #(Model(Msg), Effect(Msg)) {
       #(model, effect.none())
     }
 
-    UserTypedAmount(Left, amount_str) -> {
+    UserTypedAmount(side, amount_str) -> {
       let model = {
-        let model = model.with_amount(model, Left, amount_str)
-        let amount_result = model.get_amount(model, Left)
-        case amount_result {
-          Ok(_) -> model
-          Error(_) -> model.with_amount(model, Right, "")
+        let model = model.with_amount(model, side, amount_str)
+        let amount_result = model.get_amount(model, side)
+        case side, amount_result {
+          _, Ok(_) -> model
+          Left, Error(_) -> model.with_amount(model, Right, "")
+          Right, Error(_) -> model.with_amount(model, Left, "")
         }
       }
 
-      let effect = case model.to_conversion_params(model) {
+      let effect = case model.to_conversion_params(side, model) {
         Ok(params) -> api.get_conversion(params, ApiReturnedConversion)
         Error(_) -> effect.none()
       }
 
       #(model, effect)
     }
-
-    UserTypedAmount(Right, _) -> panic
 
     UserClickedCurrencySelector(side) -> {
       let model =
@@ -233,7 +242,7 @@ pub fn update(model: Model(Msg), msg: Msg) -> #(Model(Msg), Effect(Msg)) {
         |> model.toggle_selector_dropdown(side)
         |> model.filter_currencies(side, "")
 
-      let effect = case model.to_conversion_params(model) {
+      let effect = case model.to_conversion_params(Left, model) {
         Ok(params) -> api.get_conversion(params, ApiReturnedConversion)
         Error(_) -> effect.none()
       }
@@ -282,12 +291,12 @@ fn main_content(model: Model(Msg)) -> Element(Msg) {
       [
         html.div([attribute.class("flex items-center space-x-4")], [
           currency_input_group(
-            amount_input(left_group.amount, False, UserTypedAmount(Left, _)),
+            amount_input(left_group.amount, UserTypedAmount(Left, _)),
             left_group.currency_selector,
           ),
           equal_sign,
           currency_input_group(
-            amount_input(right_group.amount, True, UserTypedAmount(Right, _)),
+            amount_input(right_group.amount, UserTypedAmount(Right, _)),
             right_group.currency_selector,
           ),
         ]),
@@ -296,16 +305,12 @@ fn main_content(model: Model(Msg)) -> Element(Msg) {
   ])
 }
 
-fn amount_input(value, disabled, on_input) {
+fn amount_input(value, on_input) {
   html.input([
     attribute.class(
-      "w-48 p-2 border rounded-lg  focus:outline-none bg-neutral text-neutral-content",
+      "w-48 p-2 border rounded-lg focus:outline-none bg-neutral text-neutral-content caret-info",
     ),
     attribute.value(value),
-    case disabled {
-      True -> attribute.attribute("disabled", "")
-      False -> attribute.none()
-    },
     event.on_input(on_input),
   ])
 }
