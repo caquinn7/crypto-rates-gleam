@@ -111,7 +111,9 @@ fn page_scaffold(
           "window.__ENV__ = " <> "\"" <> ctx.env <> "\"",
         ),
       ]),
-      html.body([], [html.div([attribute.id("app")], [content])]),
+      html.body([attribute.class("flex flex-col min-h-screen")], [
+        html.div([attribute.id("app")], [content]),
+      ]),
     ],
   )
 }

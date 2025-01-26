@@ -11,7 +11,7 @@ pub type ButtonDropdown(msg) {
   ButtonDropdown(
     id: String,
     button_text: String,
-    dropdown_options: Dict(String, List(DropdownOption)),
+    dropdown_options: Dict(String, List(DropdownOption(msg))),
     current_value: Option(String),
     show_dropdown: Bool,
     filter: String,
@@ -22,33 +22,30 @@ pub type ButtonDropdown(msg) {
   )
 }
 
-pub type DropdownOption {
-  DropdownOption(value: String, display: String)
+pub type DropdownOption(msg) {
+  DropdownOption(value: String, display: Element(msg))
 }
 
 pub fn view(button_dropdown: ButtonDropdown(msg)) -> Element(msg) {
-  html.div(
-    [attribute.class("relative w-64"), attribute.id(button_dropdown.id)],
-    [
-      button(button_dropdown.button_text, button_dropdown.on_button_click),
-      dropdown(
-        button_dropdown.search_input_id,
-        button_dropdown.show_dropdown,
-        button_dropdown.filter,
-        button_dropdown.dropdown_options,
-        button_dropdown.on_search_input,
-        button_dropdown.on_select,
-      ),
-    ],
-  )
+  html.div([attribute.class("relative"), attribute.id(button_dropdown.id)], [
+    button(button_dropdown.button_text, button_dropdown.on_button_click),
+    dropdown(
+      button_dropdown.search_input_id,
+      button_dropdown.show_dropdown,
+      button_dropdown.filter,
+      button_dropdown.dropdown_options,
+      button_dropdown.on_search_input,
+      button_dropdown.on_select,
+    ),
+  ])
 }
 
 fn button(text: String, on_click: msg) -> Element(msg) {
   html.button(
     [
-      attribute.class("inline-flex items-center px-4 py-2 rounded"),
+      attribute.class("inline-flex items-center px-8 py-4 rounded"),
       attribute.class(
-        "w-full rounded-lg border bg-neutral text-neutral-content text-left",
+        "w-full rounded-lg border bg-neutral text-neutral-content text-left text-xl",
       ),
       event.on_click(on_click),
     ],
@@ -58,7 +55,7 @@ fn button(text: String, on_click: msg) -> Element(msg) {
         [
           attribute.attribute("viewBox", "0 0 20 20"),
           attribute.attribute("xmlns", "http://www.w3.org/2000/svg"),
-          attribute.class("ml-2 h-4 w-4 fill-current"),
+          attribute.class("ml-2 h-6 w-6 fill-current"),
         ],
         [
           svg.path([
@@ -77,14 +74,17 @@ fn dropdown(
   search_input_id: String,
   visible: Bool,
   filter: String,
-  dd_options: Dict(String, List(DropdownOption)),
+  dd_options: Dict(String, List(DropdownOption(msg))),
   on_search_input: fn(String) -> msg,
   on_select: fn(String) -> msg,
 ) {
   html.div(
     [
       attribute.class(
-        "currency-dropdown absolute z-10 w-full border rounded-lg shadow-md max-h-64 overflow-y-auto",
+        "currency-dropdown absolute z-10 border rounded-lg shadow-md max-h-64 overflow-y-auto",
+      ),
+      attribute.class(
+        "min-w-max left-1/2 transform -translate-x-1/2 w-auto translate-y-3",
       ),
       case visible {
         True -> attribute.none()
@@ -119,12 +119,12 @@ fn search_input(id: String, value: String, on_input: fn(String) -> msg) {
 }
 
 fn option_group(
-  group: #(String, List(DropdownOption)),
+  group: #(String, List(DropdownOption(msg))),
   on_select: fn(String) -> msg,
 ) -> element.Element(msg) {
   let group_title_div =
     html.div(
-      [attribute.class("px-2 py-1 font-bold text-lg text-neutral-content")],
+      [attribute.class("px-2 py-1 font-bold text-lg text-base-content")],
       [html.text(group.0)],
     )
 
@@ -135,19 +135,18 @@ fn option_group(
 }
 
 fn options_container(
-  dd_options: List(DropdownOption),
+  dd_options: List(DropdownOption(msg)),
   on_select: fn(String) -> msg,
 ) {
-  let dd_option = fn(item: DropdownOption) {
+  let dd_option = fn(item: DropdownOption(msg)) {
     html.div(
       [
         attribute.attribute("data-value", item.value),
-        attribute.class(
-          "px-6 py-1 cursor-pointer hover:bg-neutral-content text-neutral-content hover:text-base-100",
-        ),
+        attribute.class("px-6 py-1 cursor-pointer text-base-content"),
+        attribute.class("hover:bg-base-content hover:text-base-100"),
         event.on_click(on_select(item.value)),
       ],
-      [html.text(item.display)],
+      [item.display],
     )
   }
 

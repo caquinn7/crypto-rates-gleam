@@ -253,10 +253,7 @@ pub fn update(model: Model(Msg), msg: Msg) -> #(Model(Msg), Effect(Msg)) {
 }
 
 pub fn view(model: Model(Msg)) -> Element(Msg) {
-  html.div([attribute.class("flex flex-col gap-12")], [
-    header(),
-    main_content(model),
-  ])
+  element.fragment([header(), main_content(model)])
 }
 
 fn header() -> Element(Msg) {
@@ -281,43 +278,27 @@ fn main_content(model: Model(Msg)) -> Element(Msg) {
       [element.text("=")],
     )
 
-  html.main([attribute.class("flex items-center")], [
-    html.div(
-      [
-        attribute.class(
-          "flex flex-col items-center gap-8 w-full max-w-screen-lg mx-auto",
-        ),
-      ],
-      [
-        html.div([attribute.class("flex items-center space-x-4")], [
-          currency_input_group(
-            amount_input(left_group.amount, UserTypedAmount(Left, _)),
-            left_group.currency_selector,
-          ),
-          equal_sign,
-          currency_input_group(
-            amount_input(right_group.amount, UserTypedAmount(Right, _)),
-            right_group.currency_selector,
-          ),
-        ]),
-      ],
-    ),
-  ])
+  html.div(
+    [attribute.class("absolute inset-0 flex items-center justify-center p-4")],
+    [
+      html.div([attribute.class("flex items-center space-x-4")], [
+        amount_input(left_group.amount, UserTypedAmount(Left, _)),
+        button_dropdown.view(left_group.currency_selector),
+        equal_sign,
+        amount_input(right_group.amount, UserTypedAmount(Right, _)),
+        button_dropdown.view(right_group.currency_selector),
+      ]),
+    ],
+  )
 }
 
 fn amount_input(value, on_input) {
   html.input([
+    attribute.class("w-auto min-w-[1ch] max-w-full"),
     attribute.class(
-      "w-48 p-2 border rounded-lg focus:outline-none bg-neutral text-neutral-content caret-info",
+      "px-6 py-4 border rounded-lg focus:outline-none bg-neutral text-xl text-neutral-content caret-info",
     ),
     attribute.value(value),
     event.on_input(on_input),
-  ])
-}
-
-fn currency_input_group(amount_input, currency_selector) {
-  html.div([attribute.class("flex items-center space-x-4")], [
-    amount_input,
-    button_dropdown.view(currency_selector),
   ])
 }
