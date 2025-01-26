@@ -10,6 +10,8 @@ import gleam/pair
 import gleam/regex
 import gleam/result
 import gleam/string
+import lustre/attribute
+import lustre/element/html
 import shared/coin_market_cap_types.{
   type ConversionParameters, type CryptoCurrency, type FiatCurrency,
   ConversionParameters,
@@ -356,10 +358,22 @@ pub fn map_currency_input_group(
   fun(target)
 }
 
-fn crypto_dropdown_option(currency: CryptoCurrency) -> DropdownOption {
-  DropdownOption(int.to_string(currency.id), currency.name)
+fn crypto_dropdown_option(currency: CryptoCurrency) -> DropdownOption(msg) {
+  let display_element =
+    html.div([attribute.class("flex justify-between space-x-2")], [
+      html.span([], [html.text(currency.name)]),
+      html.span([], [html.text(currency.symbol)]),
+    ])
+
+  DropdownOption(int.to_string(currency.id), display_element)
 }
 
-fn fiat_dropdown_option(currency: FiatCurrency) -> DropdownOption {
-  DropdownOption(int.to_string(currency.id), currency.name)
+fn fiat_dropdown_option(currency: FiatCurrency) -> DropdownOption(msg) {
+  let display_element =
+    html.div([attribute.class("flex justify-between space-x-2")], [
+      html.span([], [html.text(currency.name)]),
+      html.span([], [html.text(currency.symbol)]),
+    ])
+
+  DropdownOption(int.to_string(currency.id), display_element)
 }
