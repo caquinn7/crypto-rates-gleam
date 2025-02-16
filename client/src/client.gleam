@@ -2,9 +2,11 @@ import client/api
 import client/browser/element as browser_element
 import client/browser/event as browser_event
 import client/button_dropdown.{type ButtonDropdown, ButtonDropdown}
-import client/model.{type Model, type Side, Left, Model, Right}
+import client/custom_effects
+import client/model.{type AmountInput, type Model, type Side, Left, Model, Right}
 import decode/zero
 import gleam/float
+import gleam/int
 import gleam/json
 import gleam/option.{Some}
 import gleam/result
@@ -18,7 +20,6 @@ import lustre_http.{type HttpError}
 import plinth/browser/document
 import plinth/browser/element as plinth_element
 import plinth/browser/event as plinth_event
-import plinth/browser/window
 import shared/coin_market_cap_types.{type CryptoCurrency, type FiatCurrency}
 import shared/conversion_response.{
   type ConversionResponse, type Currency, ConversionResponse, Currency,
@@ -33,6 +34,7 @@ pub type Msg {
     plinth_event.Event(plinth_event.UIEvent(browser_event.MouseEvent)),
   )
   UserTypedAmount(Side, String)
+  UserResizedAmountInput(Side, Int)
   UserClickedCurrencySelector(Side)
   UserFilteredCurrencies(Side, String)
   UserSelectedCurrency(Side, String)
@@ -54,12 +56,14 @@ pub fn main() {
     Ok(data) ->
       model.from_ssr_data(
         data,
+        UserTypedAmount,
         UserClickedCurrencySelector,
         UserFilteredCurrencies,
         UserSelectedCurrency,
       )
     Error(_) ->
       model.init(
+        UserTypedAmount,
         UserClickedCurrencySelector,
         UserFilteredCurrencies,
         UserSelectedCurrency,
@@ -82,7 +86,7 @@ pub fn main() {
 }
 
 pub fn init(model: Model(Msg)) -> #(Model(Msg), Effect(Msg)) {
-  let effect = case model {
+  let api_effect = case model {
     Model([], [], ..) ->
       effect.batch([
         api.get_crypto(ApiReturnedCrypto),
@@ -93,7 +97,13 @@ pub fn init(model: Model(Msg)) -> #(Model(Msg), Effect(Msg)) {
     _ -> effect.none()
   }
 
-  #(model, effect)
+  let resize_inputs_effect =
+    effect.batch([
+      resize_amount_input_effect(model, Left),
+      resize_amount_input_effect(model, Right),
+    ])
+
+  #(model, effect.batch([api_effect, resize_inputs_effect]))
 }
 
 pub fn update(model: Model(Msg), msg: Msg) -> #(Model(Msg), Effect(Msg)) {
@@ -119,20 +129,22 @@ pub fn update(model: Model(Msg), msg: Msg) -> #(Model(Msg), Effect(Msg)) {
         Currency(to_id, to_amount),
       ) = conversion
 
-      let assert Ok(currency_1_id) = model.get_currency_id(model, Left)
+      let assert Ok(currency_1_id) = model.get_selected_currency_id(model, Left)
       let to_amount = float.to_string(to_amount)
 
-      let model = case currency_1_id, from_id, to_id {
-        _, _, _ if currency_1_id == from_id ->
-          model.with_amount(model, Right, to_amount)
+      case currency_1_id, from_id, to_id {
+        _, _, _ if currency_1_id == from_id -> #(
+          model.with_amount(model, Right, to_amount),
+          resize_amount_input_effect(model, Right),
+        )
 
-        _, _, _ if currency_1_id == to_id ->
-          model.with_amount(model, Left, to_amount)
+        _, _, _ if currency_1_id == to_id -> #(
+          model.with_amount(model, Left, to_amount),
+          resize_amount_input_effect(model, Left),
+        )
 
         _, _, _ -> panic
       }
-
-      #(model, effect.none())
     }
 
     ApiReturnedConversion(Error(_)) -> todo
@@ -187,12 +199,21 @@ pub fn update(model: Model(Msg), msg: Msg) -> #(Model(Msg), Effect(Msg)) {
       }
 
       let effect = case model.to_conversion_params(side, model) {
-        Ok(params) -> api.get_conversion(params, ApiReturnedConversion)
-        Error(_) -> effect.none()
+        Ok(params) ->
+          effect.batch([
+            api.get_conversion(params, ApiReturnedConversion),
+            resize_amount_input_effect(model, side),
+          ])
+        Error(_) -> resize_amount_input_effect(model, side)
       }
 
       #(model, effect)
     }
+
+    UserResizedAmountInput(side, width) -> #(
+      model.with_amount_width(model, side, width),
+      effect.none(),
+    )
 
     UserClickedCurrencySelector(side) -> {
       let model =
@@ -200,28 +221,13 @@ pub fn update(model: Model(Msg), msg: Msg) -> #(Model(Msg), Effect(Msg)) {
         |> model.toggle_selector_dropdown(side)
         |> model.filter_currencies(side, "")
 
-      let search_focus_effect =
-        effect.from(fn(_) {
-          window.request_animation_frame(fn(_) {
-            let search_input_id =
-              model.map_currency_input_group(model, side, fn(group) {
-                group.currency_selector.search_input_id
-              })
-
-            let assert Ok(search_elem) =
-              document.get_element_by_id(search_input_id)
-            plinth_element.focus(search_elem)
-          })
-
-          Nil
-        })
-
       let dd_visible =
         model.map_currency_input_group(model, side, fn(group) {
           group.currency_selector.show_dropdown
         })
+
       let effect = case dd_visible {
-        True -> search_focus_effect
+        True -> custom_effects.focus(model.get_search_input_id(model, side))
         _ -> effect.none()
       }
 
@@ -252,6 +258,14 @@ pub fn update(model: Model(Msg), msg: Msg) -> #(Model(Msg), Effect(Msg)) {
   }
 }
 
+fn resize_amount_input_effect(model: Model(Msg), side: Side) -> Effect(Msg) {
+  custom_effects.resize_input(
+    model.get_amount_input_id(model, side),
+    model.default_amount_input_width,
+    UserResizedAmountInput(side, _),
+  )
+}
+
 pub fn view(model: Model(Msg)) -> Element(Msg) {
   element.fragment([header(), main_content(model)])
 }
@@ -274,7 +288,7 @@ fn main_content(model: Model(Msg)) -> Element(Msg) {
 
   let equal_sign =
     html.p(
-      [attribute.attribute("class", "text-xl text-base-content font-bold")],
+      [attribute.attribute("class", "text-3xl text-base-content font-bold")],
       [element.text("=")],
     )
 
@@ -282,23 +296,34 @@ fn main_content(model: Model(Msg)) -> Element(Msg) {
     [attribute.class("absolute inset-0 flex items-center justify-center p-4")],
     [
       html.div([attribute.class("flex items-center space-x-4")], [
-        amount_input(left_group.amount, UserTypedAmount(Left, _)),
+        amount_input(left_group.amount_input),
         button_dropdown.view(left_group.currency_selector),
         equal_sign,
-        amount_input(right_group.amount, UserTypedAmount(Right, _)),
+        amount_input(right_group.amount_input),
         button_dropdown.view(right_group.currency_selector),
       ]),
     ],
   )
 }
 
-fn amount_input(value, on_input) {
-  html.input([
-    attribute.class("w-auto min-w-[1ch] max-w-full"),
-    attribute.class(
-      "px-6 py-4 border rounded-lg focus:outline-none bg-neutral text-xl text-neutral-content caret-info",
-    ),
-    attribute.value(value),
-    event.on_input(on_input),
-  ])
+fn amount_input(amount_input: AmountInput(Msg)) {
+  let input =
+    html.input([
+      attribute.class("amount-input"),
+      attribute.class(
+        "px-6 py-4 border rounded-lg focus:outline-none bg-neutral text-3xl text-center text-neutral-content caret-info",
+      ),
+      attribute.id(amount_input.id),
+      attribute.style([#("width", int.to_string(amount_input.width) <> "px")]),
+      attribute.value(amount_input.value),
+      event.on_input(amount_input.on_input),
+    ])
+
+  let mirror_input =
+    html.span(
+      [attribute.class("amount-input-mirror absolute invisible whitespace-pre")],
+      [element.text(amount_input.value)],
+    )
+
+  html.div([], [input, mirror_input])
 }

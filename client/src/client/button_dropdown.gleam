@@ -43,9 +43,9 @@ pub fn view(button_dropdown: ButtonDropdown(msg)) -> Element(msg) {
 fn button(text: String, on_click: msg) -> Element(msg) {
   html.button(
     [
-      attribute.class("inline-flex items-center px-8 py-4 rounded"),
+      attribute.class("inline-flex items-center px-6 py-4 rounded"),
       attribute.class(
-        "w-full rounded-lg border bg-neutral text-neutral-content text-left text-xl",
+        "w-full rounded-lg border bg-neutral text-neutral-content text-left text-3xl",
       ),
       event.on_click(on_click),
     ],

@@ -1,5 +1,6 @@
 import client.{
   UserClickedCurrencySelector, UserFilteredCurrencies, UserSelectedCurrency,
+  UserTypedAmount,
 }
 import client/model
 import gleam/json
@@ -33,6 +34,7 @@ pub fn get(
   let content =
     model.from_ssr_data(
       ssr_data,
+      UserTypedAmount,
       UserClickedCurrencySelector,
       UserFilteredCurrencies,
       UserSelectedCurrency,

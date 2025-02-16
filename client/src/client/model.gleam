@@ -24,6 +24,8 @@ pub const fiat_group_key = "Fiat"
 
 pub const default_button_dropdown_text = "Select"
 
+pub const default_amount_input_width = 76
+
 pub type Model(msg) {
   Model(
     crypto: List(CryptoCurrency),
@@ -33,7 +35,19 @@ pub type Model(msg) {
 }
 
 pub type CurrencyInputGroup(msg) {
-  CurrencyInputGroup(amount: String, currency_selector: ButtonDropdown(msg))
+  CurrencyInputGroup(
+    amount_input: AmountInput(msg),
+    currency_selector: ButtonDropdown(msg),
+  )
+}
+
+pub type AmountInput(msg) {
+  AmountInput(
+    id: String,
+    value: String,
+    width: Int,
+    on_input: fn(String) -> msg,
+  )
 }
 
 pub type Side {
@@ -42,6 +56,7 @@ pub type Side {
 }
 
 pub fn init(
+  on_amount_input: fn(Side, String) -> msg,
   on_button_click: fn(Side) -> msg,
   on_search_input: fn(Side, String) -> msg,
   on_select: fn(Side, String) -> msg,
@@ -63,12 +78,24 @@ pub fn init(
       on_select: on_select(Left, _),
     )
 
+  let amount_input =
+    AmountInput(
+      "amount-input-1",
+      "",
+      default_amount_input_width,
+      on_amount_input(Left, _),
+    )
+
   let currency_input_group_1 =
-    CurrencyInputGroup(amount: "", currency_selector: btn_dd_1)
+    CurrencyInputGroup(amount_input:, currency_selector: btn_dd_1)
 
   let currency_input_group_2 =
     CurrencyInputGroup(
-      amount: "",
+      amount_input: AmountInput(
+        ..amount_input,
+        id: "amount-input-2",
+        on_input: on_amount_input(Right, _),
+      ),
       currency_selector: ButtonDropdown(
         ..btn_dd_1,
         id: "btn-dd-2",
@@ -84,6 +111,7 @@ pub fn init(
 
 pub fn from_ssr_data(
   ssr_data: SsrData,
+  on_amount_input: fn(Side, String) -> msg,
   on_button_click: fn(Side) -> msg,
   on_search_input: fn(Side, String) -> msg,
   on_select: fn(Side, String) -> msg,
@@ -97,7 +125,7 @@ pub fn from_ssr_data(
   }
 
   let model =
-    init(on_button_click, on_search_input, on_select)
+    init(on_amount_input, on_button_click, on_search_input, on_select)
     |> with_crypto(crypto)
     |> with_fiat(fiat)
     |> with_amount(Left, unwrap_amount(currency_1.amount))
@@ -182,10 +210,76 @@ pub fn with_amount(model: Model(msg), side: Side, amount: String) -> Model(msg) 
   let currency_input_groups =
     model.currency_input_groups
     |> map_currency_input_groups(Some(side), fn(currency_input_group) {
-      CurrencyInputGroup(..currency_input_group, amount:)
+      let amount_input =
+        AmountInput(..currency_input_group.amount_input, value: amount)
+
+      CurrencyInputGroup(..currency_input_group, amount_input:)
     })
 
   Model(..model, currency_input_groups:)
+}
+
+pub fn with_amount_width(
+  model: Model(msg),
+  side: Side,
+  width: Int,
+) -> Model(msg) {
+  let currency_input_groups =
+    model.currency_input_groups
+    |> map_currency_input_groups(Some(side), fn(currency_input_group) {
+      let amount_input =
+        AmountInput(..currency_input_group.amount_input, width: width)
+
+      CurrencyInputGroup(..currency_input_group, amount_input:)
+    })
+
+  Model(..model, currency_input_groups:)
+}
+
+pub fn with_selected_currency(
+  model: Model(msg),
+  side: Side,
+  currency_id: Option(String),
+) -> Result(Model(msg), Nil) {
+  let currency_label_result = {
+    case currency_id {
+      None -> Ok(default_button_dropdown_text)
+
+      Some(selected_val) -> {
+        list.find_map(model.crypto, fn(currency) {
+          case int.to_string(currency.id) == selected_val {
+            True -> Ok(currency.name)
+            _ -> Error(Nil)
+          }
+        })
+        |> result.lazy_or(fn() {
+          list.find_map(model.fiat, fn(currency) {
+            case int.to_string(currency.id) == selected_val {
+              True -> Ok(currency.name)
+              _ -> Error(Nil)
+            }
+          })
+        })
+      }
+    }
+  }
+
+  use currency_label <- result.try(currency_label_result)
+
+  let currency_input_groups =
+    model.currency_input_groups
+    |> map_currency_input_groups(Some(side), fn(currency_input_group) {
+      CurrencyInputGroup(
+        ..currency_input_group,
+        currency_selector: ButtonDropdown(
+          ..currency_input_group.currency_selector,
+          current_value: currency_id,
+          button_text: currency_label,
+        ),
+      )
+    })
+
+  Ok(Model(..model, currency_input_groups:))
 }
 
 pub fn toggle_selector_dropdown(model: Model(msg), side: Side) -> Model(msg) {
@@ -246,59 +340,13 @@ pub fn filter_currencies(
   Model(..model, currency_input_groups:)
 }
 
-pub fn with_selected_currency(
-  model: Model(msg),
-  side: Side,
-  currency_id: Option(String),
-) -> Result(Model(msg), Nil) {
-  let currency_label_result = {
-    case currency_id {
-      None -> Ok(default_button_dropdown_text)
-
-      Some(selected_val) -> {
-        list.find_map(model.crypto, fn(currency) {
-          case int.to_string(currency.id) == selected_val {
-            True -> Ok(currency.name)
-            _ -> Error(Nil)
-          }
-        })
-        |> result.lazy_or(fn() {
-          list.find_map(model.fiat, fn(currency) {
-            case int.to_string(currency.id) == selected_val {
-              True -> Ok(currency.name)
-              _ -> Error(Nil)
-            }
-          })
-        })
-      }
-    }
-  }
-
-  use currency_label <- result.try(currency_label_result)
-
-  let currency_input_groups =
-    model.currency_input_groups
-    |> map_currency_input_groups(Some(side), fn(currency_input_group) {
-      CurrencyInputGroup(
-        ..currency_input_group,
-        currency_selector: ButtonDropdown(
-          ..currency_input_group.currency_selector,
-          current_value: currency_id,
-          button_text: currency_label,
-        ),
-      )
-    })
-
-  Ok(Model(..model, currency_input_groups:))
-}
-
 pub fn to_conversion_params(
   from_side: Side,
   model: Model(msg),
 ) -> Result(ConversionParameters, Nil) {
   use amount <- result.try(get_amount(model, from_side))
-  use currency_1 <- result.try(get_currency_id(model, Left))
-  use currency_2 <- result.try(get_currency_id(model, Right))
+  use currency_1 <- result.try(get_selected_currency_id(model, Left))
+  use currency_2 <- result.try(get_selected_currency_id(model, Right))
 
   let params = case from_side {
     Left -> ConversionParameters(amount, currency_1, currency_2)
@@ -316,10 +364,25 @@ pub fn get_amount(model: Model(msg), side: Side) -> Result(Float, Nil) {
       |> result.map(int.to_float)
     })
   }
-  map_currency_input_group(model, side, fn(group) { to_float(group.amount) })
+  map_currency_input_group(model, side, fn(group) {
+    to_float(group.amount_input.value)
+  })
 }
 
-pub fn get_currency_id(model: Model(msg), side: Side) -> Result(Int, Nil) {
+pub fn get_amount_input_id(model: Model(msg), side: Side) -> String {
+  map_currency_input_group(model, side, fn(group) { group.amount_input.id })
+}
+
+pub fn get_search_input_id(model: Model(msg), side: Side) -> String {
+  map_currency_input_group(model, side, fn(group) {
+    group.currency_selector.search_input_id
+  })
+}
+
+pub fn get_selected_currency_id(
+  model: Model(msg),
+  side: Side,
+) -> Result(Int, Nil) {
   map_currency_input_group(model, side, fn(group) {
     let id_str = group.currency_selector.current_value
     case id_str {

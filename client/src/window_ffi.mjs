@@ -3,5 +3,3 @@ export function get_app_url() {
     ? window.location.origin
     : 'https://crypto-rates.fly.dev';
 }
-
-

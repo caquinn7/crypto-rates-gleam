@@ -16,6 +16,8 @@ import lustre/effect
 import shared/coin_market_cap_types.{CryptoCurrency, FiatCurrency}
 import shared/conversion_response.{ConversionResponse, Currency}
 
+const on_amount_input = UserTypedAmount
+
 const on_button_click = UserClickedCurrencySelector
 
 const on_search_input = UserFilteredCurrencies
@@ -26,6 +28,8 @@ const on_select = UserSelectedCurrency
 // where functions from client/api module are called
 // due to error "ReferenceError: window is not defined".
 // seems to be an issue with the lustre_http library.
+
+// also need to figure out how to assert on effects that are not effect.none() in general
 
 pub fn main() {
   gleeunit.main()
@@ -43,19 +47,26 @@ pub fn main() {
 
 pub fn client_init_currencies_not_empty_test() {
   let model =
-    model.init(on_button_click, on_search_input, on_select)
+    model.init(on_amount_input, on_button_click, on_search_input, on_select)
     |> model.with_crypto([CryptoCurrency(1, None, "", "")])
     |> model.with_fiat([FiatCurrency(2, "", "", "")])
 
-  model
-  |> client.init
-  |> should.equal(#(model, effect.none()))
+  let #(result_model, result_effect) =
+    model
+    |> client.init
+
+  result_model
+  |> should.equal(model)
+
+  result_effect
+  |> should.not_equal(effect.none())
 }
 
 pub fn client_update_api_returned_crypto_ok_test() {
   let expected_crypto = [CryptoCurrency(1, None, "", "")]
 
-  let model = model.init(on_button_click, on_search_input, on_select)
+  let model =
+    model.init(on_amount_input, on_button_click, on_search_input, on_select)
 
   model
   |> client.update(ApiReturnedCrypto(Ok(expected_crypto)))
@@ -69,7 +80,8 @@ pub fn client_update_api_returned_crypto_ok_test() {
 pub fn client_update_api_returned_fiat_ok_test() {
   let expected_fiat = [FiatCurrency(1, "", "", "")]
 
-  let model = model.init(on_button_click, on_search_input, on_select)
+  let model =
+    model.init(on_amount_input, on_button_click, on_search_input, on_select)
 
   model
   |> client.update(ApiReturnedFiat(Ok(expected_fiat)))
@@ -85,7 +97,7 @@ pub fn client_update_api_returned_conversion_ok_left_to_right_test() {
   let expected_to_currency = Currency(2, 2.0)
 
   let model =
-    model.init(on_button_click, on_search_input, on_select)
+    model.init(on_amount_input, on_button_click, on_search_input, on_select)
     |> model.with_crypto([
       CryptoCurrency(expected_from_currency.id, None, "", ""),
       CryptoCurrency(expected_to_currency.id, None, "", ""),
@@ -109,23 +121,26 @@ pub fn client_update_api_returned_conversion_ok_left_to_right_test() {
   let conversion_response =
     ConversionResponse(expected_from_currency, expected_to_currency)
 
-  model
-  |> client.update(ApiReturnedConversion(Ok(conversion_response)))
-  |> should.equal(#(
-    model.with_amount(
-      model,
-      Right,
-      float.to_string(expected_to_currency.amount),
-    ),
-    effect.none(),
+  let #(result_model, result_effect) =
+    model
+    |> client.update(ApiReturnedConversion(Ok(conversion_response)))
+
+  result_model
+  |> should.equal(model.with_amount(
+    model,
+    Right,
+    float.to_string(expected_to_currency.amount),
   ))
+
+  result_effect
+  |> should.not_equal(effect.none())
 }
 
 pub fn client_update_api_returned_conversion_ok_right_to_left_test() {
   let expected_from_currency = Currency(1, 1.0)
   let expected_to_currency = Currency(2, 2.0)
   let model =
-    model.init(on_button_click, on_search_input, on_select)
+    model.init(on_amount_input, on_button_click, on_search_input, on_select)
     |> model.with_crypto([
       CryptoCurrency(expected_from_currency.id, None, "", ""),
       CryptoCurrency(expected_to_currency.id, None, "", ""),
@@ -149,17 +164,24 @@ pub fn client_update_api_returned_conversion_ok_right_to_left_test() {
   let conversion_response =
     ConversionResponse(expected_from_currency, expected_to_currency)
 
-  model
-  |> client.update(ApiReturnedConversion(Ok(conversion_response)))
-  |> should.equal(#(
-    model.with_amount(model, Left, float.to_string(expected_to_currency.amount)),
-    effect.none(),
+  let #(result_model, result_effect) =
+    model
+    |> client.update(ApiReturnedConversion(Ok(conversion_response)))
+
+  result_model
+  |> should.equal(model.with_amount(
+    model,
+    Left,
+    float.to_string(expected_to_currency.amount),
   ))
+
+  result_effect
+  |> should.not_equal(effect.none())
 }
 
 pub fn client_update_user_typed_amount_left_invalid_amount_test() {
   let model =
-    model.init(on_button_click, on_search_input, on_select)
+    model.init(on_amount_input, on_button_click, on_search_input, on_select)
     |> model.with_amount(Left, "1.0")
     |> model.with_amount(Right, "2.0")
 
@@ -169,14 +191,20 @@ pub fn client_update_user_typed_amount_left_invalid_amount_test() {
     |> model.with_amount(Left, typed_input)
     |> model.with_amount(Right, "")
 
-  model
-  |> client.update(UserTypedAmount(Left, typed_input))
-  |> should.equal(#(expected_model, effect.none()))
+  let #(result_model, result_effect) =
+    model
+    |> client.update(UserTypedAmount(Left, typed_input))
+
+  result_model
+  |> should.equal(expected_model)
+
+  result_effect
+  |> should.not_equal(effect.none())
 }
 
 pub fn client_update_user_typed_amount_right_invalid_amount_test() {
   let model =
-    model.init(on_button_click, on_search_input, on_select)
+    model.init(on_amount_input, on_button_click, on_search_input, on_select)
     |> model.with_amount(Left, "1.0")
     |> model.with_amount(Right, "2.0")
 
@@ -186,30 +214,53 @@ pub fn client_update_user_typed_amount_right_invalid_amount_test() {
     |> model.with_amount(Left, "")
     |> model.with_amount(Right, typed_input)
 
-  model
-  |> client.update(UserTypedAmount(Right, typed_input))
-  |> should.equal(#(expected_model, effect.none()))
+  let #(result_model, result_effect) =
+    model
+    |> client.update(UserTypedAmount(Right, typed_input))
+
+  result_model
+  |> should.equal(expected_model)
+
+  result_effect
+  |> should.not_equal(effect.none())
 }
 
 pub fn client_update_user_typed_amount_error_getting_conversion_params_test() {
-  let model = model.init(on_button_click, on_search_input, on_select)
+  let model =
+    model.init(on_amount_input, on_button_click, on_search_input, on_select)
 
   let typed_input = "1"
   let expected_model =
     model
     |> model.with_amount(Left, typed_input)
 
-  model
-  |> client.update(UserTypedAmount(Left, typed_input))
-  |> should.equal(#(expected_model, effect.none()))
+  let #(result_model, result_effect) =
+    model
+    |> client.update(UserTypedAmount(Left, typed_input))
+
+  result_model
+  |> should.equal(expected_model)
+
+  result_effect
+  |> should.not_equal(effect.none())
 }
 
 // pub fn client_update_user_typed_amount_gets_conversion_params_test() {
 //   todo
 // }
 
+pub fn client_update_user_resized_amount_input_test() {
+  let model =
+    model.init(on_amount_input, on_button_click, on_search_input, on_select)
+
+  model
+  |> client.update(client.UserResizedAmountInput(Left, 100))
+  |> should.equal(#(model.with_amount_width(model, Left, 100), effect.none()))
+}
+
 pub fn client_update_user_clicked_currency_selector_not_currently_visible_test() {
-  let model = model.init(on_button_click, on_search_input, on_select)
+  let model =
+    model.init(on_amount_input, on_button_click, on_search_input, on_select)
 
   model
   |> model.map_currency_input_group(Left, fn(group) {
@@ -234,7 +285,7 @@ pub fn client_update_user_clicked_currency_selector_not_currently_visible_test()
 
 pub fn client_update_user_clicked_currency_selector_currently_visible_test() {
   let model =
-    model.init(on_button_click, on_search_input, on_select)
+    model.init(on_amount_input, on_button_click, on_search_input, on_select)
     |> model.toggle_selector_dropdown(Left)
     |> model.filter_currencies(Left, "filter")
 
@@ -261,7 +312,7 @@ pub fn client_update_user_clicked_currency_selector_currently_visible_test() {
 
 pub fn client_update_user_filtered_currencies_test() {
   let model =
-    model.init(on_button_click, on_search_input, on_select)
+    model.init(on_amount_input, on_button_click, on_search_input, on_select)
     |> model.with_crypto([
       CryptoCurrency(1, None, "test str", ""),
       CryptoCurrency(2, None, "another test str", ""),
@@ -281,7 +332,7 @@ pub fn client_update_user_filtered_currencies_test() {
 
 pub fn client_update_user_selected_currency_expected_model_test() {
   let model =
-    model.init(on_button_click, on_search_input, on_select)
+    model.init(on_amount_input, on_button_click, on_search_input, on_select)
     |> model.with_crypto([
       CryptoCurrency(1, None, "", ""),
       CryptoCurrency(2, None, "", ""),

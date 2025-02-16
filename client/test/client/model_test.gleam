@@ -1,10 +1,11 @@
 import client.{
   UserClickedCurrencySelector, UserFilteredCurrencies, UserSelectedCurrency,
+  UserTypedAmount,
 }
 import client/button_dropdown.{ButtonDropdown}
 import client/model.{
-  type CurrencyInputGroup, type Model, type Side, CurrencyInputGroup, Left,
-  Model, Right,
+  type AmountInput, type CurrencyInputGroup, type Model, type Side, AmountInput,
+  CurrencyInputGroup, Left, Model, Right,
 }
 import gleam/dict
 import gleam/float
@@ -24,6 +25,8 @@ pub fn main() {
   gleeunit.main()
 }
 
+const on_amount_input = UserTypedAmount
+
 const on_button_click = UserClickedCurrencySelector
 
 const on_search_input = UserFilteredCurrencies
@@ -31,7 +34,8 @@ const on_search_input = UserFilteredCurrencies
 const on_select = UserSelectedCurrency
 
 pub fn model_init_currencies_empty_test() {
-  let result = model.init(on_button_click, on_search_input, on_select)
+  let result =
+    model.init(on_amount_input, on_button_click, on_search_input, on_select)
 
   result.crypto
   |> should.equal([])
@@ -41,23 +45,66 @@ pub fn model_init_currencies_empty_test() {
 }
 
 pub fn model_init_amounts_empty_str_test() {
-  let result = model.init(on_button_click, on_search_input, on_select)
+  let result =
+    model.init(on_amount_input, on_button_click, on_search_input, on_select)
 
   let Model(
     _,
     _,
-    #(CurrencyInputGroup(amount_1, _), CurrencyInputGroup(amount_2, _)),
+    #(
+      CurrencyInputGroup(amount_input_1, _),
+      CurrencyInputGroup(amount_input_2, _),
+    ),
   ) = result
 
-  amount_1
+  amount_input_1.value
   |> should.equal("")
 
-  amount_2
+  amount_input_2.value
   |> should.equal("")
 }
 
+pub fn model_init_left_amount_input_test() {
+  let result =
+    model.init(on_amount_input, on_button_click, on_search_input, on_select)
+
+  let Model(_, _, #(CurrencyInputGroup(amount_input, _), _)) = result
+
+  amount_input.id
+  |> should.equal("amount-input-1")
+
+  amount_input.value
+  |> should.equal("")
+
+  amount_input.width
+  |> should.equal(model.default_amount_input_width)
+
+  amount_input.on_input("1.0")
+  |> should.equal(UserTypedAmount(Left, "1.0"))
+}
+
+pub fn model_init_right_amount_input_test() {
+  let result =
+    model.init(on_amount_input, on_button_click, on_search_input, on_select)
+
+  let Model(_, _, #(_, CurrencyInputGroup(amount_input, _))) = result
+
+  amount_input.id
+  |> should.equal("amount-input-2")
+
+  amount_input.value
+  |> should.equal("")
+
+  amount_input.width
+  |> should.equal(model.default_amount_input_width)
+
+  amount_input.on_input("1.0")
+  |> should.equal(UserTypedAmount(Right, "1.0"))
+}
+
 pub fn model_init_left_currency_selector_test() {
-  let result = model.init(on_button_click, on_search_input, on_select)
+  let result =
+    model.init(on_amount_input, on_button_click, on_search_input, on_select)
 
   let Model(_, _, #(CurrencyInputGroup(_, selector_1), _)) = result
 
@@ -92,7 +139,8 @@ pub fn model_init_left_currency_selector_test() {
 }
 
 pub fn model_init_right_currency_selector_test() {
-  let result = model.init(on_button_click, on_search_input, on_select)
+  let result =
+    model.init(on_amount_input, on_button_click, on_search_input, on_select)
 
   let Model(_, _, #(_, CurrencyInputGroup(_, selector_2))) = result
 
@@ -135,7 +183,13 @@ pub fn model_from_ssr_data_test() {
     )
 
   let result =
-    model.from_ssr_data(ssr_data, on_button_click, on_search_input, on_select)
+    model.from_ssr_data(
+      ssr_data,
+      on_amount_input,
+      on_button_click,
+      on_search_input,
+      on_select,
+    )
 
   result.crypto
   |> should.equal(ssr_data.crypto)
@@ -144,14 +198,14 @@ pub fn model_from_ssr_data_test() {
   |> should.equal(ssr_data.fiat)
 
   let #(
-    CurrencyInputGroup(amount_1, currency_selector_1),
-    CurrencyInputGroup(amount_2, currency_selector_2),
+    CurrencyInputGroup(amount_input_1, currency_selector_1),
+    CurrencyInputGroup(amount_input_2, currency_selector_2),
   ) = result.currency_input_groups
 
-  amount_1
+  amount_input_1.value
   |> should.equal("")
 
-  amount_2
+  amount_input_2.value
   |> should.equal("1.1")
 
   currency_selector_1.current_value
@@ -171,7 +225,13 @@ pub fn model_from_ssr_data_left_currency_id_invalid_test() {
     )
 
   let result =
-    model.from_ssr_data(ssr_data, on_button_click, on_search_input, on_select)
+    model.from_ssr_data(
+      ssr_data,
+      on_amount_input,
+      on_button_click,
+      on_search_input,
+      on_select,
+    )
 
   result.crypto
   |> should.equal(ssr_data.crypto)
@@ -180,14 +240,14 @@ pub fn model_from_ssr_data_left_currency_id_invalid_test() {
   |> should.equal(ssr_data.fiat)
 
   let #(
-    CurrencyInputGroup(amount_1, currency_selector_1),
-    CurrencyInputGroup(amount_2, currency_selector_2),
+    CurrencyInputGroup(amount_input_1, currency_selector_1),
+    CurrencyInputGroup(amount_input_2, currency_selector_2),
   ) = result.currency_input_groups
 
-  amount_1
+  amount_input_1.value
   |> should.equal("1.0")
 
-  amount_2
+  amount_input_2.value
   |> should.equal("1.1")
 
   currency_selector_1.current_value
@@ -207,7 +267,13 @@ pub fn model_from_ssr_data_right_currency_id_invalid_test() {
     )
 
   let result =
-    model.from_ssr_data(ssr_data, on_button_click, on_search_input, on_select)
+    model.from_ssr_data(
+      ssr_data,
+      on_amount_input,
+      on_button_click,
+      on_search_input,
+      on_select,
+    )
 
   result.crypto
   |> should.equal(ssr_data.crypto)
@@ -216,14 +282,14 @@ pub fn model_from_ssr_data_right_currency_id_invalid_test() {
   |> should.equal(ssr_data.fiat)
 
   let #(
-    CurrencyInputGroup(amount_1, currency_selector_1),
-    CurrencyInputGroup(amount_2, currency_selector_2),
+    CurrencyInputGroup(amount_input_1, currency_selector_1),
+    CurrencyInputGroup(amount_input_2, currency_selector_2),
   ) = result.currency_input_groups
 
-  amount_1
+  amount_input_1.value
   |> should.equal("1.0")
 
-  amount_2
+  amount_input_2.value
   |> should.equal("1.1")
 
   currency_selector_1.current_value
@@ -234,7 +300,29 @@ pub fn model_from_ssr_data_right_currency_id_invalid_test() {
   |> should.be_none
 }
 
-pub fn model_with_amount_test() {
+pub fn model_with_amount_only_updates_value_test() {
+  let model =
+    model.init(on_amount_input, on_button_click, on_search_input, on_select)
+
+  let before =
+    model.map_currency_input_group(model, Left, fn(group) { group.amount_input })
+
+  let AmountInput(id, _, width, on_input) =
+    model
+    |> model.with_amount(Left, "1.0")
+    |> model.map_currency_input_group(Left, fn(group) { group.amount_input })
+
+  id
+  |> should.equal(before.id)
+
+  width
+  |> should.equal(before.width)
+
+  on_input("1.0")
+  |> should.equal(UserTypedAmount(Left, "1.0"))
+}
+
+pub fn model_with_amount_correctly_parses_value_test() {
   let input_outputs = [
     #("", ""),
     #("+", ""),
@@ -248,27 +336,59 @@ pub fn model_with_amount_test() {
   ]
 
   list.each(input_outputs, fn(input_output) {
-    let #(input, expected_output) = input_output
+    let #(input, expected_amount) = input_output
     let input_chars = string.to_graphemes(input)
 
-    let initial_model = model.init(on_button_click, on_search_input, on_select)
+    let initial_model =
+      model.init(on_amount_input, on_button_click, on_search_input, on_select)
 
     let final_model =
       list.fold(input_chars, initial_model, fn(acc, curr) {
         let acc_amount =
-          model.map_currency_input_group(acc, Left, fn(group) { group.amount })
+          model.map_currency_input_group(acc, Left, fn(group) {
+            group.amount_input.value
+          })
 
         model.with_amount(acc, Left, acc_amount <> curr)
       })
 
-    final_model
-    |> model.map_currency_input_group(Left, fn(group) { group.amount })
-    |> should.equal(expected_output)
+    let result =
+      final_model
+      |> model.map_currency_input_group(Left, fn(group) { group.amount_input })
+
+    result.value
+    |> should.equal(expected_amount)
   })
 }
 
+pub fn with_amount_width_test() {
+  let model =
+    model.init(on_amount_input, on_button_click, on_search_input, on_select)
+
+  let before =
+    model.map_currency_input_group(model, Left, fn(group) { group.amount_input })
+
+  let AmountInput(id, val, width, on_input) =
+    model
+    |> model.with_amount_width(Left, 76)
+    |> model.map_currency_input_group(Left, fn(group) { group.amount_input })
+
+  id
+  |> should.equal(before.id)
+
+  val
+  |> should.equal(before.value)
+
+  width
+  |> should.equal(76)
+
+  on_input("1.0")
+  |> should.equal(UserTypedAmount(Left, "1.0"))
+}
+
 pub fn model_toggle_selector_dropdown_test() {
-  let initial_model = model.init(on_button_click, on_search_input, on_select)
+  let initial_model =
+    model.init(on_amount_input, on_button_click, on_search_input, on_select)
 
   let initial_show_dd =
     model.map_currency_input_group(initial_model, Left, fn(group) {
@@ -293,7 +413,7 @@ pub fn model_toggle_selector_dropdown_test() {
 
 pub fn model_filter_currencies_filter_is_empty_string_test() {
   let initial_model =
-    model.init(on_button_click, on_search_input, on_select)
+    model.init(on_amount_input, on_button_click, on_search_input, on_select)
     |> model.with_crypto([CryptoCurrency(1, Some(2), "CQ Token", "CQT")])
     |> model.with_fiat([FiatCurrency(2, "United States Dollar", "$", "USD")])
 
@@ -307,7 +427,7 @@ pub fn model_filter_currencies_filter_is_empty_string_test() {
 
 pub fn model_filter_currencies_case_insensitive_test() {
   let result =
-    model.init(on_button_click, on_search_input, on_select)
+    model.init(on_amount_input, on_button_click, on_search_input, on_select)
     |> model.with_crypto([
       CryptoCurrency(1, None, "ABC", ""),
       CryptoCurrency(2, None, "DEF", ""),
@@ -321,7 +441,7 @@ pub fn model_filter_currencies_case_insensitive_test() {
 
 pub fn model_filter_currencies_no_match_test() {
   let result =
-    model.init(on_button_click, on_search_input, on_select)
+    model.init(on_amount_input, on_button_click, on_search_input, on_select)
     |> model.with_crypto([
       CryptoCurrency(1, None, "ABC", ""),
       CryptoCurrency(2, None, "DEF", ""),
@@ -334,7 +454,7 @@ pub fn model_filter_currencies_no_match_test() {
 
 pub fn model_filter_currencies_test() {
   let initial_model =
-    model.init(on_button_click, on_search_input, on_select)
+    model.init(on_amount_input, on_button_click, on_search_input, on_select)
     |> model.with_crypto([
       CryptoCurrency(1, None, "test str", ""),
       CryptoCurrency(2, None, "another test str", ""),
@@ -367,7 +487,8 @@ pub fn model_filter_currencies_test() {
 }
 
 pub fn model_with_selected_currency_none_test() {
-  let initial_model = model.init(on_button_click, on_search_input, on_select)
+  let initial_model =
+    model.init(on_amount_input, on_button_click, on_search_input, on_select)
 
   let result =
     initial_model
@@ -382,7 +503,8 @@ pub fn model_with_selected_currency_none_test() {
 }
 
 pub fn model_with_selected_currency_invalid_currency_id_test() {
-  let initial_model = model.init(on_button_click, on_search_input, on_select)
+  let initial_model =
+    model.init(on_amount_input, on_button_click, on_search_input, on_select)
 
   let result =
     initial_model
@@ -396,7 +518,7 @@ pub fn model_with_selected_currency_invalid_currency_id_test() {
 pub fn model_with_selected_currency_test() {
   let expected_currency_id = 1
   let initial_model =
-    model.init(on_button_click, on_search_input, on_select)
+    model.init(on_amount_input, on_button_click, on_search_input, on_select)
     |> model.with_crypto([CryptoCurrency(expected_currency_id, None, "", "")])
 
   let result =
@@ -419,7 +541,8 @@ pub fn model_with_selected_currency_test() {
 }
 
 pub fn model_map_currency_input_groups_left_test() {
-  let initial_model = model.init(on_button_click, on_search_input, on_select)
+  let initial_model =
+    model.init(on_amount_input, on_button_click, on_search_input, on_select)
 
   let expected_btn_txt = "click me"
 
@@ -443,7 +566,8 @@ pub fn model_map_currency_input_groups_left_test() {
 }
 
 pub fn model_map_currency_input_groups_right_test() {
-  let initial_model = model.init(on_button_click, on_search_input, on_select)
+  let initial_model =
+    model.init(on_amount_input, on_button_click, on_search_input, on_select)
 
   let expected_btn_txt = "click me"
 
@@ -467,7 +591,8 @@ pub fn model_map_currency_input_groups_right_test() {
 }
 
 pub fn model_map_currency_input_groups_both_sides_test() {
-  let initial_model = model.init(on_button_click, on_search_input, on_select)
+  let initial_model =
+    model.init(on_amount_input, on_button_click, on_search_input, on_select)
 
   let expected_btn_txt = "click me"
 
@@ -495,7 +620,7 @@ pub fn model_to_conversion_params_invalid_amount_test() {
   let expected_currency_id_2 = 2
 
   let assert Ok(model) =
-    model.init(on_button_click, on_search_input, on_select)
+    model.init(on_amount_input, on_button_click, on_search_input, on_select)
     |> model.with_amount(Left, ".")
     |> model.with_crypto([
       CryptoCurrency(expected_currency_id_1, None, "", ""),
@@ -523,7 +648,7 @@ pub fn model_to_conversion_params_invalid_left_currency_test() {
   let expected_currency_id_2 = 2
 
   let assert Ok(model) =
-    model.init(on_button_click, on_search_input, on_select)
+    model.init(on_amount_input, on_button_click, on_search_input, on_select)
     |> model.with_amount(Left, float.to_string(1.0))
     |> model.with_crypto([
       CryptoCurrency(1, None, "", ""),
@@ -544,7 +669,7 @@ pub fn model_to_conversion_params_invalid_right_currency_test() {
   let expected_currency_id_1 = 1
 
   let assert Ok(model) =
-    model.init(on_button_click, on_search_input, on_select)
+    model.init(on_amount_input, on_button_click, on_search_input, on_select)
     |> model.with_amount(Left, float.to_string(1.0))
     |> model.with_crypto([
       CryptoCurrency(expected_currency_id_1, None, "", ""),
@@ -567,7 +692,7 @@ pub fn model_to_conversion_params_from_left_happy_path_test() {
   let expected_currency_id_2 = 2
 
   let assert Ok(model) =
-    model.init(on_button_click, on_search_input, on_select)
+    model.init(on_amount_input, on_button_click, on_search_input, on_select)
     |> model.with_amount(Left, float.to_string(expected_amount))
     |> model.with_crypto([
       CryptoCurrency(expected_currency_id_1, None, "", ""),
@@ -601,7 +726,7 @@ pub fn model_to_conversion_params_from_right_happy_path_test() {
   let expected_currency_id_2 = 2
 
   let assert Ok(model) =
-    model.init(on_button_click, on_search_input, on_select)
+    model.init(on_amount_input, on_button_click, on_search_input, on_select)
     |> model.with_amount(Left, float.to_string(2.0))
     |> model.with_amount(Right, float.to_string(expected_amount))
     |> model.with_crypto([
