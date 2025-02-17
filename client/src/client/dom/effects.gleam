@@ -1,4 +1,4 @@
-import client/browser/element as browser_element
+import client/dom/element as dom_element
 import gleam/float
 import gleam/int
 import gleam/result
@@ -16,14 +16,13 @@ pub fn resize_input(
   effect.from(fn(dispatch) {
     window.request_animation_frame(fn(_) {
       let assert Ok(input_elem) = document.get_element_by_id(element_id)
-      let assert Ok(mirror_elem) =
-        browser_element.next_element_sibling(input_elem)
+      let assert Ok(mirror_elem) = dom_element.next_element_sibling(input_elem)
 
-      browser_element.copy_input_styles(input_elem, mirror_elem)
+      dom_element.copy_input_styles(input_elem, mirror_elem)
 
       let parse_from_input_elem = fn(property_name) {
         let val =
-          browser_element.get_computed_style_property(input_elem, property_name)
+          dom_element.get_computed_style_property(input_elem, property_name)
 
         let assert True = string.ends_with(val, "px")
 
@@ -42,7 +41,7 @@ pub fn resize_input(
 
       let new_width =
         mirror_elem
-        |> browser_element.get_offset_width
+        |> dom_element.get_offset_width
         |> int.to_float
         |> fn(mirror_offset_width) {
           mirror_offset_width

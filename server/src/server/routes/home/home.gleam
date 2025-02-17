@@ -3,6 +3,7 @@ import client.{
   UserTypedAmount,
 }
 import client/model
+import client/model_utils
 import gleam/json
 import gleam/result
 import lustre/attribute
@@ -32,14 +33,14 @@ pub fn get(
     |> json.to_string
 
   let content =
-    model.from_ssr_data(
+    model_utils.from_ssr_data(
       ssr_data,
       UserTypedAmount,
       UserClickedCurrencySelector,
       UserFilteredCurrencies,
       UserSelectedCurrency,
     )
-    |> client.view
+    |> model.view
     |> page_scaffold(ssr_json, ctx)
 
   content

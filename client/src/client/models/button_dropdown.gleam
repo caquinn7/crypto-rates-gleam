@@ -1,22 +1,21 @@
+import client/models/button.{type Button, Button}
 import gleam/dict.{type Dict}
 import gleam/list
 import gleam/option.{type Option}
 import lustre/attribute
 import lustre/element.{type Element}
 import lustre/element/html
-import lustre/element/svg
 import lustre/event
 
 pub type ButtonDropdown(msg) {
   ButtonDropdown(
     id: String,
-    button_text: String,
+    button: Button(msg),
     dropdown_options: Dict(String, List(DropdownOption(msg))),
     current_value: Option(String),
     show_dropdown: Bool,
     filter: String,
     search_input_id: String,
-    on_button_click: msg,
     on_search_input: fn(String) -> msg,
     on_select: fn(String) -> msg,
   )
@@ -28,7 +27,7 @@ pub type DropdownOption(msg) {
 
 pub fn view(button_dropdown: ButtonDropdown(msg)) -> Element(msg) {
   html.div([attribute.class("relative"), attribute.id(button_dropdown.id)], [
-    button(button_dropdown.button_text, button_dropdown.on_button_click),
+    button.view(button_dropdown.button),
     dropdown(
       button_dropdown.search_input_id,
       button_dropdown.show_dropdown,
@@ -38,36 +37,6 @@ pub fn view(button_dropdown: ButtonDropdown(msg)) -> Element(msg) {
       button_dropdown.on_select,
     ),
   ])
-}
-
-fn button(text: String, on_click: msg) -> Element(msg) {
-  html.button(
-    [
-      attribute.class("inline-flex items-center px-6 py-4 rounded"),
-      attribute.class(
-        "w-full rounded-lg border bg-neutral text-neutral-content text-left text-3xl",
-      ),
-      event.on_click(on_click),
-    ],
-    [
-      html.text(text),
-      svg.svg(
-        [
-          attribute.attribute("viewBox", "0 0 20 20"),
-          attribute.attribute("xmlns", "http://www.w3.org/2000/svg"),
-          attribute.class("ml-2 h-6 w-6 fill-current"),
-        ],
-        [
-          svg.path([
-            attribute.attribute(
-              "d",
-              "M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z",
-            ),
-          ]),
-        ],
-      ),
-    ],
-  )
 }
 
 fn dropdown(
