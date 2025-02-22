@@ -230,16 +230,18 @@ pub fn with_selected_currency(
       None -> Ok(default_button_dropdown_text)
 
       Some(selected_val) -> {
-        list.find_map(model.crypto, fn(currency) {
+        model.crypto
+        |> list.find_map(fn(currency) {
           case int.to_string(currency.id) == selected_val {
-            True -> Ok(currency.name)
+            True -> Ok(currency.symbol)
             _ -> Error(Nil)
           }
         })
         |> result.lazy_or(fn() {
-          list.find_map(model.fiat, fn(currency) {
+          model.fiat
+          |> list.find_map(fn(currency) {
             case int.to_string(currency.id) == selected_val {
-              True -> Ok(currency.name)
+              True -> Ok(currency.symbol)
               _ -> Error(Nil)
             }
           })
