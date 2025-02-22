@@ -12,7 +12,7 @@ pub type CurrencyInputGroup(msg) {
 }
 
 pub fn view(input_group: CurrencyInputGroup(msg)) -> Element(msg) {
-  html.span([attribute.class("flex space-x-4")], [
+  html.span([attribute.class("flex space-x-2")], [
     auto_resize_input.view(input_group.amount_input),
     button_dropdown.view(input_group.currency_selector),
   ])

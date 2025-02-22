@@ -11,10 +11,9 @@ pub type Button(msg) {
 pub fn view(button: Button(msg)) -> Element(msg) {
   html.button(
     [
-      attribute.class("inline-flex items-center px-6 py-4 rounded"),
-      attribute.class(
-        "w-full rounded-lg border bg-neutral text-neutral-content text-left text-3xl",
-      ),
+      attribute.class("inline-flex items-center px-6 py-4"),
+      attribute.class("w-full rounded-r-lg border bg-neutral"),
+      attribute.class("font-light text-4xl text-left text-neutral-content"),
       event.on_click(button.on_click),
     ],
     [

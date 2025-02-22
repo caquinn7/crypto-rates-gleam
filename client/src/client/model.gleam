@@ -21,7 +21,7 @@ fn header() -> Element(msg) {
     html.h1(
       [
         attribute.class(
-          "w-full mx-auto max-w-screen-xl text-4xl text-base-content font-bold",
+          "w-full mx-auto max-w-screen-xl text-5xl text-base-content",
         ),
       ],
       [html.text("RateRadar")],

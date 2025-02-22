@@ -16,9 +16,11 @@ pub type AutoResizeInput(msg) {
 pub fn view(input_model: AutoResizeInput(msg)) -> Element(msg) {
   let input =
     html.input([
-      attribute.class("amount-input"),
       attribute.class(
-        "px-6 py-4 border rounded-lg focus:outline-none bg-neutral text-3xl text-center text-neutral-content caret-info",
+        "px-6 py-4 border rounded-l-lg focus:outline-none bg-neutral",
+      ),
+      attribute.class(
+        "font-light text-4xl text-center text-neutral-content caret-info",
       ),
       attribute.id(input_model.id),
       attribute.style([#("width", int.to_string(input_model.width) <> "px")]),

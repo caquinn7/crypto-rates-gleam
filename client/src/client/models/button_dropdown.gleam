@@ -50,7 +50,7 @@ fn dropdown(
   html.div(
     [
       attribute.class(
-        "currency-dropdown absolute z-10 border rounded-lg shadow-md max-h-64 overflow-y-auto",
+        "absolute z-10 border rounded-lg shadow-md max-h-64 overflow-y-auto",
       ),
       attribute.class(
         "min-w-max left-1/2 transform -translate-x-1/2 w-auto translate-y-3",
@@ -63,7 +63,7 @@ fn dropdown(
     [
       search_input(search_input_id, filter, on_search_input),
       html.div(
-        [attribute.class("suggestions")],
+        [],
         dd_options
           |> dict.to_list
           |> list.map(option_group(_, on_select)),
@@ -97,10 +97,7 @@ fn option_group(
       [html.text(group.0)],
     )
 
-  html.div([attribute.class("group")], [
-    group_title_div,
-    options_container(group.1, on_select),
-  ])
+  html.div([], [group_title_div, options_container(group.1, on_select)])
 }
 
 fn options_container(
