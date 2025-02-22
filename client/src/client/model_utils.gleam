@@ -298,12 +298,16 @@ pub fn filter_currencies(
 
   let filtered_crypto =
     model.crypto
-    |> list.filter(fn(currency) { currency.name |> is_match })
+    |> list.filter(fn(currency) {
+      is_match(currency.name) || is_match(currency.symbol)
+    })
     |> list.map(crypto_dropdown_option)
 
   let filtered_fiat =
     model.fiat
-    |> list.filter(fn(currency) { currency.name |> is_match })
+    |> list.filter(fn(currency) {
+      is_match(currency.name) || is_match(currency.symbol)
+    })
     |> list.map(fiat_dropdown_option)
 
   let currency_input_groups =

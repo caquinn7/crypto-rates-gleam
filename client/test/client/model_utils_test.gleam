@@ -509,10 +509,7 @@ pub fn model_filter_currencies_case_insensitive_test() {
       on_search_input,
       on_select,
     )
-    |> model_utils.with_crypto([
-      CryptoCurrency(1, None, "ABC", ""),
-      CryptoCurrency(2, None, "DEF", ""),
-    ])
+    |> model_utils.with_crypto([CryptoCurrency(2, None, "DEF", "")])
     |> model_utils.filter_currencies(Left, "def")
 
   result
@@ -528,18 +525,15 @@ pub fn model_filter_currencies_no_match_test() {
       on_search_input,
       on_select,
     )
-    |> model_utils.with_crypto([
-      CryptoCurrency(1, None, "ABC", ""),
-      CryptoCurrency(2, None, "DEF", ""),
-    ])
+    |> model_utils.with_crypto([CryptoCurrency(1, None, "ABC", "")])
     |> model_utils.filter_currencies(Left, "XYZ")
 
   get_dd_option_values(result, Left, model_utils.crypto_group_key)
   |> should.equal([])
 }
 
-pub fn model_filter_currencies_test() {
-  let initial_model =
+pub fn model_filter_currencies_exact_match_on_crypto_name_test() {
+  let result =
     model_utils.init(
       on_amount_input,
       on_button_click,
@@ -547,34 +541,143 @@ pub fn model_filter_currencies_test() {
       on_select,
     )
     |> model_utils.with_crypto([
-      CryptoCurrency(1, None, "test str", ""),
-      CryptoCurrency(2, None, "another test str", ""),
-      CryptoCurrency(3, None, "AAA", ""),
+      CryptoCurrency(1, None, "Bitcoin", "BTC"),
+      CryptoCurrency(2, None, "Litecoin", "LTC"),
     ])
-    |> model_utils.with_fiat([
-      FiatCurrency(4, "a test", "", ""),
-      FiatCurrency(5, "BBB", "", ""),
-      FiatCurrency(6, "test", "", ""),
-    ])
+    |> model_utils.filter_currencies(Left, "Bitcoin")
 
+  get_dd_option_values(result, Left, model_utils.crypto_group_key)
+  |> should.equal(["1"])
+}
+
+pub fn model_filter_currencies_exact_match_on_crypto_symbol_test() {
   let result =
-    initial_model
-    |> model_utils.filter_currencies(Left, "test")
+    model_utils.init(
+      on_amount_input,
+      on_button_click,
+      on_search_input,
+      on_select,
+    )
+    |> model_utils.with_crypto([
+      CryptoCurrency(1, None, "Bitcoin", "BTC"),
+      CryptoCurrency(2, None, "Litecoin", "LTC"),
+    ])
+    |> model_utils.filter_currencies(Left, "BTC")
+
+  get_dd_option_values(result, Left, model_utils.crypto_group_key)
+  |> should.equal(["1"])
+}
+
+pub fn model_filter_currencies_exact_match_on_fiat_name_test() {
+  let result =
+    model_utils.init(
+      on_amount_input,
+      on_button_click,
+      on_search_input,
+      on_select,
+    )
+    |> model_utils.with_fiat([
+      FiatCurrency(1, "Dollar", "USD", ""),
+      FiatCurrency(2, "Euro", "EUR", ""),
+    ])
+    |> model_utils.filter_currencies(Left, "Dollar")
+
+  get_dd_option_values(result, Left, model_utils.fiat_group_key)
+  |> should.equal(["1"])
+}
+
+pub fn model_filter_currencies_exact_match_on_fiat_symbol_test() {
+  let result =
+    model_utils.init(
+      on_amount_input,
+      on_button_click,
+      on_search_input,
+      on_select,
+    )
+    |> model_utils.with_fiat([
+      FiatCurrency(1, "Dollar", "", "USD"),
+      FiatCurrency(2, "Euro", "", "EUR"),
+    ])
+    |> model_utils.filter_currencies(Left, "USD")
+
+  get_dd_option_values(result, Left, model_utils.fiat_group_key)
+  |> should.equal(["1"])
+}
+
+pub fn model_filter_currencies_partial_match_on_crypto_name_test() {
+  let result =
+    model_utils.init(
+      on_amount_input,
+      on_button_click,
+      on_search_input,
+      on_select,
+    )
+    |> model_utils.with_crypto([
+      CryptoCurrency(1, None, "Bitcoin", "BTC"),
+      CryptoCurrency(2, None, "Litecoin", "LTC"),
+      CryptoCurrency(3, None, "Ethereum", "ETH"),
+    ])
+    |> model_utils.filter_currencies(Left, "coin")
 
   get_dd_option_values(result, Left, model_utils.crypto_group_key)
   |> should.equal(["1", "2"])
+}
+
+pub fn model_filter_currencies_partial_match_on_crypto_symbol_test() {
+  let result =
+    model_utils.init(
+      on_amount_input,
+      on_button_click,
+      on_search_input,
+      on_select,
+    )
+    |> model_utils.with_crypto([
+      CryptoCurrency(1, None, "Bitcoin", "BTC"),
+      CryptoCurrency(2, None, "Ethereum", "ETH"),
+      CryptoCurrency(3, None, "Ethereum Classic", "ETC"),
+    ])
+    |> model_utils.filter_currencies(Left, "ET")
+
+  get_dd_option_values(result, Left, model_utils.crypto_group_key)
+  |> should.equal(["2", "3"])
+}
+
+pub fn model_filter_currencies_partial_match_on_fiat_name_test() {
+  let result =
+    model_utils.init(
+      on_amount_input,
+      on_button_click,
+      on_search_input,
+      on_select,
+    )
+    |> model_utils.with_fiat([
+      FiatCurrency(1, "United States Dollar", "", "USD"),
+      FiatCurrency(2, "Australian Dollar", "", "EUR"),
+      FiatCurrency(3, "Euro", "", "EUR"),
+    ])
+    |> model_utils.filter_currencies(Left, "Dollar")
 
   get_dd_option_values(result, Left, model_utils.fiat_group_key)
-  |> should.equal(["4", "6"])
+  |> should.equal(["1", "2"])
+}
 
-  result.currency_input_groups.1
-  |> should.equal(initial_model.currency_input_groups.1)
+pub fn model_filter_currencies_partial_match_on_fiat_symbol_test() {
+  let result =
+    model_utils.init(
+      on_amount_input,
+      on_button_click,
+      on_search_input,
+      on_select,
+    )
+    |> model_utils.with_fiat([
+      FiatCurrency(1, "United States Dollar", "", "USD"),
+      FiatCurrency(2, "Australian Dollar", "", "EUR"),
+      FiatCurrency(3, "Bahamian Dollar", "", "BSD"),
+    ])
+    |> model_utils.filter_currencies(Left, "SD")
 
-  result.crypto
-  |> should.equal(initial_model.crypto)
-
-  result.fiat
-  |> should.equal(initial_model.fiat)
+  get_dd_option_values(result, Left, model_utils.fiat_group_key)
+  |> should.equal(["1", "3"])
 }
 
 pub fn model_with_selected_currency_none_test() {
