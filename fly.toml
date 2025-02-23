@@ -18,3 +18,10 @@ primary_region = 'atl'
 
 [[vm]]
   size = 'shared-cpu-1x'
+
+[env]
+ENV="FLY"
+CSS_FILE="client.css"
+JS_FILE="client.mjs"
+FIAT_CURRENCIES="USD,AUD,BRL,CAD,CHF,CNY,EUR,GBP,HKD,INR,JPY,KRW,MXN,NZD,RUB,SEK,SGD,TRY"
+CRYPTO_LIMIT=25

@@ -4,20 +4,20 @@ import gleam/list
 import gleam/option.{Some}
 import gleam/result
 import non_empty_list.{type NonEmptyList}
-import server/coin_market_cap.{type CmcListResponse, CmcListResponse} as cmc
+import server/coin_market_cap.{
+  type CmcListResponse, type RequestError, CmcListResponse,
+}
 import server/response_utils
 import server/validation_utils.{error_msg}
 import shared/coin_market_cap_types.{type CryptoCurrency, type FiatCurrency} as cmc_types
 import valid
 import wisp.{type Request, type Response}
 
-pub type RequestCrypto =
-  fn(Int) -> Result(CmcListResponse(CryptoCurrency), cmc.RequestError)
-
-pub type RequestFiat =
-  fn(Int) -> Result(CmcListResponse(FiatCurrency), cmc.RequestError)
-
-pub fn get_crypto(req: Request, request_crypto: RequestCrypto) -> Response {
+pub fn get_crypto(
+  req: Request,
+  request_crypto: fn(Int) ->
+    Result(CmcListResponse(CryptoCurrency), RequestError),
+) -> Response {
   req
   |> validate_request
   |> result.map_error(response_utils.bad_request_response(req, _))
@@ -33,7 +33,10 @@ pub fn get_crypto(req: Request, request_crypto: RequestCrypto) -> Response {
   |> result.unwrap_both
 }
 
-pub fn get_fiat(req: Request, request_fiat: RequestFiat) -> Response {
+pub fn get_fiat(
+  req: Request,
+  request_fiat: fn(Int) -> Result(CmcListResponse(FiatCurrency), RequestError),
+) -> Response {
   req
   |> validate_request
   |> result.map_error(response_utils.bad_request_response(req, _))
@@ -61,7 +64,7 @@ pub fn validate_request(req: Request) -> Result(Int, NonEmptyList(String)) {
   let assert Ok(query_params) = request.get_query(req)
 
   query_params
-  |> list.key_find("limit")
+  |> list.key_find(limit_name)
   |> result.unwrap("100")
   |> validator
 }

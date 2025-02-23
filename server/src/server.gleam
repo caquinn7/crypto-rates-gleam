@@ -1,6 +1,7 @@
 import dot_env
 import dot_env/env
 import gleam/erlang/process
+import gleam/string
 import mist
 import server/router
 import server/web.{Context}
@@ -16,6 +17,12 @@ pub fn main() {
   let assert Ok(css_file) = env.get_string("CSS_FILE")
   let assert Ok(js_file) = env.get_string("JS_FILE")
   let assert Ok(cmc_api_key) = env.get_string("COIN_MARKET_CAP_API_KEY")
+  let crypto_limit = env.get_int_or("CRYPTO_LIMIT", 25)
+  let fiats = case env.get_string("FIAT_CURRENCIES") {
+    Error(_) -> []
+    Ok(s) -> string.split(s, ",")
+  }
+
   let ctx =
     Context(
       env:,
@@ -23,6 +30,8 @@ pub fn main() {
       css_file:,
       js_file:,
       cmc_api_key:,
+      crypto_limit:,
+      fiats:,
     )
 
   let assert Ok(secret_key_base) = env.get_string("SECRET_KEY_BASE")
@@ -38,7 +47,8 @@ pub fn main() {
 fn load_env() {
   dot_env.new()
   |> dot_env.set_path(".env")
-  |> dot_env.set_debug(False)
+  |> dot_env.set_debug(True)
+  |> dot_env.set_ignore_missing_file(True)
   |> dot_env.load
 }
 

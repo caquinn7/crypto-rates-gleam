@@ -1,36 +1,26 @@
 import gleam/list
 import gleam/option.{Some}
 import gleam/result
+import server/coin_market_cap.{type CmcListResponse, type RequestError}
 import server/routes/conversions.{type RequestConversion}
-import server/routes/currencies.{type RequestCrypto, type RequestFiat}
 import shared/coin_market_cap_types.{
-  type ConversionParameters, ConversionParameters,
+  type ConversionParameters, type CryptoCurrency, type FiatCurrency,
+  ConversionParameters,
 }
 import shared/ssr_data.{type Currency, type SsrData, Currency, SsrData}
 
 pub fn get(
-  request_crypto: RequestCrypto,
-  request_fiat: RequestFiat,
+  request_crypto: fn() -> Result(CmcListResponse(CryptoCurrency), RequestError),
+  get_fiat: fn() -> Result(List(FiatCurrency), Nil),
   request_conversion: RequestConversion,
   from_currency: String,
   to_currency: String,
 ) -> Result(SsrData, Nil) {
   let get_crypto = fn() {
-    request_crypto(100)
+    request_crypto()
     |> result.map(fn(cmc_response) {
       case cmc_response.data {
-        Some(c) -> list.unique(c)
-        _ -> []
-      }
-    })
-    |> result.replace_error(Nil)
-  }
-
-  let get_fiat = fn() {
-    request_fiat(100)
-    |> result.map(fn(cmc_response) {
-      case cmc_response.data {
-        Some(c) -> list.unique(c)
+        Some(currencies) -> list.unique(currencies)
         _ -> []
       }
     })

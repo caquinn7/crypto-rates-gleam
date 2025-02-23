@@ -14,6 +14,8 @@ pub type Context {
     css_file: String,
     js_file: String,
     cmc_api_key: String,
+    crypto_limit: Int,
+    fiats: List(String),
   )
 }
 

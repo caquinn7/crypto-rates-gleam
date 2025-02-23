@@ -26,8 +26,8 @@ pub fn main() {
 }
 
 pub fn ssr_data_get_error_getting_crypto_test() {
-  let request_crypto = fn(_) { Error(HttpError(httpc.InvalidUtf8Response)) }
-  let request_fiat = fn(_) { Ok(CmcListResponse(ok_cmc_status, Some([usd]))) }
+  let request_crypto = fn() { Error(HttpError(httpc.InvalidUtf8Response)) }
+  let request_fiat = fn() { Ok([usd]) }
 
   server_ssr_data.get(
     request_crypto,
@@ -41,8 +41,8 @@ pub fn ssr_data_get_error_getting_crypto_test() {
 }
 
 pub fn ssr_data_get_error_getting_fiat_test() {
-  let request_crypto = fn(_) { Ok(CmcListResponse(ok_cmc_status, Some([btc]))) }
-  let request_fiat = fn(_) { Error(HttpError(httpc.InvalidUtf8Response)) }
+  let request_crypto = fn() { Ok(CmcListResponse(ok_cmc_status, Some([btc]))) }
+  let request_fiat = fn() { Error(Nil) }
 
   server_ssr_data.get(
     request_crypto,
@@ -56,8 +56,8 @@ pub fn ssr_data_get_error_getting_fiat_test() {
 }
 
 pub fn ssr_data_get_error_getting_conversion_test() {
-  let request_crypto = fn(_) { Ok(CmcListResponse(ok_cmc_status, Some([btc]))) }
-  let request_fiat = fn(_) { Ok(CmcListResponse(ok_cmc_status, Some([usd]))) }
+  let request_crypto = fn() { Ok(CmcListResponse(ok_cmc_status, Some([btc]))) }
+  let request_fiat = fn() { Ok([usd]) }
   let request_conversion = fn(_) { Error(HttpError(httpc.InvalidUtf8Response)) }
 
   server_ssr_data.get(
@@ -72,8 +72,8 @@ pub fn ssr_data_get_error_getting_conversion_test() {
 }
 
 pub fn ssr_data_get_happy_path_test() {
-  let request_crypto = fn(_) { Ok(CmcListResponse(ok_cmc_status, Some([btc]))) }
-  let request_fiat = fn(_) { Ok(CmcListResponse(ok_cmc_status, Some([usd]))) }
+  let request_crypto = fn() { Ok(CmcListResponse(ok_cmc_status, Some([btc]))) }
+  let request_fiat = fn() { Ok([usd]) }
 
   server_ssr_data.get(
     request_crypto,
